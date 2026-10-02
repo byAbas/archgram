@@ -192,7 +192,10 @@ same file every time.
   that reads skills follows the same steps.
 - A part is drawn only when a file in the project backs it, and the skill
   notes that file; an edge only where a line of code makes it, and the
-  skill notes that line. It finds the parts by walking from the project's
+  skill notes that line. The spec keeps both as each node's and edge's
+  source, so `archgram check` holds them to the code as the skill draws
+  and whenever it runs later ([docs/features/sources.md](features/sources.md)).
+  It finds the parts by walking from the project's
   entry points, keeps one level of detail per diagram, and names each part
   after the file that decides, found by following the imports. Where the
   code and the documentation disagree, or the architecture is unclear, it
@@ -205,10 +208,14 @@ same file every time.
   to npm later runs only once a reviewed skill names it, as Anthropic's
   plugin directory asks of a package a plugin runs. Each release sets that
   version in the skill, and a test holds the two equal. The spec is kept,
-  so a later call changes it and draws again, and says what changed.
+  so a later call changes it and draws again, and says what changed,
+  starting from what `archgram check` says has lost its code.
 - It learns the spec format from that same command (`archgram spec`), so
   the format it writes always matches the command that draws it; it keeps
-  no copy of the format that could fall behind.
+  no copy of the format that could fall behind, nor of how to fill it.
+  What a version adds, and how a writer fills it, is in that format, so a
+  new field needs no change to the skill, and a skill newer or older than
+  the archgram it runs never writes a field that archgram cannot read.
 - It works on its own: everything it needs is in its folder or comes from
   archgram through npx, so it needs nothing installed in the project; its
   plugin manifest only lets Claude Code take the same folder as a plugin.
@@ -311,4 +318,4 @@ None.
 | 0.20    | 2026-10-04 | Where the project has no archgram of its own, the skill runs the version released with it, named exactly, not the latest; each release sets it, and a test holds it to the release (§6.6). |
 | 0.21    | 2026-10-04 | The skill's folder is also a Claude Code plugin of that one skill, with a manifest, an icon and a README, so Anthropic's plugin directory can list it without the rest of the repository (§6.5, §6.6). |
 | 0.22    | 2026-10-04 | The agents' baseline as measured: 6.3 minutes per diagram drawn by hand, 9.3 with a skill that added previews and self-critique, with no measure of how the time split; §8's baseline names that skill (§1, §8). |
-| 0.23    | 2026-10-07 | Features with more than a few lines of requirements get their own document in `docs/features/`, which this one points to. The problem names a stale diagram nobody notices (§1). 0.6 is in the scope; 0.7 names the code behind each node and edge, checked by `check` and `build`, with its limit (§5, §6.1, `docs/features/sources.md`). Each feature's own success criteria count here (§8). |
+| 0.23    | 2026-10-07 | Features with more than a few lines of requirements get their own document in `docs/features/`, which this one points to. The problem names a stale diagram nobody notices (§1). 0.6 is in the scope; 0.7 names the code behind each node and edge, checked by `check` and `build`, with its limit; the skill writes a source for each and starts an update from what the check names (§5, §6.1, §6.6, `docs/features/sources.md`). Each feature's own success criteria count here (§8). |
