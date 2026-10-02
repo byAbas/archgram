@@ -13,6 +13,11 @@ follow [Semantic Versioning](https://semver.org/).
   directory can list it. Installing it takes the skill's folder alone,
   not the repository. The README says what the skill runs, its privacy
   (it collects nothing) and its terms (MIT).
+- A node or an edge may name the code behind it, `source`: a path from
+  the spec's folder, with a few words of the line that makes it after
+  `#`. `archgram check` fails, and `archgram build` warns, when that code
+  is not there, so a diagram cannot drift from the code unnoticed.
+  Sources are never drawn.
 
 ### Changed
 
