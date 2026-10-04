@@ -426,8 +426,10 @@ spec generator are small helpers inside the workspace.
   npm. The workflow drafts the release and a maintainer publishes it;
   releases are immutable once published.
 - The skill is one folder, installed as docs/PRD.md (6.5) says. It runs
-  `npx archgram` and reads the spec format from `archgram spec`, the text
-  of docs/SPEC.md carried in the binary, so it keeps no copy of the format.
+  archgram through npx, the project's own or the version released with the
+  skill (docs/PRD.md 6.6), and reads the spec format from `archgram spec`,
+  the text of docs/SPEC.md carried in the binary, so it keeps no copy of
+  the format.
 - Later: a WASM package for the browser, and the PNG module as a
   separate, optional package.
 - Crates on crates.io once the API is stable.
