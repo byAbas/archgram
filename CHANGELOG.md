@@ -6,6 +6,13 @@ follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- The `archgram` skill's folder is also a Claude Code plugin of that one
+  skill, with a manifest, an icon and a README, so Anthropic's plugin
+  directory can list it. Installing it takes the skill's folder alone,
+  not the repository.
+
 ### Changed
 
 - The `archgram` skill runs the archgram released with it, named exactly

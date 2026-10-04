@@ -1,0 +1,16 @@
+{
+  "name": "archgram",
+  "version": "0.6.1",
+  "description": "Draws a project's software architecture as an animated SVG with archgram, from its code and docs, for its README.",
+  "author": {
+    "name": "Abas Turabli",
+    "url": "https://abasturabli.com"
+  },
+  "homepage": "https://www.archgram.dev",
+  "repository": "https://github.com/byAbas/archgram",
+  "license": "MIT",
+  "keywords": ["architecture", "diagram", "svg", "readme", "documentation"],
+  "icon": "./.claude-plugin/icon.png",
+  "documentationUrl": "https://github.com/byAbas/archgram#draw-with-your-coding-agent",
+  "supportUrl": "https://github.com/byAbas/archgram/issues"
+}
