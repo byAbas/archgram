@@ -19,6 +19,9 @@ own colours. The report lists each part drawn with the file behind it.
   project's root and, where the colours are not already design tokens,
   `docs/diagrams/theme/archgram.resolver.json`.
 - It opens the SVG once with the system's own viewer.
+- It pre-approves only the four archgram commands it runs, at that
+  version: `spec`, `check`, `build` and `theme check`. Every other
+  command, the project's own archgram included, asks the user first.
 - It sends nothing anywhere, and edits the README or commits only when
   asked.
 

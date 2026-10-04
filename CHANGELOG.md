@@ -20,6 +20,10 @@ follow [Semantic Versioning](https://semver.org/).
   than the latest on npm. A version published later runs only once a new
   skill names it. A project that lists archgram in its `package.json`
   still draws with its own.
+- The skill pre-approves only the four archgram commands it runs, at its
+  version (`spec`, `check`, `build`, `theme check`), rather than any
+  command that starts with `npx --yes archgram`. Running the project's own
+  archgram asks first.
 
 ## [0.6.1] - 2026-10-01
 
