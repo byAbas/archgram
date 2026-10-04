@@ -1,5 +1,6 @@
 {
   "name": "archgram",
+  "displayName": "archgram",
   "version": "0.6.1",
   "description": "Draws a project's software architecture as an animated SVG with archgram, from its code and docs, for its README.",
   "author": {
@@ -12,5 +13,7 @@
   "keywords": ["architecture", "diagram", "svg", "readme", "documentation"],
   "icon": "./.claude-plugin/icon.png",
   "documentationUrl": "https://github.com/byAbas/archgram#draw-with-your-coding-agent",
-  "supportUrl": "https://github.com/byAbas/archgram/issues"
+  "supportUrl": "https://github.com/byAbas/archgram/issues",
+  "privacyPolicyUrl": "https://github.com/byAbas/archgram/blob/main/skills/archgram/README.md#privacy",
+  "termsOfServiceUrl": "https://github.com/byAbas/archgram/blob/main/skills/archgram/README.md#terms"
 }
