@@ -3,7 +3,7 @@ name: archgram
 description: Draws a project's software architecture as an animated SVG with archgram, for its README and docs, from the code and documentation. Writes a spec to docs/diagrams/<name>.archgram.yaml, checks and draws it with the archgram command, in the project's own colours, then opens the drawing and lists each part with the file behind it. Use it whenever the user wants an architecture, system, data-flow, pipeline or "how it works" diagram, a diagram for a README, or an existing archgram diagram updated after the code changed, even if they only say "draw how this works".
 license: MIT
 compatibility: Requires Node 22 or later, with npx.
-allowed-tools: Bash(npx --yes archgram@0.6.1 *) Bash(npx --yes archgram *)
+allowed-tools: Bash(npx --yes archgram@0.6.1 spec) Bash(npx --yes archgram@0.6.1 check *) Bash(npx --yes archgram@0.6.1 build *) Bash(npx --yes archgram@0.6.1 theme check *)
 ---
 
 # Drawing architecture with archgram

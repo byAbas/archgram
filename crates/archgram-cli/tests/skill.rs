@@ -38,14 +38,10 @@ fn the_skill_names_the_version_it_is_released_with() {
                 );
                 pinned += 1;
             }
-            // The one unpinned form is the permission to run the project's
-            // own archgram, whose lockfile pins it.
-            if !line.starts_with("allowed-tools:") {
-                assert!(
-                    !line.contains("npx --yes archgram "),
-                    "{at} runs archgram through npx without a version: {line}"
-                );
-            }
+            assert!(
+                !line.contains("npx --yes archgram "),
+                "{at} runs archgram through npx without a version: {line}"
+            );
         }
     }
     assert!(pinned > 0, "no archgram@X.Y.Z in {}", skill.display());
@@ -65,4 +61,59 @@ fn the_plugin_carries_the_version_it_is_released_with() {
         "{} does not carry \"version\": \"{version}\"",
         manifest.display()
     );
+}
+
+/// `allowed-tools` pre-approves exactly the archgram commands the skill
+/// runs, at its version, and nothing broader, as Anthropic's plugin
+/// directory asks: every command is covered, and every rule is used.
+#[test]
+fn the_skill_preapproves_only_the_commands_it_runs() {
+    let skill = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../skills/archgram");
+    let mut files = Vec::new();
+    markdown(&skill, &mut files);
+    let prefix = format!("npx --yes archgram@{} ", env!("CARGO_PKG_VERSION"));
+    let mut commands = Vec::new();
+    for file in &files {
+        for line in std::fs::read_to_string(file).unwrap().lines() {
+            if line.starts_with("allowed-tools:") {
+                continue;
+            }
+            for (i, _) in line.match_indices(&prefix) {
+                let rest = &line[i..];
+                let end = rest.find('`').unwrap_or(rest.len());
+                commands.push(rest[..end].trim_end().to_string());
+            }
+        }
+    }
+    assert!(!commands.is_empty(), "no `{prefix}…` command in the skill");
+
+    let manifest = std::fs::read_to_string(skill.join("SKILL.md")).unwrap();
+    let allowed = manifest
+        .lines()
+        .find_map(|line| line.strip_prefix("allowed-tools: "))
+        .expect("SKILL.md has allowed-tools");
+    let rules: Vec<&str> = allowed
+        .split(") ")
+        .map(|rule| rule.trim_start_matches("Bash(").trim_end_matches(')'))
+        .collect();
+    let covers = |rule: &str, command: &str| match rule.strip_suffix(" *") {
+        Some(head) => command == head || command.starts_with(&format!("{head} ")),
+        None => command == rule,
+    };
+    for rule in &rules {
+        assert!(
+            rule.starts_with(&prefix) && rule.len() > prefix.len() + 1,
+            "allowed-tools rule `{rule}` is not one archgram command at this version"
+        );
+        assert!(
+            commands.iter().any(|command| covers(rule, command)),
+            "allowed-tools rule `{rule}` covers no command the skill runs"
+        );
+    }
+    for command in &commands {
+        assert!(
+            rules.iter().any(|rule| covers(rule, command)),
+            "`{command}` is not pre-approved in allowed-tools"
+        );
+    }
 }
