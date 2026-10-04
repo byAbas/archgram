@@ -2,7 +2,7 @@
 
 | Field   | Value      |
 |---------|------------|
-| Version | 0.21       |
+| Version | 0.22       |
 | Date    | 2026-10-04 |
 | Status  | Draft      |
 | Owner   | Abas Turabli |
@@ -26,9 +26,11 @@ or a trust boundary, no dark mode of its own, no way to show the order in
 which things happen.
 
 AI coding agents hit the same wall from the other side. Asked for a
-diagram, an agent spends most of its time placing coordinates by hand. In
-a test of three diagram tasks, agents took on average more than nine
-minutes each, most of it on layout.
+diagram, an agent writes the SVG by hand, every coordinate and every
+path. In a test of three diagram tasks, agents doing so took 6.3 minutes
+per diagram on average, and 9.3 minutes with a skill that added previews
+and self-critique; how that time split between layout and the rest was
+not measured.
 
 ## 2. Users
 
@@ -247,7 +249,8 @@ archgram records each logo's source and guidelines for them.
 - Layout and SVG for a 100-node spec take under 50 ms in the native CLI.
 - The core WASM module, when there is one, stays under 350 KB gzipped.
 - With archgram, an agent produces an approved diagram in less than half
-  the time it took without it (baseline: 9.3 minutes on average).
+  the time it took without it (baseline: 9.3 minutes on average, the
+  hand-drawing skill of the test in §1).
 
 ## 9. Non-goals
 
@@ -288,3 +291,4 @@ None.
 | 0.19    | 2026-10-01 | A step's number sits above the signals and lights as a signal reaches it, traced in the passing colour from where the line enters; the still image keeps the plain number; a number keeps clear of a refusal's ✕ (§6.4). |
 | 0.20    | 2026-10-04 | Where the project has no archgram of its own, the skill runs the version released with it, named exactly, not the latest; each release sets it, and a test holds it to the release (§6.6). |
 | 0.21    | 2026-10-04 | The skill's folder is also a Claude Code plugin of that one skill, with a manifest, an icon and a README, so Anthropic's plugin directory can list it without the rest of the repository (§6.5, §6.6). |
+| 0.22    | 2026-10-04 | The agents' baseline as measured: 6.3 minutes per diagram drawn by hand, 9.3 with a skill that added previews and self-critique, with no measure of how the time split; §8's baseline names that skill (§1, §8). |
