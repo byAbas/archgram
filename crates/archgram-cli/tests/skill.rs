@@ -63,11 +63,12 @@ fn the_plugin_carries_the_version_it_is_released_with() {
     );
 }
 
-/// `allowed-tools` pre-approves exactly the archgram commands the skill
-/// runs, at its version, and nothing broader, as Anthropic's plugin
-/// directory asks: every command is covered, and every rule is used.
+/// `allowed-tools` pre-approves only exact commands the skill runs, at its
+/// version, with no wildcard: Anthropic's plugin directory reads any npx
+/// rule that ends in a wildcard as "any npx command" (`ALLOWED_TOOLS_BROAD`).
+/// A command that writes, or takes a path, asks the user.
 #[test]
-fn the_skill_preapproves_only_the_commands_it_runs() {
+fn the_skill_preapproves_only_exact_commands_it_runs() {
     let skill = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../skills/archgram");
     let mut files = Vec::new();
     markdown(&skill, &mut files);
@@ -92,28 +93,15 @@ fn the_skill_preapproves_only_the_commands_it_runs() {
         .lines()
         .find_map(|line| line.strip_prefix("allowed-tools: "))
         .expect("SKILL.md has allowed-tools");
-    let rules: Vec<&str> = allowed
-        .split(") ")
-        .map(|rule| rule.trim_start_matches("Bash(").trim_end_matches(')'))
-        .collect();
-    let covers = |rule: &str, command: &str| match rule.strip_suffix(" *") {
-        Some(head) => command == head || command.starts_with(&format!("{head} ")),
-        None => command == rule,
-    };
-    for rule in &rules {
+    for rule in allowed.split(") ") {
+        let rule = rule.trim_start_matches("Bash(").trim_end_matches(')');
         assert!(
-            rule.starts_with(&prefix) && rule.len() > prefix.len() + 1,
-            "allowed-tools rule `{rule}` is not one archgram command at this version"
+            !rule.contains('*'),
+            "allowed-tools rule `{rule}` has a wildcard; pre-approve exact commands only"
         );
         assert!(
-            commands.iter().any(|command| covers(rule, command)),
-            "allowed-tools rule `{rule}` covers no command the skill runs"
-        );
-    }
-    for command in &commands {
-        assert!(
-            rules.iter().any(|rule| covers(rule, command)),
-            "`{command}` is not pre-approved in allowed-tools"
+            commands.iter().any(|command| command == rule),
+            "allowed-tools rule `{rule}` is not a command the skill runs"
         );
     }
 }
