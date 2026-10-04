@@ -64,6 +64,17 @@ version goes in by a pull request and the tag follows the merge.
    gh attestation verify archgram-skill-X.Y.Z.tar.gz -R byAbas/archgram
    ```
 
+8. Publish the plugin's new version in Anthropic's directory, once step 7
+   shows the release whole: the skill names `archgram@X.Y.Z`, and a
+   version published before npm has it stops for everyone who installs
+   it from there. Open archgram under **Submissions** at
+   [claude.ai/directory/manage](https://claude.ai/directory/manage),
+   select **Check for new commits**, and once the version of the merged
+   commit passes its checks, select **Publish**. Auto-publish is off for
+   this reason; leave it off. A version held for a reviewer goes live
+   once they clear it
+   ([Submit your plugin](https://claude.com/docs/plugins/submit#update-a-published-plugin)).
+
 ## When a release fails
 
 What to do depends on whether anything has reached users.
