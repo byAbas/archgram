@@ -2,8 +2,8 @@
 
 | Field   | Value      |
 |---------|------------|
-| Version | 0.19       |
-| Date    | 2026-10-01 |
+| Version | 0.20       |
+| Date    | 2026-10-04 |
 | Status  | Draft      |
 | Owner   | Abas Turabli |
 
@@ -176,14 +176,19 @@ same file every time.
   code and the documentation disagree, or the architecture is unclear, it
   asks the user; it asks for no other approval.
 - It writes `docs/diagrams/<name>.archgram.yaml`, creating the folder when
-  missing, and draws `<name>.svg` beside it with `npx archgram`: the
-  project's own archgram when it has one, the latest otherwise. The spec is
-  kept, so a later call changes it and draws again, and says what changed.
+  missing, and draws `<name>.svg` beside it with archgram through npx: the
+  project's own archgram when its `package.json` lists one, pinned by the
+  project's lockfile, and otherwise the version released with the skill,
+  named exactly (`archgram@X.Y.Z`), never the latest. A version published
+  to npm later runs only once a reviewed skill names it, as Anthropic's
+  plugin directory asks of a package a plugin runs. Each release sets that
+  version in the skill, and a test holds the two equal. The spec is kept,
+  so a later call changes it and draws again, and says what changed.
 - It learns the spec format from that same command (`archgram spec`), so
   the format it writes always matches the command that draws it; it keeps
   no copy of the format that could fall behind.
 - It works on its own: everything it needs is in its folder or comes from
-  `npx archgram`, so it needs no plugin and nothing installed in the
+  archgram through npx, so it needs no plugin and nothing installed in the
   project. Its text changes only by review, like the code.
 - Its evaluations live beside it: that it is chosen when asked for an
   architecture diagram and not otherwise, that it draws a project it is
@@ -277,3 +282,4 @@ None.
 | 0.17    | 2026-09-29 | The skill recognises the system's style of architecture, merges parts with the same relations into one node, and keeps a drawing to about ten nodes and twelve edges; its evaluations cover a pipeline, ports and adapters, and a plugin host (§6.6). |
 | 0.18    | 2026-10-01 | The skill is for any coding agent that reads the Agent Skills format, not Claude Code alone: written to the format's fields, asked for in words, and installed with the `skills` command into each agent's folder; archgram needs no installer of its own (§6.5, §6.6). |
 | 0.19    | 2026-10-01 | A step's number sits above the signals and lights as a signal reaches it, traced in the passing colour from where the line enters; the still image keeps the plain number; a number keeps clear of a refusal's ✕ (§6.4). |
+| 0.20    | 2026-10-04 | Where the project has no archgram of its own, the skill runs the version released with it, named exactly, not the latest; each release sets it, and a test holds it to the release (§6.6). |

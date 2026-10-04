@@ -18,5 +18,6 @@ the small projects the prompts run in.
 
 Each case runs with the skill and without it, as skill-creator does. The
 runs call a model and cost money, so they run on request, not in CI; the
-skill runs `npx archgram`, so the version under test must be on npm, and
-the runs need network access to the npm registry.
+skill runs the archgram version it names (`archgram@X.Y.Z`) through npx,
+so that version must be on npm, and the runs need network access to the
+npm registry.
