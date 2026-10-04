@@ -429,7 +429,9 @@ spec generator are small helpers inside the workspace.
   archgram through npx, the project's own or the version released with the
   skill (docs/PRD.md 6.6), and reads the spec format from `archgram spec`,
   the text of docs/SPEC.md carried in the binary, so it keeps no copy of
-  the format.
+  the format. Its `.claude-plugin/plugin.json`, icon and README make the
+  same folder a Claude Code plugin of one skill, so Anthropic's plugin
+  directory takes that folder and not the repository.
 - Later: a WASM package for the browser, and the PNG module as a
   separate, optional package.
 - Crates on crates.io once the API is stable.

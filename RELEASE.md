@@ -17,10 +17,11 @@ version goes in by a pull request and the tag follows the merge.
    (`[workspace.package]`; the npm packages take theirs from it), and in
    `CHANGELOG.md` turn `Unreleased` into the version and today's date, and
    point its compare link at the new tag. In `README.md`, point the skill's
-   install command at the new version, and in `skills/archgram/` set every
-   `archgram@X.Y.Z` the skill runs to it (the test
-   `the_skill_names_the_version_it_is_released_with` fails until each one
-   does). Commit (`chore: set the version to X.Y.Z`).
+   install command at the new version. In `skills/archgram/`, set every
+   `archgram@X.Y.Z` the skill runs to it, and the `version` in
+   `.claude-plugin/plugin.json` (the tests in
+   `crates/archgram-cli/tests/skill.rs` fail until both do). Commit
+   (`chore: set the version to X.Y.Z`).
 
    From the merge until the packages are approved on npm (step 5), a skill
    installed from `main` names a version npm does not have yet, and says

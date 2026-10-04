@@ -50,3 +50,19 @@ fn the_skill_names_the_version_it_is_released_with() {
     }
     assert!(pinned > 0, "no archgram@X.Y.Z in {}", skill.display());
 }
+
+/// The skill's folder is also a Claude Code plugin (docs/PRD.md 6.5), whose
+/// manifest carries the release's version, so an update reaches its users.
+#[test]
+fn the_plugin_carries_the_version_it_is_released_with() {
+    let manifest = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../skills/archgram/.claude-plugin/plugin.json");
+    let text = std::fs::read_to_string(&manifest)
+        .unwrap_or_else(|e| panic!("{}: {e}", manifest.display()));
+    let version = env!("CARGO_PKG_VERSION");
+    assert!(
+        text.contains(&format!("\"version\": \"{version}\"")),
+        "{} does not carry \"version\": \"{version}\"",
+        manifest.display()
+    );
+}

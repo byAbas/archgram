@@ -2,7 +2,7 @@
 
 | Field   | Value      |
 |---------|------------|
-| Version | 0.20       |
+| Version | 0.21       |
 | Date    | 2026-10-04 |
 | Status  | Draft      |
 | Owner   | Abas Turabli |
@@ -154,7 +154,10 @@ same file every time.
   `SKILL.md`), Claude Code among them. It is installed with the `skills`
   command (`npx skills add byabas/archgram`), which puts it in the folder
   each agent reads, for a project or for every project; archgram carries no
-  installer of its own (§6.6).
+  installer of its own (§6.6). The same folder is also a Claude Code
+  plugin of that one skill, with a manifest, an icon and a README of its
+  own, so Anthropic's plugin directory can list it; the plugin is the
+  skill's folder alone, never the repository.
 
 ### 6.6 The `archgram` skill
 - It draws a project's architecture for its README and docs, from the
@@ -188,8 +191,9 @@ same file every time.
   the format it writes always matches the command that draws it; it keeps
   no copy of the format that could fall behind.
 - It works on its own: everything it needs is in its folder or comes from
-  archgram through npx, so it needs no plugin and nothing installed in the
-  project. Its text changes only by review, like the code.
+  archgram through npx, so it needs nothing installed in the project; its
+  plugin manifest only lets Claude Code take the same folder as a plugin.
+  Its text changes only by review, like the code.
 - Its evaluations live beside it: that it is chosen when asked for an
   architecture diagram and not otherwise, that it draws a project it is
   given, in more than one style of architecture, and that it asks when
@@ -283,3 +287,4 @@ None.
 | 0.18    | 2026-10-01 | The skill is for any coding agent that reads the Agent Skills format, not Claude Code alone: written to the format's fields, asked for in words, and installed with the `skills` command into each agent's folder; archgram needs no installer of its own (§6.5, §6.6). |
 | 0.19    | 2026-10-01 | A step's number sits above the signals and lights as a signal reaches it, traced in the passing colour from where the line enters; the still image keeps the plain number; a number keeps clear of a refusal's ✕ (§6.4). |
 | 0.20    | 2026-10-04 | Where the project has no archgram of its own, the skill runs the version released with it, named exactly, not the latest; each release sets it, and a test holds it to the release (§6.6). |
+| 0.21    | 2026-10-04 | The skill's folder is also a Claude Code plugin of that one skill, with a manifest, an icon and a README, so Anthropic's plugin directory can list it without the rest of the repository (§6.5, §6.6). |
