@@ -1,6 +1,6 @@
 ---
 name: archgram
-description: Draws a project's software architecture as an animated SVG with archgram, for its README and docs, from the code and documentation. Writes a spec to docs/diagrams/<name>.archgram.yaml, checks and draws it with the archgram command, in the project's own colours, then opens the drawing and lists each part with the file behind it. Use it whenever the user wants an architecture, system, data-flow, pipeline or "how it works" diagram, a diagram for a README, or an existing archgram diagram updated after the code changed or `archgram check` says its code is gone, even if they only say "draw how this works".
+description: Draws a project's software architecture as an animated SVG with archgram, for its README and docs, from the code and documentation. Writes a spec in docs/diagrams/, checks and draws it with the archgram command, in the project's own colours, then opens the drawing and lists each part with the file behind it. Use it whenever the user wants an architecture, system, data-flow, pipeline or "how it works" diagram, a diagram for a README, or an existing archgram diagram updated after the code changed or `archgram check` says its code is gone, even if they only say "draw how this works".
 license: MIT
 compatibility: Requires Node 22 or later, with npx.
 allowed-tools: Bash(npx --yes --loglevel=error archgram@0.8.0 spec --brief) Bash(npx --yes --loglevel=error archgram@0.8.0 spec --section theme-file)

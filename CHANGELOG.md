@@ -4,6 +4,14 @@ Each release's changes, newest first. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions
 follow [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Fixed
+
+- The `archgram` skill's description holds no angle brackets: a
+  description cannot contain XML tags, and `<name>` read as one. It
+  triggers as before.
+
 ## [0.8.0] - 2026-10-07
 
 ### Added
@@ -257,6 +265,7 @@ same release.
   subset of Geist.
 - `archgram build` and `archgram check`.
 
+[Unreleased]: https://github.com/byAbas/archgram/compare/v0.8.0...HEAD
 [0.8.0]: https://github.com/byAbas/archgram/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/byAbas/archgram/compare/v0.6.1...v0.7.0
 [0.6.1]: https://github.com/byAbas/archgram/compare/v0.5.0...v0.6.1
