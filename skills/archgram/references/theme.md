@@ -6,8 +6,8 @@ in what happens on a flow: a green border on a card a signal passes, red
 where a step refuses it. A project with a design of its own gets its
 colours through a mapping file, `archgram.theme.json` at the project's
 root, passed to `build` with `--theme-file archgram.theme.json`. Its
-format is in `npx --yes --loglevel=error archgram@0.7.0 spec`, under
-"Theme file"; read that section before writing one.
+format is in `npx --yes --loglevel=error archgram@0.7.0 spec --section theme-file`;
+read that section before writing one.
 
 The mapping sits at the root because archgram reads a theme's files only
 under the mapping's own folder: a mapping in `docs/diagrams/` could not

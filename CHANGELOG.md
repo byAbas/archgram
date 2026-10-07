@@ -23,6 +23,23 @@ follow [Semantic Versioning](https://semver.org/).
   a line for each other section. `archgram spec --section <name>` prints
   one section, by its heading or its short name (`theme-file`).
 
+### Changed
+
+- The `archgram` skill reads the short part of the format (`archgram
+  spec --brief`), and a section only when it needs one, such as the
+  theme file. It pre-approves those two commands, which only print.
+- The skill leaves the direction to archgram (`direction: auto`) and
+  reads the drawing's size from `archgram build`, rather than editing
+  the spec and drawing again when the drawing came out too wide. It
+  checks the spec again after every change, the last one included,
+  before it draws.
+- The skill draws only what the code shows: a note taken from the README
+  alone goes to the report as a gap. It names a merged node's parts in
+  its note, gives an edge from outside the code the line that receives
+  it, changes only what an update found, and names the style it
+  recognised; when two styles fit, the one with the more specific sign,
+  so a registry that hands its extensions an API makes a plugin host.
+
 ## [0.7.0] - 2026-10-07
 
 ### Added

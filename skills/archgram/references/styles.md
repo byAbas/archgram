@@ -4,7 +4,10 @@ Most systems follow one style, or a few side by side. Recognising it tells
 you the parts to look for, the questions a reader brings, and what can be
 merged. Find the style in the table by what the code shows, then read its
 file, and only that one; a system that fits none is drawn from
-`references/architecture.md` alone. Say in the report which style you
+`references/architecture.md` alone. When two styles fit, take the one
+whose sign is the more specific: a registry with an API its extensions
+call back makes a plugin host, even when the host is also a command-line
+tool, and the plugin host's file says what to merge. Say in the report which style you
 recognised, or that none fitted.
 
 The styles follow the usual catalogues: Richards and Ford's
