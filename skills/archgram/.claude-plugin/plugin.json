@@ -1,7 +1,7 @@
 {
   "name": "archgram",
   "displayName": "archgram",
-  "version": "0.6.1",
+  "version": "0.7.0",
   "description": "Draws a project's software architecture as an animated SVG with archgram, from its code and docs, for its README.",
   "author": {
     "name": "Abas Turabli",
