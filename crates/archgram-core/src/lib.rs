@@ -21,6 +21,23 @@ pub use error::{Location, SpecError};
 pub use spec::Spec;
 pub use validate::{FORMAT_VERSION, validate};
 
+use spec::Direction;
+
+/// The widest drawing a README on GitHub shows with its text at a readable
+/// size (docs/PRD.md 6.6): `direction: auto` keeps left to right within
+/// it, and otherwise chooses the narrower direction.
+pub const README_WIDTH: f64 = 1300.0;
+
+/// A drawing, with its size and the direction it was laid out in.
+#[derive(Debug, Clone, PartialEq)]
+pub struct Drawing {
+    pub svg: String,
+    pub width: f64,
+    pub height: f64,
+    /// Right or down: the spec's own direction, or what `auto` came to.
+    pub direction: Direction,
+}
+
 /// Reads a JSON spec and checks it. Returns the spec, or every problem found:
 /// one problem when the text is not a well-formed spec, all of them when it
 /// is well-formed but breaks the rules in docs/SPEC.md.
@@ -91,7 +108,7 @@ pub fn build_with(
     if !errors.is_empty() {
         return Err(errors);
     }
-    draw_with(&spec, options, logos)
+    draw_with(&spec, options, logos).map(|drawing| drawing.svg)
 }
 
 /// Measures, lays out and draws a spec that has passed validation.
@@ -100,11 +117,11 @@ pub fn build_with(
 ///
 /// Layout hints that contradict the edges.
 pub fn draw(spec: &Spec, options: render::Options) -> Result<String, Vec<SpecError>> {
-    draw_with(spec, options, &logos::NoLogos)
+    draw_with(spec, options, &logos::NoLogos).map(|drawing| drawing.svg)
 }
 
 /// [`draw`], with technology logos drawn from `logos` where a node names
-/// one it has.
+/// one it has, and with the drawing's size and direction.
 ///
 /// # Errors
 ///
@@ -113,10 +130,53 @@ pub fn draw_with(
     spec: &Spec,
     options: render::Options,
     logos: &dyn logos::Logos,
-) -> Result<String, Vec<SpecError>> {
+) -> Result<Drawing, Vec<SpecError>> {
+    let (spec, placement) = fit(spec, options, logos)?;
+    let scene = render::scene(&spec, &placement, options, logos);
+    Ok(Drawing {
+        svg: render::svg::write(&scene),
+        width: scene.width,
+        height: scene.height,
+        direction: spec.direction,
+    })
+}
+
+/// The spec laid out in its direction, `auto` decided (docs/SPEC.md, Top
+/// level): left to right when the drawing is no wider than
+/// [`README_WIDTH`], and otherwise the narrower of the two directions, so
+/// a wide, shallow diagram does not turn wider still. The spec returned
+/// names the direction it was laid out in, so layout only ever sees right
+/// or down.
+fn fit(
+    spec: &Spec,
+    options: render::Options,
+    logos: &dyn logos::Logos,
+) -> Result<(Spec, layout::Placement), Vec<SpecError>> {
     let sizes = measure::card_sizes_with(spec, logos);
-    let placement = layout::place(spec, &sizes)?;
-    Ok(render::render(spec, &placement, options, logos))
+    let lay = |direction| {
+        let spec = Spec {
+            direction,
+            ..spec.clone()
+        };
+        let placement = layout::place(&spec, &sizes)?;
+        Ok((spec, placement))
+    };
+    if spec.direction != Direction::Auto {
+        return lay(spec.direction);
+    }
+    let width = |(spec, placement): &(Spec, layout::Placement)| {
+        render::scene(spec, placement, options, logos).width
+    };
+    let right = lay(Direction::Right)?;
+    if width(&right) <= README_WIDTH {
+        return Ok(right);
+    }
+    let down = lay(Direction::Down)?;
+    Ok(if width(&down) < width(&right) {
+        down
+    } else {
+        right
+    })
 }
 
 /// The spec laid out once and drawn twice, light then dark, each file with
@@ -130,10 +190,22 @@ pub fn draw_themes(
     spec: &Spec,
     options: render::Options,
     logos: &dyn logos::Logos,
-) -> Result<(String, String), Vec<SpecError>> {
-    let sizes = measure::card_sizes_with(spec, logos);
-    let placement = layout::place(spec, &sizes)?;
-    let theme = |mode| render::render(spec, &placement, render::Options { mode, ..options }, logos);
+) -> Result<(Drawing, Drawing), Vec<SpecError>> {
+    let (spec, placement) = fit(spec, options, logos)?;
+    let theme = |mode| {
+        let scene = render::scene(
+            &spec,
+            &placement,
+            render::Options { mode, ..options },
+            logos,
+        );
+        Drawing {
+            svg: render::svg::write(&scene),
+            width: scene.width,
+            height: scene.height,
+            direction: spec.direction,
+        }
+    };
     Ok((theme(render::Mode::Light), theme(render::Mode::Dark)))
 }
 

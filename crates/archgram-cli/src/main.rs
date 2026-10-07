@@ -11,6 +11,7 @@ use std::process::ExitCode;
 
 use archgram_core::render::{Mode, Options};
 use archgram_core::sources::Found;
+use archgram_core::spec::Direction;
 use archgram_core::tokens::Role;
 use archgram_core::{Spec, SpecError};
 use archgram_icons::Icons;
@@ -358,18 +359,27 @@ fn build(
         }
     }
     let out = out.unwrap_or_else(|| default_output(path));
-    let files = if split {
+    let drawings = if split {
         match archgram_core::draw_themes(&spec, options, &Icons::load()) {
             Ok((light, dark)) => vec![(themed(&out, "light"), light), (themed(&out, "dark"), dark)],
             Err(errors) => return report(path, &errors),
         }
     } else {
         match archgram_core::draw_with(&spec, options, &Icons::load()) {
-            Ok(svg) => vec![(out, svg)],
+            Ok(drawing) => vec![(out, drawing)],
             Err(errors) => return report(path, &errors),
         }
     };
-    for (file, svg) in files {
+    if let Some((_, drawing)) = drawings.first()
+        && drawing.width > archgram_core::README_WIDTH
+    {
+        eprintln!(
+            "archgram: warning: {path}: {}",
+            too_wide(spec.direction, drawing)
+        );
+    }
+    for (file, drawing) in drawings {
+        let svg = drawing.svg;
         if let Some(folder) = file.parent().filter(|f| !f.as_os_str().is_empty())
             && let Err(e) = std::fs::create_dir_all(folder)
         {
@@ -383,9 +393,35 @@ fn build(
             eprintln!("archgram: cannot write {}: {e}", file.display());
             return ExitCode::from(2);
         }
-        println!("wrote {}", file.display());
+        println!(
+            "wrote {} ({:.0} × {:.0} px, {})",
+            file.display(),
+            drawing.width,
+            drawing.height,
+            match drawing.direction {
+                Direction::Down => "top to bottom",
+                Direction::Right | Direction::Auto => "left to right",
+            }
+        );
     }
     ExitCode::SUCCESS
+}
+
+/// What to say of a drawing wider than a README shows at a readable size
+/// (docs/PRD.md 6.6), and what would bring it within: `auto` where the
+/// spec named right, and otherwise a second diagram, since `auto` has
+/// already chosen the narrower direction, and `down` was the spec's own.
+fn too_wide(asked: Direction, drawing: &archgram_core::Drawing) -> String {
+    let advice = if asked == Direction::Right {
+        "set `direction: auto` to let archgram choose the narrower direction, or split it in two"
+    } else {
+        "split it into two diagrams"
+    };
+    format!(
+        "the drawing is {:.0} px wide, wider than the {:.0} px a README on GitHub shows at a readable size; {advice}",
+        drawing.width,
+        archgram_core::README_WIDTH
+    )
 }
 
 /// Writes `contents` to `path` as a new file beside it, renamed over the

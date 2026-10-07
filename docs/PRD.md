@@ -2,7 +2,7 @@
 
 | Field   | Value      |
 |---------|------------|
-| Version | 0.25       |
+| Version | 0.26       |
 | Date    | 2026-10-07 |
 | Status  | Draft      |
 | Owner   | Abas Turabli |
@@ -123,10 +123,11 @@ same file every time.
 
 ### 6.2 Layout and routing
 - Edges flow in one main direction, left to right or top to bottom.
-- With the direction `auto`, it is left to right, and top to bottom where
-  left to right would be wider than 1,300 px (§6.6). The choice is made
-  from the spec alone, so the same spec still draws the same bytes; a
-  spec that names no direction keeps left to right.
+- With the direction `auto`, it is left to right while that is no wider
+  than 1,300 px (§6.6), and otherwise whichever of the two directions is
+  narrower: top to bottom can be wider still, for a wide, shallow tree.
+  The choice is made from the spec alone, so the same spec still draws
+  the same bytes; a spec that names no direction keeps left to right.
 - No two boxes overlap. No edge passes through a box it does not start
   or end at.
 - Edges are orthogonal, with as few bends and crossings as the layout
@@ -356,3 +357,4 @@ None.
 | 0.23    | 2026-10-07 | Features with more than a few lines of requirements get their own document in `docs/features/`, which this one points to. The problem names a stale diagram nobody notices (§1). 0.6 is in the scope; 0.7 names the code behind each node and edge, checked by `check` and `build`, with its limit; the skill writes a source for each and starts an update from what the check names (§5, §6.1, §6.6, `docs/features/sources.md`). Each feature's own success criteria count here (§8). |
 | 0.24    | 2026-10-07 | The plugin is listed in Anthropic's directory, for Claude Code (§6.5). |
 | 0.25    | 2026-10-07 | Without a skill, an agent now answers with a Mermaid chart in seconds, tied to no code and checked by nothing; the skill's first evaluation measured both (§1). 0.8: `direction: auto` chooses left to right or top to bottom to fit 1,300 px, `build` says the size it drew, and `archgram spec --brief` and `--section` print part of the format (§5, §6.1, §6.2, §6.5, §6.6). The skill is measured by its evaluation's checks, at least 90 % in all and 75 % in each case, and by its time on two cases, not against the hand-drawing baseline (§8). |
+| 0.26    | 2026-10-07 | `direction: auto` keeps left to right while it fits 1,300 px, and otherwise the narrower direction, not top to bottom always: a 100-node tree measured 1,648 px left to right and 10,424 px top to bottom (§6.2). |

@@ -657,3 +657,86 @@ fn links_on_the_way_are_refused() {
         stderr(&run)
     );
 }
+
+/// A chain of `n` services in `direction`, written as a spec in `dir`.
+fn chain_spec(dir: &Path, n: usize, direction: &str) -> PathBuf {
+    let nodes: Vec<String> = (0..n)
+        .map(|i| format!(r#"{{ "id": "s{i}", "kind": "service", "label": "Service {i}" }}"#))
+        .collect();
+    let edges: Vec<String> = (1..n)
+        .map(|i| format!(r#"{{ "from": "s{}", "to": "s{i}" }}"#, i - 1))
+        .collect();
+    let spec = dir.join(format!("chain-{n}-{direction}.json"));
+    std::fs::write(
+        &spec,
+        format!(
+            r#"{{ "archgram": 1, "title": "chain", "description": "A chain.", "direction": "{direction}", "nodes": [{}], "edges": [{}] }}"#,
+            nodes.join(", "),
+            edges.join(", ")
+        ),
+    )
+    .unwrap();
+    spec
+}
+
+/// `build` says the size it drew and the direction, so an agent need not
+/// read the SVG for them (docs/PRD.md 6.5).
+#[test]
+fn build_says_the_size_and_direction_it_drew() {
+    let dir = scratch("build-size");
+    let run = archgram(&[
+        "build",
+        &example("linkshort.json"),
+        "-o",
+        dir.join("l.svg").to_str().unwrap(),
+    ]);
+    assert!(run.status.success(), "{}", stderr(&run));
+    let out = String::from_utf8_lossy(&run.stdout);
+    let svg = read(&dir.join("l.svg"));
+    let width = svg
+        .split(r#" width=""#)
+        .nth(1)
+        .unwrap()
+        .split('"')
+        .next()
+        .unwrap();
+    assert!(out.contains(&format!("({width} × ")), "{out}");
+    assert!(out.trim_end().ends_with("px, left to right)"), "{out}");
+    assert!(stderr(&run).is_empty(), "{}", stderr(&run));
+
+    let spec = chain_spec(&dir, 9, "auto");
+    let run = archgram(&[
+        "build",
+        spec.to_str().unwrap(),
+        "-o",
+        dir.join("c.svg").to_str().unwrap(),
+    ]);
+    assert!(run.status.success(), "{}", stderr(&run));
+    assert!(String::from_utf8_lossy(&run.stdout).contains("px, top to bottom)"));
+    assert!(
+        stderr(&run).is_empty(),
+        "auto fits, so no warning: {}",
+        stderr(&run)
+    );
+}
+
+/// A drawing wider than a README shows is drawn and warned of, with what
+/// would bring it within (docs/PRD.md 6.5).
+#[test]
+fn build_warns_of_a_drawing_too_wide_for_a_readme_and_still_draws() {
+    let dir = scratch("build-wide");
+    let spec = chain_spec(&dir, 9, "right");
+    let out = dir.join("wide.svg");
+    let run = archgram(&["build", spec.to_str().unwrap(), "-o", out.to_str().unwrap()]);
+    assert!(run.status.success(), "{}", stderr(&run));
+    assert!(out.exists());
+    let warning = stderr(&run);
+    assert!(
+        warning.contains("px wide, wider than the 1300 px"),
+        "{warning}"
+    );
+    assert!(
+        warning.contains("set `direction: auto` to let archgram choose"),
+        "{warning}"
+    );
+}

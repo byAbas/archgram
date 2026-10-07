@@ -106,6 +106,10 @@ pub enum Direction {
     #[default]
     Right,
     Down,
+    /// Right while it fits [`crate::README_WIDTH`], and otherwise the
+    /// narrower of right and down; decided before layout
+    /// ([`crate::draw_with`]).
+    Auto,
 }
 
 /// The card style every node in the diagram uses (DESIGN.md, Layout).
