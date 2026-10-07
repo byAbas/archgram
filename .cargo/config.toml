@@ -2,11 +2,12 @@
 # Repository tasks (ARCHITECTURE.md, Code map): `cargo xtask icons`, `fonts`, `npm`.
 xtask = "run --quiet --package xtask --"
 
-# LLVM's linker, shipped with the Rust toolchain, on every platform the
-# release builds: the same linker everywhere, and faster than the systems'.
-[target.'cfg(target_os = "macos")']
-linker = "rust-lld"
-
+# LLVM's linker, shipped with the Rust toolchain, on Windows, where it is
+# faster than the system's. macOS keeps Apple's linker, which ships with
+# Apple's SDK and so reads it: `rust-lld` reads a new SDK only once a Rust
+# release carries an LLVM that knows it, which left the macOS 27 SDK
+# (`arm64e.x1`) unreadable until Rust 1.101
+# (https://github.com/rust-lang/rust/issues/162928).
 [target.x86_64-pc-windows-msvc]
 linker = "rust-lld"
 
