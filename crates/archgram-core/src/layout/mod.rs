@@ -78,6 +78,8 @@ pub struct Placement {
 }
 
 /// Lays out the nodes with the card sizes `sizes` (one per node, in spec order).
+/// `direction: auto` lays out left to right here; [`crate::draw_with`]
+/// decides it before it calls this.
 ///
 /// # Errors
 ///
@@ -265,7 +267,7 @@ fn lay_out(spec: &Spec, sizes: &[Size]) -> Result<Placement, Vec<SpecError>> {
             .expect("validated id")
     };
     let (main_size, cross_size): (Vec<f64>, Vec<f64>) = match spec.direction {
-        Direction::Right => sizes.iter().map(|s| (s.w, s.h)).unzip(),
+        Direction::Right | Direction::Auto => sizes.iter().map(|s| (s.w, s.h)).unzip(),
         Direction::Down => sizes.iter().map(|s| (s.h, s.w)).unzip(),
     };
 
@@ -330,7 +332,7 @@ fn lay_out(spec: &Spec, sizes: &[Size]) -> Result<Placement, Vec<SpecError>> {
             e.label.as_deref().map(|l| {
                 let s = crate::measure::label_size(l);
                 match spec.direction {
-                    Direction::Right => (s.w, s.h),
+                    Direction::Right | Direction::Auto => (s.w, s.h),
                     Direction::Down => (s.h, s.w),
                 }
             })
@@ -366,7 +368,7 @@ fn lay_out(spec: &Spec, sizes: &[Size]) -> Result<Placement, Vec<SpecError>> {
         .map(|v| {
             if v < n && spec.nodes[v].variant == Variant::Multi {
                 match spec.direction {
-                    Direction::Right => CARD_MULTI_OFFSET,
+                    Direction::Right | Direction::Auto => CARD_MULTI_OFFSET,
                     Direction::Down => -CARD_MULTI_OFFSET,
                 }
             } else {
@@ -427,7 +429,7 @@ fn lay_out(spec: &Spec, sizes: &[Size]) -> Result<Placement, Vec<SpecError>> {
         .frames
         .iter()
         .map(|_| match spec.direction {
-            Direction::Right => SPACING_FRAME_PADDING + name_room,
+            Direction::Right | Direction::Auto => SPACING_FRAME_PADDING + name_room,
             Direction::Down => SPACING_FRAME_PADDING,
         })
         .collect();
@@ -474,7 +476,7 @@ fn lay_out(spec: &Spec, sizes: &[Size]) -> Result<Placement, Vec<SpecError>> {
         }
     };
     let stack_after = |v: usize| {
-        if multi(v) && spec.direction == Direction::Right {
+        if multi(v) && spec.direction != Direction::Down {
             2.0 * CARD_MULTI_OFFSET
         } else {
             0.0
@@ -872,7 +874,7 @@ fn lay_out(spec: &Spec, sizes: &[Size]) -> Result<Placement, Vec<SpecError>> {
             at += d + gap_width.get(i).copied().unwrap_or(0.0);
         }
         let mut grew = false;
-        if spec.direction == Direction::Right {
+        if spec.direction != Direction::Down {
             for &f in &inner_first {
                 let (s0, s1) = fr.span[f];
                 let length = start[s1] + depth[s1] + end_depth[f] - (start[s0] - start_depth[f]);
@@ -921,7 +923,7 @@ fn lay_out(spec: &Spec, sizes: &[Size]) -> Result<Placement, Vec<SpecError>> {
         .map(|v| cross[v] - cross_lo[v])
         .fold(f64::INFINITY, f64::min);
     let point = |main: f64, across: f64| match spec.direction {
-        Direction::Right => Point {
+        Direction::Right | Direction::Auto => Point {
             x: main,
             y: across - cross_min,
         },
@@ -991,7 +993,7 @@ fn lay_out(spec: &Spec, sizes: &[Size]) -> Result<Placement, Vec<SpecError>> {
                 (f64::midpoint(leave_main(a), end), out_port[hop])
             };
             let (width, height) = match spec.direction {
-                Direction::Right => (along, across),
+                Direction::Right | Direction::Auto => (along, across),
                 Direction::Down => (across, along),
             };
             let centre = point(along_at, across_at);

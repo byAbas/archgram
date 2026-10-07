@@ -4,6 +4,21 @@ Each release's changes, newest first. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions
 follow [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+
+- `direction: auto` lets archgram choose the direction: left to right
+  while it is no wider than 1,300 px, the most a README on GitHub shows
+  at a readable size, and otherwise the narrower of left to right and
+  top to bottom. The same spec still
+  draws the same bytes, and a spec without `direction` keeps left to
+  right.
+- `archgram build` says the size it drew and the direction
+  (`wrote architecture.svg (541 × 678 px, top to bottom)`), and warns
+  when the drawing is wider than 1,300 px, with what would bring it
+  within.
+
 ## [0.7.0] - 2026-10-07
 
 ### Added
@@ -221,6 +236,7 @@ same release.
   subset of Geist.
 - `archgram build` and `archgram check`.
 
+[Unreleased]: https://github.com/byAbas/archgram/compare/v0.7.0...HEAD
 [0.7.0]: https://github.com/byAbas/archgram/compare/v0.6.1...v0.7.0
 [0.6.1]: https://github.com/byAbas/archgram/compare/v0.5.0...v0.6.1
 [0.5.0]: https://github.com/byAbas/archgram/compare/v0.4.0...v0.5.0

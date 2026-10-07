@@ -57,7 +57,7 @@ drawing keeps a plain name; any other spec draws its own name with `.svg`.
 | `archgram` | yes | `1` | | The spec format's version |
 | `title` | yes | text | | The diagram's name; the SVG's `<title>` |
 | `description` | yes | text | | The whole diagram in prose; the SVG's `<desc>`, read by screen readers |
-| `direction` | no | `right`, `down` | `right` | The direction of the flow |
+| `direction` | no | `right`, `down`, `auto` | `right` | The direction of the flow. `auto` lets archgram choose: left to right while it is no wider than 1,300 px, the most a README on GitHub shows at a readable size, and otherwise whichever of left to right and top to bottom is narrower. It is chosen from the spec alone, so the same spec draws the same bytes, and `archgram build` says which it chose |
 | `card` | no | `horizontal`, `vertical` | `horizontal` | The card style for every node |
 | `logo` | no | `corner`, `inline`, `chip`, `icon` | `corner` | Where technology logos go: the card's corner, before the note (or the technology's name), a chip on the icon, or in place of the icon |
 | `palette` | no | a palette name | `mono` | The palette; light and dark are chosen when rendering |

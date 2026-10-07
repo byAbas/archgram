@@ -223,7 +223,9 @@ fn logos_are_in_their_brands_colours() {
         "edges": [{ "from": "a", "to": "b" }] }"#,
     )
     .unwrap();
-    let svg = archgram_core::draw_with(&spec, Options::default(), &TwoLogos).unwrap();
+    let svg = archgram_core::draw_with(&spec, Options::default(), &TwoLogos)
+        .unwrap()
+        .svg;
     assert!(svg.contains(r#"class="logo brand-blue""#), "{svg}");
     assert!(svg.contains(".logo.brand-blue, .logo-icon.brand-blue { fill: #2563eb; }"));
     assert!(svg.contains(".logo.brand-ink, .logo-icon.brand-ink { fill: #181717; }"));

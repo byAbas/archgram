@@ -191,7 +191,12 @@ the units would find the same errors. The steps:
    layers between them; dagre's nesting edges would pull them together
    and remain an option.
 6. Direction. The layout is computed left to right; top to bottom is a
-   transform of the result.
+   transform of the result. `direction: auto` is decided before layout,
+   in `draw_with` and `draw_themes`: the spec is laid out and its scene
+   built left to right, and when the scene is wider than 1,300 px
+   (`README_WIDTH`), top to bottom too, keeping the narrower. Layout
+   itself only ever sees right or down, and the drawing reports its size
+   and the direction chosen, which `archgram build` prints.
 
 ### Route
 
