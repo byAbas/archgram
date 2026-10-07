@@ -2,7 +2,7 @@
 
 | Field   | Value      |
 |---------|------------|
-| Version | 0.24       |
+| Version | 0.25       |
 | Date    | 2026-10-07 |
 | Status  | Draft      |
 | Owner   | Abas Turabli |
@@ -42,6 +42,17 @@ path. In a test of three diagram tasks, agents doing so took 6.3 minutes
 per diagram on average, and 9.3 minutes with a skill that added previews
 and self-critique; how that time split between layout and the rest was
 not measured.
+
+Without a skill, an agent today no longer draws by hand. In the skill's
+first evaluation (2026-10-07, Claude Opus 5.5, eight cases, one run each,
+each graded by an independent agent), the agent without the skill wrote
+a Mermaid chart into the README, or a sketch into its reply, in about
+half a minute: in none of the project's colours, tied to no line of
+code, and checked by nothing afterwards. Asked to update or repair a
+diagram, it changed the spec but neither checked it nor drew it again,
+so the README kept the old picture. It passed 31 of 71 checks; with the
+skill, the same agent passed 64 of 71, in 56 seconds on average against
+33.
 
 ## 2. Users
 
@@ -92,6 +103,7 @@ same file every time.
 | 0.5 | A flow may stop at a step, and the refusal goes back to where the flow began; a card's border is drawn from the arrow that reaches it, in a colour for passing and one for a refusal, in one of four styles; only a signal glows, faintly |
 | 0.6 | A step's number lights as its signal passes it; the skill works with any coding agent that reads the Agent Skills format |
 | 0.7 | A node or an edge names the code behind it, and archgram says when that code is gone ([docs/features/sources.md](features/sources.md)) |
+| 0.8 | archgram chooses the direction that fits a README, and `build` says the size it drew; `archgram spec` prints a short part of the format, or one section |
 | Later | The WASM package, for the browser; the PNG module, drawn from the same scene as the SVG by archgram's own rasterizer |
 
 ## 6. Functional requirements
@@ -103,12 +115,18 @@ same file every time.
   location, never ignored.
 - The spec holds no coordinates. It may carry layout hints: direction,
   which nodes share a column or a row, and the order of nodes within one.
+  The direction may be left to archgram (`auto`), which chooses the one
+  that fits (§6.2).
 - A node or an edge may name the code behind it, and archgram says when
   that code is not there; it is never drawn. It finds what the code lost,
   not what it gained ([docs/features/sources.md](features/sources.md)).
 
 ### 6.2 Layout and routing
 - Edges flow in one main direction, left to right or top to bottom.
+- With the direction `auto`, it is left to right, and top to bottom where
+  left to right would be wider than 1,300 px (§6.6). The choice is made
+  from the spec alone, so the same spec still draws the same bytes; a
+  spec that names no direction keeps left to right.
 - No two boxes overlap. No edge passes through a box it does not start
   or end at.
 - Edges are orthogonal, with as few bends and crossings as the layout
@@ -163,7 +181,13 @@ same file every time.
   given for the output is created when it does not exist.
 - `archgram spec` prints the spec format this version reads (docs/SPEC.md,
   carried in the binary), so whoever writes a spec, a person or an agent,
-  reads the format of the very command that draws it.
+  reads the format of the very command that draws it. The format opens
+  with a short part, one complete spec that uses each common field and a
+  line for each other section, which `archgram spec --brief` prints alone;
+  `--section` prints one section. Both are parts of the same document, not
+  a copy of it.
+- `archgram build` says the size it drew, and warns when it is wider than
+  1,300 px (§6.6).
 - A library, usable from Rust and, later through WASM, from the browser
   (§5).
 - PNG, one file per theme, through the optional module (later, §5).
@@ -215,6 +239,9 @@ same file every time.
   What a version adds, and how a writer fills it, is in that format, so a
   new field needs no change to the skill, and a skill newer or older than
   the archgram it runs never writes a field that archgram cannot read.
+  It starts from the short part of the format, and reads a section when
+  it needs one: the theme file when the project has colours of its own,
+  a problem's section when `check` reports one.
 - It works on its own: everything it needs is in its folder or comes from
   archgram through npx, so it needs nothing installed in the project; its
   plugin manifest only lets Claude Code take the same folder as a plugin.
@@ -240,7 +267,9 @@ same file every time.
   tells apart, are one node naming them all; what is still over goes to
   a second diagram, or is left out and said so.
 - A drawing is at most 1,300 px wide, so its text stays readable in a
-  README on GitHub; a wider one is drawn top to bottom or split in two.
+  README on GitHub. The skill leaves the direction to archgram (`auto`)
+  unless the user asks for one, reads the size from `build`, and splits a
+  drawing that fits neither way in two.
 - The skill judges a drawing from its spec and its size. It never starts a
   browser or takes a screenshot.
 - When done, `archgram check` passes, the SVG is opened with the
@@ -271,9 +300,16 @@ archgram records each logo's source and guidelines for them.
 - Every text pair passes WCAG 2.1 AA in both themes.
 - Layout and SVG for a 100-node spec take under 50 ms in the native CLI.
 - The core WASM module, when there is one, stays under 350 KB gzipped.
-- With archgram, an agent produces an approved diagram in less than half
-  the time it took without it (baseline: 9.3 minutes on average, the
-  hand-drawing skill of the test in §1).
+- With the skill, an agent passes at least 90 % of the evaluation's
+  checks (`evals/archgram/evals.json`) and at least 75 % of each case's,
+  and more of them than the same agent without it. The evaluation of §1
+  passed 64 of 71 with the skill (90 %, its lowest case 69 %) and 31 of
+  71 without.
+- With the skill, an agent draws a small project for the first time in
+  under 45 seconds, and repairs a diagram whose code changed in under 30
+  (the cases `draws-a-project` and `repairs-what-lost-its-code`, the
+  median of three runs on Claude Opus 5.5). The evaluation of §1 took
+  74 and 36.
 - Each feature with a document of its own meets the criteria there:
   [the code behind a diagram](features/sources.md#success-criteria).
 
@@ -319,3 +355,4 @@ None.
 | 0.22    | 2026-10-04 | The agents' baseline as measured: 6.3 minutes per diagram drawn by hand, 9.3 with a skill that added previews and self-critique, with no measure of how the time split; §8's baseline names that skill (§1, §8). |
 | 0.23    | 2026-10-07 | Features with more than a few lines of requirements get their own document in `docs/features/`, which this one points to. The problem names a stale diagram nobody notices (§1). 0.6 is in the scope; 0.7 names the code behind each node and edge, checked by `check` and `build`, with its limit; the skill writes a source for each and starts an update from what the check names (§5, §6.1, §6.6, `docs/features/sources.md`). Each feature's own success criteria count here (§8). |
 | 0.24    | 2026-10-07 | The plugin is listed in Anthropic's directory, for Claude Code (§6.5). |
+| 0.25    | 2026-10-07 | Without a skill, an agent now answers with a Mermaid chart in seconds, tied to no code and checked by nothing; the skill's first evaluation measured both (§1). 0.8: `direction: auto` chooses left to right or top to bottom to fit 1,300 px, `build` says the size it drew, and `archgram spec --brief` and `--section` print part of the format (§5, §6.1, §6.2, §6.5, §6.6). The skill is measured by its evaluation's checks, at least 90 % in all and 75 % in each case, and by its time on two cases, not against the hand-drawing baseline (§8). |
