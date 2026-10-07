@@ -97,6 +97,12 @@ version goes in by a pull request and the tag follows the merge.
    claude plugin list | grep -i archgram
    ```
 
+   The list always shows the released copy itself, as
+   `archgram@skills-dir` at `./.claude/skills/archgram`: the skill's
+   folder carries a plugin manifest, so Claude Code loads it as a plugin
+   from the skills folder
+   ([plugin origins](https://code.claude.com/docs/en/plugins/loading)).
+   Any other archgram line, or any path the `ls` prints, is another copy.
    Remove a personal copy (`npx skills remove --global archgram -y`) or
    move it out of the skills folder until the run is done, and turn the
    plugin off for the run with `claude plugin disable archgram@synced`,
