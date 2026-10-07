@@ -55,9 +55,22 @@ sh evals/archgram/run.sh --out ~/archgram-evals/iteration-1 --repeat 3 --jobs 4 
   the user a question, so a question is asked in the run's reply. Each run
   stops at `--budget` dollars (5 by default) and 80 turns.
 
+Follow them live, in a second terminal, one line for each thing a run
+does: its start, with the plugins and skill it loaded, what the model
+says, each tool it calls, each error and denial, and how it ended, with
+its time, turns and estimated cost. `--only eval-8` keeps one case,
+`--full` prints the model's text whole, and `--once` prints what is there
+and stops:
+
+```sh
+node evals/archgram/watch.mjs ~/archgram-evals/iteration-1
+```
+
 Each run leaves skill-creator's layout under `--out`:
 `eval-<id>-<name>/<config>/run-<k>/` with `outputs/` (the project as the
-run left it), `result.json`, `timing.json` (time, tokens and the
-estimated cost), `transcript.jsonl` and `stderr.log`. skill-creator's
+run left it), `stream.jsonl` (each event as it happened, which the
+watcher reads), `result.json`, `timing.json` (time, tokens and the
+estimated cost), `transcript.jsonl` (the session's whole transcript) and
+`stderr.log`. skill-creator's
 grader then marks each run against its case's `expectations`, and its
 `aggregate_benchmark` and viewer read the same folders.

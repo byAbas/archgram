@@ -10,7 +10,9 @@
 # It writes skill-creator's layout under DIR, a folder outside the
 # repository: eval-<id>-<name>/eval_metadata.json, and for each run
 # eval-<id>-<name>/<config>/run-<k>/ with outputs/ (the project as the run
-# left it), result.json, timing.json, transcript.jsonl and stderr.log.
+# left it), stream.jsonl (each event as it happened; follow the runs live
+# with `node evals/archgram/watch.mjs DIR`), result.json, timing.json,
+# transcript.jsonl and stderr.log.
 set -eu
 
 here=$(cd "$(dirname "$0")" && pwd)
@@ -47,7 +49,8 @@ if [ "${1:-}" = __one ]; then
   set -- --model "$EVAL_MODEL" --setting-sources project \
     --settings "$EVAL_OUT/settings.json" \
     --permission-mode acceptEdits --permission-prompts none \
-    --max-budget-usd "$EVAL_BUDGET" --max-turns 80 --output-format json \
+    --max-budget-usd "$EVAL_BUDGET" --max-turns 80 \
+    --output-format stream-json --verbose \
     --allowedTools Read Write Edit Glob Grep Skill \
     "Bash(npx --yes --loglevel=error archgram@$EVAL_VERSION *)" \
     "Bash(ls *)" "Bash(cat *)" "Bash(head *)" "Bash(grep *)" "Bash(find *)" \
@@ -63,9 +66,12 @@ if [ "${1:-}" = __one ]; then
     "$here/evals.json" "$id")
   start=$(date -u +%Y-%m-%dT%H:%M:%SZ)
   start_s=$(date +%s)
+  printf '%s %s run-%s: started\n' "$case_dir" "$config" "$k"
   status=0
+  # Each event as it happens, which watch.mjs follows live; the last line
+  # is the run's result.
   (cd "$dir/outputs" && printf '%s' "$prompt" | claude -p "$@") \
-    >"$dir/result.json" 2>"$dir/stderr.log" || status=$?
+    >"$dir/stream.jsonl" 2>"$dir/stderr.log" || status=$?
   end=$(date -u +%Y-%m-%dT%H:%M:%SZ)
   end_s=$(date +%s)
 
@@ -73,7 +79,10 @@ if [ "${1:-}" = __one ]; then
     const fs = require("fs"), path = require("path"), os = require("os");
     const [dir, start, end, seconds, status] = process.argv.slice(1);
     let r = {};
-    try { r = JSON.parse(fs.readFileSync(path.join(dir, "result.json"), "utf8")); } catch {}
+    for (const line of fs.readFileSync(path.join(dir, "stream.jsonl"), "utf8").split("\n")) {
+      try { const e = JSON.parse(line); if (e.type === "result") r = e; } catch {}
+    }
+    fs.writeFileSync(path.join(dir, "result.json"), JSON.stringify(r, null, 2) + "\n");
     const u = r.usage || {};
     const tokens = ["input_tokens", "output_tokens", "cache_read_input_tokens", "cache_creation_input_tokens"]
       .reduce((n, k) => n + (u[k] || 0), 0);
