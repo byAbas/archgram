@@ -4,6 +4,11 @@
 
 use std::path::{Path, PathBuf};
 
+/// How the skill runs archgram through npx. `--loglevel=error` keeps npm's
+/// own warnings, such as those about a pnpm project's `.npmrc`, out of what
+/// the agent reads (#52).
+const NPX: &str = "npx --yes --loglevel=error archgram";
+
 fn markdown(dir: &Path, found: &mut Vec<PathBuf>) {
     for entry in std::fs::read_dir(dir).unwrap_or_else(|e| panic!("{}: {e}", dir.display())) {
         let path = entry.unwrap().path();
@@ -39,8 +44,12 @@ fn the_skill_names_the_version_it_is_released_with() {
                 pinned += 1;
             }
             assert!(
-                !line.contains("npx --yes archgram "),
+                !line.contains(&format!("{NPX} ")),
                 "{at} runs archgram through npx without a version: {line}"
+            );
+            assert!(
+                !line.contains("npx --yes archgram"),
+                "{at} runs archgram through npx without `--loglevel=error`: {line}"
             );
         }
     }
@@ -72,7 +81,7 @@ fn the_skill_preapproves_only_exact_commands_it_runs() {
     let skill = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../skills/archgram");
     let mut files = Vec::new();
     markdown(&skill, &mut files);
-    let prefix = format!("npx --yes archgram@{} ", env!("CARGO_PKG_VERSION"));
+    let prefix = format!("{NPX}@{} ", env!("CARGO_PKG_VERSION"));
     let mut commands = Vec::new();
     for file in &files {
         for line in std::fs::read_to_string(file).unwrap().lines() {
