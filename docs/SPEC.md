@@ -9,6 +9,54 @@ A spec describes the system, never the drawing. It has no coordinates, no
 sizes and no colours. It names things, groups them and connects them;
 archgram decides where they go and how they look.
 
+## In brief
+
+One spec that uses each field most diagrams need, and a line for each
+other section. `archgram spec --brief` prints this section alone, and
+`archgram spec --section <name>` prints another, by the name below.
+
+```yaml
+archgram: 1
+title: shop
+description: >-
+  A customer places an order with the API, which queues it; a worker
+  saves it to Postgres and mails a receipt through Resend.
+direction: auto
+nodes:
+  - { id: browser, kind: browser, label: Customer }
+  - { id: api, kind: service, label: API, tech: express, frame: app, source: ../../src/api.ts }
+  - { id: queue, kind: queue, label: orders, tech: redis, source: ../../src/queue.ts }
+  - { id: worker, kind: service, label: Worker, frame: app, source: ../../src/worker.ts }
+  - { id: db, kind: database, label: Postgres, tech: postgresql, source: ../../src/db.ts }
+  - { id: mail, kind: service, label: Resend, variant: external, source: ../../src/mail.ts }
+frames:
+  - { id: app, label: Our services }
+edges:
+  - { from: browser, to: api, label: POST /orders, source: '../../src/api.ts#app.post("/orders"' }
+  - { from: api, to: queue, source: "../../src/api.ts#orders.add(" }
+  - { from: queue, to: worker, source: "../../src/worker.ts#new Worker(" }
+  - { from: worker, to: db, label: insert order, source: "../../src/worker.ts#saveOrder(" }
+  - { from: worker, to: mail, label: receipt, style: dashed, source: "../../src/worker.ts#sendReceipt(" }
+flows:
+  - { name: an order, steps: [browser, api, queue, worker, [db, mail]] }
+```
+
+A writer that reads the code gives a `source` to every node a file backs
+and to every edge, as above, and quotes each source that holds a `#`.
+
+- `formats`: JSON or YAML, and the file name that draws `<name>.svg`.
+- `top-level`: every field above the lists, with its values and
+  default, `direction` and how a flow is drawn among them.
+- `nodes`: a node's fields, and every kind by category.
+- `frames`: a frame's fields, and nesting one in another.
+- `edges`: an edge's fields, and what an edge means.
+- `flows`: steps, branches, a flow that stops, and how archgram times them.
+- `hints`: `first`, `last`, `sameLayer` and `order`.
+- `sources`: what a source may name, and how archgram looks it up.
+- `validation`: what makes a spec invalid.
+- `theme-file`: drawing in a project's own colours.
+- `examples`: complete specs, in JSON and YAML.
+
 ## Formats
 
 The core reads JSON. The optional YAML module reads YAML 1.2 and produces

@@ -26,7 +26,9 @@ Usage:
                                Draw the diagram (default output: the spec's name with .svg)
   archgram check <spec>        Check a spec and list every problem, a source the code
                                no longer has among them
-  archgram spec                Print the spec format this archgram reads (docs/SPEC.md)
+  archgram spec [--brief | --section <name>]
+                               Print the spec format this archgram reads (docs/SPEC.md): all
+                               of it, its short part, or one section, such as theme-file
   archgram theme check <archgram.theme.json>
                                Read a project's design tokens as the theme and show each role's colour
   archgram --version           Print the version
@@ -74,6 +76,8 @@ fn main() -> ExitCode {
             print!("{SPEC}");
             ExitCode::SUCCESS
         }
+        ["spec", "--brief"] => print_section("in-brief"),
+        ["spec", "--section", name] => print_section(name),
         ["theme", "check", path] => theme_check(path),
         ["build", path, rest @ ..] => match build_options(rest) {
             Ok(b) => build(path, b),
@@ -89,6 +93,57 @@ fn main() -> ExitCode {
         }
         _ => usage_error(&format!("unrecognised arguments: {}", args.join(" "))),
     }
+}
+
+/// One section of the spec format, from its `## ` heading to the next:
+/// the same document, printed in part (docs/PRD.md 6.5). `name` is the
+/// heading or its short form, `theme-file` for `Theme file`.
+fn print_section(name: &str) -> ExitCode {
+    let sections = spec_sections();
+    match sections.iter().find(|(id, _)| *id == section_id(name)) {
+        Some((_, text)) => {
+            print!("{text}");
+            ExitCode::SUCCESS
+        }
+        None => usage_error(&format!(
+            "the spec has no section \"{}\"; its sections are: {}",
+            printable(name),
+            sections
+                .iter()
+                .map(|(id, _)| id.as_str())
+                .collect::<Vec<_>>()
+                .join(", ")
+        )),
+    }
+}
+
+/// The spec format's sections, each with its short name and its text.
+fn spec_sections() -> Vec<(String, &'static str)> {
+    let starts: Vec<usize> = SPEC.match_indices("\n## ").map(|(i, _)| i + 1).collect();
+    starts
+        .iter()
+        .enumerate()
+        .map(|(n, &start)| {
+            let end = starts.get(n + 1).copied().unwrap_or(SPEC.len());
+            let text = &SPEC[start..end];
+            let heading = text
+                .lines()
+                .next()
+                .unwrap_or_default()
+                .trim_start_matches("## ");
+            (section_id(heading), text)
+        })
+        .collect()
+}
+
+/// A section's short name: lowercase, with each run of other characters
+/// a hyphen, so `Theme file`, `theme file` and `theme-file` are one.
+fn section_id(name: &str) -> String {
+    name.to_lowercase()
+        .split(|c: char| !c.is_alphanumeric())
+        .filter(|w| !w.is_empty())
+        .collect::<Vec<_>>()
+        .join("-")
 }
 
 fn usage_error(message: &str) -> ExitCode {

@@ -110,10 +110,12 @@ npx archgram check docs/diagrams/linkshort.archgram.yaml
 ### `archgram spec`
 
 Prints the spec format this archgram reads: every field, node kind and
-rule.
+rule. `--brief` prints its short part, one complete spec and what each
+other section covers; `--section <name>` prints one section, such as
+`theme-file`.
 
 ```sh
-npx archgram spec
+npx archgram spec --brief
 ```
 
 ### `archgram theme check <archgram.theme.json>`
