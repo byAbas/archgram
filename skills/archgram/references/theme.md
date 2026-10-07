@@ -3,8 +3,8 @@
 archgram draws in black and white by default: every icon and a flow's
 signal in the text colour, and colour only in the technology logos and
 in what happens on a flow: a green border on a card a signal passes, red
-where a step refuses it. A project with a design of its own gets its
-colours through a mapping file, `archgram.theme.json` at the project's
+where a step refuses it. When the user asks for the project's colours,
+or names their own, they reach archgram through a mapping file, `archgram.theme.json` at the project's
 root, passed to `build` with `--theme-file archgram.theme.json`. Its
 format is in `npx --yes --loglevel=error archgram@0.8.0 spec --section theme-file`;
 read that section before writing one.
@@ -33,7 +33,8 @@ reach tokens in `design-system/tokens/`.
 3. **Colours the user gave** in the request. Write them as tokens the same
    way.
 4. **None of these.** Keep archgram's own colours, pass no `--theme-file`,
-   and say so in the report.
+   and say in the report that the project has no colours to read, and
+   that the user can name theirs.
 
 ## Mapping the roles
 

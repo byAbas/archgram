@@ -2,7 +2,7 @@
 
 | Field   | Value      |
 |---------|------------|
-| Version | 0.26       |
+| Version | 0.27       |
 | Date    | 2026-10-07 |
 | Status  | Draft      |
 | Owner   | Abas Turabli |
@@ -241,7 +241,7 @@ same file every time.
   new field needs no change to the skill, and a skill newer or older than
   the archgram it runs never writes a field that archgram cannot read.
   It starts from the short part of the format, and reads a section when
-  it needs one: the theme file when the project has colours of its own,
+  it needs one: the theme file when the user asks for colours,
   a problem's section when `check` reports one.
 - It works on its own: everything it needs is in its folder or comes from
   archgram through npx, so it needs nothing installed in the project; its
@@ -249,16 +249,21 @@ same file every time.
   Its text changes only by review, like the code.
 - Its evaluations live beside it: that it is chosen when asked for an
   architecture diagram and not otherwise, that it draws a project it is
-  given, in more than one style of architecture, and that it asks when
-  the architecture is unclear. They run on
+  given, in more than one style of architecture, in archgram's colours
+  unless asked for the project's, and that it asks when the architecture
+  is unclear. They run on
   request, since each run is a paid model call.
-- It draws in the project's own colours, found in this order: the
-  project's DTCG tokens, through a mapping file; else the colours its
+- It draws in archgram's own palette unless the user asks for other
+  colours, as a project's design system is used only when asked for
+  (§4). Asked for the project's colours, it finds them in this order:
+  the project's DTCG tokens, through a mapping file; else the colours its
   code styles with (CSS custom properties, a Tailwind theme, Sass
   variables, a theme object), which the skill reads and writes as DTCG
   tokens and a mapping beside the spec; else colours the user gives in
-  the request; else archgram's own palette. archgram's contrast check
-  holds either way; a colour that fails it is reported with the reason.
+  the request; else it keeps archgram's palette and says so. A mapping
+  file already at the project's root was asked for before, and each
+  later drawing uses it. archgram's contrast check holds either way; a
+  colour that fails it is reported with the reason.
 - It recognises the style the system follows (layered, ports and
   adapters, microservices, a pipeline, a plugin host and others) and
   looks for that style's parts; a system that follows none is drawn from
@@ -358,3 +363,4 @@ None.
 | 0.24    | 2026-10-07 | The plugin is listed in Anthropic's directory, for Claude Code (§6.5). |
 | 0.25    | 2026-10-07 | Without a skill, an agent now answers with a Mermaid chart in seconds, tied to no code and checked by nothing; the skill's first evaluation measured both (§1). 0.8: `direction: auto` chooses left to right or top to bottom to fit 1,300 px, `build` says the size it drew, and `archgram spec --brief` and `--section` print part of the format (§5, §6.1, §6.2, §6.5, §6.6). The skill is measured by its evaluation's checks, at least 90 % in all and 75 % in each case, and by its time on two cases, not against the hand-drawing baseline (§8). |
 | 0.26    | 2026-10-07 | `direction: auto` keeps left to right while it fits 1,300 px, and otherwise the narrower direction, not top to bottom always: a 100-node tree measured 1,648 px left to right and 10,424 px top to bottom (§6.2). |
+| 0.27    | 2026-10-07 | The skill draws in archgram's own palette unless the user asks for other colours, as §4 says of a project's design system; asked, it finds the project's as before, and a mapping file already at the root keeps being used (§6.6). |

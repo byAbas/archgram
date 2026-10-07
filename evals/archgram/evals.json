@@ -5,7 +5,7 @@
       "id": 1,
       "name": "draws-a-project",
       "prompt": "Draw the architecture of this project for the README.",
-      "expected_output": "docs/diagrams/<name>.archgram.yaml passes `archgram check`, and <name>.svg is drawn beside it. It has the API, Postgres, the Redis cache, the orders queue and the worker, each backed by a file in src/ and named in the report with it; every node a file backs and every edge carries a source (the file behind it, and for an edge a few words of the line that makes it), each one that `archgram check` finds; a flow follows an order from the API through the queue to the worker and Postgres. The colours come from src/styles.css through archgram.theme.json at the root, with the icons in the text colour. The skill did not ask any question. Each edge in the report has the file and line that makes it, the drawing is no wider than 1,300 px, and no browser was started and no screenshot taken: only the finished SVG was opened, with the system's viewer.",
+      "expected_output": "docs/diagrams/<name>.archgram.yaml passes `archgram check`, and <name>.svg is drawn beside it. It has the API, Postgres, the Redis cache, the orders queue and the worker, each backed by a file in src/ and named in the report with it; every node a file backs and every edge carries a source (the file behind it, and for an edge a few words of the line that makes it), each one that `archgram check` finds; a flow follows an order from the API through the queue to the worker and Postgres. The prompt asks for no colours, so the drawing keeps archgram's own, though src/styles.css has colours of its own: no theme is written and the report says the project's colours can be asked for. The skill did not ask any question. Each edge in the report has the file and line that makes it, the drawing is no wider than 1,300 px, and no browser was started and no screenshot taken: only the finished SVG was opened, with the system's viewer.",
       "files": ["files/shop"],
       "expectations": [
         "A spec at docs/diagrams/<name>.archgram.yaml and <name>.svg beside it exist",
@@ -14,8 +14,8 @@
         "Each of those nodes has a source naming its file in src/",
         "Every node a file backs and every edge has a source, an edge's with a few words of the line that makes it; an edge from a node no file backs is sourced at the line that receives it",
         "A flow follows an order from the API through the queue to the worker and Postgres",
-        "The SVG's colours are those of src/styles.css, in light and dark: archgram.theme.json at the project's root maps them, and the build passes it with --theme-file",
-        "The icons stay in the text colour: the theme does not give the node kinds colours of their own",
+        "No theme is written (no archgram.theme.json, no resolver) and no build passes --theme-file: the prompt asked for no colours",
+        "The report says the colours are archgram's own, and that the project's can be asked for",
         "The SVG is no wider than 1,300 px",
         "The run asked the user no question",
         "The report gives each edge with the file and line that makes it, and each cited line holds the code it quotes",
@@ -160,6 +160,22 @@
         "architecture.svg is drawn",
         "The report says what changed in the spec",
         "No browser was started and no screenshot taken"
+      ]
+    },
+    {
+      "id": 9,
+      "name": "draws-in-the-project-colours",
+      "prompt": "Draw the architecture of this project for the README, in our own colours.",
+      "expected_output": "docs/diagrams/<name>.archgram.yaml passes `archgram check`, and <name>.svg is drawn beside it in the colours of src/styles.css, light and dark: the skill writes them as DTCG tokens in docs/diagrams/theme/archgram.resolver.json, maps archgram's roles to them in archgram.theme.json at the project's root, checks the mapping with `archgram theme check`, and builds with --theme-file. The icons stay in the text colour. The report says the colours came from src/styles.css. The skill did not ask any question.",
+      "files": ["files/shop"],
+      "expectations": [
+        "A spec at docs/diagrams/<name>.archgram.yaml and <name>.svg beside it exist",
+        "The run ran `archgram check` on the final spec, and it passes",
+        "The SVG's colours are those of src/styles.css, in light and dark: archgram.theme.json at the project's root maps them, and the build passes it with --theme-file",
+        "The run ran `archgram theme check` on archgram.theme.json, and it passes",
+        "The icons stay in the text colour: the theme does not give the node kinds colours of their own",
+        "The report says the colours came from src/styles.css",
+        "The run asked the user no question"
       ]
     }
   ]

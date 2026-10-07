@@ -6,6 +6,14 @@ follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+
+- The `archgram` skill draws in archgram's own colours unless the user
+  asks for others, such as the project's own: it no longer reads the
+  styling code nor writes a theme unasked. Asked, it finds the project's
+  colours as before, and a theme already at the project's root keeps
+  being used.
+
 ### Fixed
 
 - The `archgram` skill's description holds no angle brackets: a

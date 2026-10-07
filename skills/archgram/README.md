@@ -5,8 +5,8 @@ A skill, and a Claude Code plugin of that one skill in
 project's software architecture as an animated SVG for its README and
 docs. The agent reads the code and the documentation, writes a spec to
 `docs/diagrams/<name>.archgram.yaml`, and archgram lays it out and draws
-`docs/diagrams/<name>.svg` beside it, in light and dark, in the project's
-own colours. The report lists each part drawn with the file behind it.
+`docs/diagrams/<name>.svg` beside it, in light and dark, in archgram's
+colours or, when asked, the project's own. The report lists each part drawn with the file behind it.
 
 ## What it runs, reads and writes
 
@@ -14,17 +14,18 @@ own colours. The report lists each part drawn with the file behind it.
   `package.json` lists one, and otherwise `archgram@0.8.0`, the version
   released with this skill. npx downloads that version from the npm
   registry the first time.
-- It reads the project's code, documentation and styling files.
+- It reads the project's code and documentation, and its styling files
+  when asked for its colours.
 - From archgram 0.7, a spec may name the file behind each part and a few
   words of the line behind each edge, and `check` and `build` look for
   them, to say which of that code is gone. archgram reads those files
   only under the project's folder, never `.git` nor a file that commonly
   holds secrets, and keeps only whether each holds the words
   ([SECURITY.md, What archgram reads](https://github.com/byAbas/archgram/blob/main/SECURITY.md#what-archgram-reads)).
-- It writes the spec and the SVG under `docs/diagrams/`. When the project
-  has colours of its own, it also writes `archgram.theme.json` at the
-  project's root and, where the colours are not already design tokens,
-  `docs/diagrams/theme/archgram.resolver.json`.
+- It writes the spec and the SVG under `docs/diagrams/`. When the user
+  asks for the project's colours, it also writes `archgram.theme.json`
+  at the project's root and, where the colours are not already design
+  tokens, `docs/diagrams/theme/archgram.resolver.json`.
 - It opens the SVG once with the system's own viewer.
 - It pre-approves two commands, at that version, which only print parts
   of the spec format:

@@ -1,6 +1,6 @@
 ---
 name: archgram
-description: Draws a project's software architecture as an animated SVG with archgram, for its README and docs, from the code and documentation. Writes a spec in docs/diagrams/, checks and draws it with the archgram command, in the project's own colours, then opens the drawing and lists each part with the file behind it. Use it whenever the user wants an architecture, system, data-flow, pipeline or "how it works" diagram, a diagram for a README, or an existing archgram diagram updated after the code changed or `archgram check` says its code is gone, even if they only say "draw how this works".
+description: Draws a project's software architecture as an animated SVG with archgram, for its README and docs, from the code and documentation. Writes a spec in docs/diagrams/, checks and draws it with the archgram command, in the project's own colours when asked, then opens the drawing and lists each part with the file behind it. Use it whenever the user wants an architecture, system, data-flow, pipeline or "how it works" diagram, a diagram for a README, or an existing archgram diagram updated after the code changed or `archgram check` says its code is gone, even if they only say "draw how this works".
 license: MIT
 compatibility: Requires Node 22 or later, with npx.
 allowed-tools: Bash(npx --yes --loglevel=error archgram@0.8.0 spec --brief) Bash(npx --yes --loglevel=error archgram@0.8.0 spec --section theme-file)
@@ -30,7 +30,7 @@ Progress:
 - [ ] 2. Facts, each with its file
 - [ ] 3. The spec format, from archgram itself
 - [ ] 4. Spec written and checked
-- [ ] 5. The project's colours
+- [ ] 5. The project's colours, when asked
 - [ ] 6. Drawn, critiqued, opened
 - [ ] 7. Reported
 ```
@@ -140,14 +140,20 @@ with the nearest one that exists. A problem that says the code lacks what
 you wrote is a part or a line you could not back: fix the fact, not only
 the spec, and drop it if no code makes it.
 
-## 5. Draw in the project's own colours
+## 5. Draw in the project's colours, when asked
 
-archgram draws in black and white by default. When the project has its
-own design, draw in it: read `references/theme.md`, which says where
-archgram's colour goes, where to look (design tokens, then the styling
-code, then colours the user gave) and how to hand them to archgram with
-`--theme-file`. With none of these, keep archgram's own and
-say so in the report.
+archgram draws in black and white by default, and so does the diagram
+unless the user asks for colours: the project's own ("in our colours",
+"match our design system") or colours they name. The colours are theirs
+to choose, as the parts are: a theme guessed from the styling code
+changes how their README looks without their asking. When they ask, read
+`references/theme.md`, which says where archgram's colour goes, where to
+look (design tokens, then the styling code, then colours the user gave)
+and how to hand them to archgram with `--theme-file`. Otherwise leave the
+styling files unread and write no theme.
+
+An `archgram.theme.json` already at the project's root was asked for
+before: keep drawing with it.
 
 ## 6. Draw, critique, open
 
@@ -155,9 +161,10 @@ say so in the report.
 npx --yes --loglevel=error archgram@0.8.0 build docs/diagrams/<name>.archgram.yaml
 ```
 
-Add `--theme-file archgram.theme.json` when step 5 wrote one. The drawing
-lands beside the spec as `docs/diagrams/<name>.svg`, and `build` says its
-size and the direction it chose: `wrote … (588 × 740 px, top to bottom)`.
+Add `--theme-file archgram.theme.json` when the project's root has one.
+The drawing lands beside the spec as `docs/diagrams/<name>.svg`, and
+`build` says its size and the direction it chose: `wrote … (588 × 740 px,
+top to bottom)`.
 Wider than 1,300 px, its text shrinks below a comfortable size on GitHub,
 which shows a README image about 880 px wide, and `build` warns. With
 `direction: auto` it has already chosen the narrower direction, so split
@@ -184,7 +191,8 @@ Tell the user, briefly:
   that makes it;
 - on an update, what changed in the spec and why, starting with what
   `archgram check` said had lost its code;
-- where the colours came from;
+- where the colours came from, or that they are archgram's own and the
+  project's can be asked for;
 - what the diagram still does not show;
 - the line for the README, with alt text that tells the whole flow in
   words: `![<the flow in one sentence>](docs/diagrams/<name>.svg)`.
