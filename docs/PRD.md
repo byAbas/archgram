@@ -44,14 +44,15 @@ and self-critique; how that time split between layout and the rest was
 not measured.
 
 Without a skill, an agent today no longer draws by hand. In the skill's
-evaluation pilot (2026-10-07, Claude Opus 5.5, one run per case), asked
-to draw a small project for its README, it wrote a Mermaid chart into the
-README in under thirty seconds: quick, but in none of the project's
-colours, tied to no line of code, and checked by nothing afterwards.
-Asked to repair a diagram whose code had changed, it fixed the spec but
-neither checked it nor drew it again, so the README kept the old
-picture. With the skill, the same agent passed every check of both
-cases, in 76 and 32 seconds.
+first evaluation (2026-10-07, Claude Opus 5.5, eight cases, one run each,
+each graded by an independent agent), the agent without the skill wrote
+a Mermaid chart into the README, or a sketch into its reply, in about
+half a minute: in none of the project's colours, tied to no line of
+code, and checked by nothing afterwards. Asked to update or repair a
+diagram, it changed the spec but neither checked it nor drew it again,
+so the README kept the old picture. It passed 31 of 71 checks; with the
+skill, the same agent passed 64 of 71, in 56 seconds on average against
+33.
 
 ## 2. Users
 
@@ -299,14 +300,16 @@ archgram records each logo's source and guidelines for them.
 - Every text pair passes WCAG 2.1 AA in both themes.
 - Layout and SVG for a 100-node spec take under 50 ms in the native CLI.
 - The core WASM module, when there is one, stays under 350 KB gzipped.
-- With the skill, an agent passes at least 90 % of each evaluation
-  case's checks (`evals/archgram/evals.json`), and more of them than the
-  same agent without it. The pilot of §1 passed 23 of 23 with the skill
-  and 11 of 23 without.
+- With the skill, an agent passes at least 90 % of the evaluation's
+  checks (`evals/archgram/evals.json`) and at least 75 % of each case's,
+  and more of them than the same agent without it. The evaluation of §1
+  passed 64 of 71 with the skill (90 %, its lowest case 69 %) and 31 of
+  71 without.
 - With the skill, an agent draws a small project for the first time in
   under 45 seconds, and repairs a diagram whose code changed in under 30
   (the cases `draws-a-project` and `repairs-what-lost-its-code`, the
-  median of three runs on Claude Opus 5.5). The pilot took 76 and 32.
+  median of three runs on Claude Opus 5.5). The evaluation of §1 took
+  74 and 36.
 - Each feature with a document of its own meets the criteria there:
   [the code behind a diagram](features/sources.md#success-criteria).
 
@@ -352,4 +355,4 @@ None.
 | 0.22    | 2026-10-04 | The agents' baseline as measured: 6.3 minutes per diagram drawn by hand, 9.3 with a skill that added previews and self-critique, with no measure of how the time split; §8's baseline names that skill (§1, §8). |
 | 0.23    | 2026-10-07 | Features with more than a few lines of requirements get their own document in `docs/features/`, which this one points to. The problem names a stale diagram nobody notices (§1). 0.6 is in the scope; 0.7 names the code behind each node and edge, checked by `check` and `build`, with its limit; the skill writes a source for each and starts an update from what the check names (§5, §6.1, §6.6, `docs/features/sources.md`). Each feature's own success criteria count here (§8). |
 | 0.24    | 2026-10-07 | The plugin is listed in Anthropic's directory, for Claude Code (§6.5). |
-| 0.25    | 2026-10-07 | Without a skill, an agent now answers with a Mermaid chart in seconds, tied to no code and checked by nothing; the skill's evaluation pilot measured both (§1). 0.8: `direction: auto` chooses left to right or top to bottom to fit 1,300 px, `build` says the size it drew, and `archgram spec --brief` and `--section` print part of the format (§5, §6.1, §6.2, §6.5, §6.6). The skill is measured by its evaluation's checks and by its time on two cases, not against the hand-drawing baseline (§8). |
+| 0.25    | 2026-10-07 | Without a skill, an agent now answers with a Mermaid chart in seconds, tied to no code and checked by nothing; the skill's first evaluation measured both (§1). 0.8: `direction: auto` chooses left to right or top to bottom to fit 1,300 px, `build` says the size it drew, and `archgram spec --brief` and `--section` print part of the format (§5, §6.1, §6.2, §6.5, §6.6). The skill is measured by its evaluation's checks, at least 90 % in all and 75 % in each case, and by its time on two cases, not against the hand-drawing baseline (§8). |
