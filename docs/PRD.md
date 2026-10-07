@@ -2,7 +2,7 @@
 
 | Field   | Value      |
 |---------|------------|
-| Version | 0.23       |
+| Version | 0.24       |
 | Date    | 2026-10-07 |
 | Status  | Draft      |
 | Owner   | Abas Turabli |
@@ -174,7 +174,7 @@ same file every time.
   each agent reads, for a project or for every project; archgram carries no
   installer of its own (§6.6). The same folder is also a Claude Code
   plugin of that one skill, with a manifest, an icon and a README of its
-  own, so Anthropic's plugin directory can list it; the plugin is the
+  own, listed in Anthropic's directory for Claude Code; the plugin is the
   skill's folder alone, never the repository.
 
 ### 6.6 The `archgram` skill
@@ -318,3 +318,4 @@ None.
 | 0.21    | 2026-10-04 | The skill's folder is also a Claude Code plugin of that one skill, with a manifest, an icon and a README, so Anthropic's plugin directory can list it without the rest of the repository (§6.5, §6.6). |
 | 0.22    | 2026-10-04 | The agents' baseline as measured: 6.3 minutes per diagram drawn by hand, 9.3 with a skill that added previews and self-critique, with no measure of how the time split; §8's baseline names that skill (§1, §8). |
 | 0.23    | 2026-10-07 | Features with more than a few lines of requirements get their own document in `docs/features/`, which this one points to. The problem names a stale diagram nobody notices (§1). 0.6 is in the scope; 0.7 names the code behind each node and edge, checked by `check` and `build`, with its limit; the skill writes a source for each and starts an update from what the check names (§5, §6.1, §6.6, `docs/features/sources.md`). Each feature's own success criteria count here (§8). |
+| 0.24    | 2026-10-07 | The plugin is listed in Anthropic's directory, for Claude Code (§6.5). |

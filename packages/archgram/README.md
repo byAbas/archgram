@@ -145,6 +145,12 @@ It asks which agents to install it for; add `-g` to install it for every
 project rather than this one. Then ask your agent to draw the architecture,
 or, in Claude Code, type `/archgram`.
 
+In Claude Code, it is also a plugin in
+[Anthropic's directory](https://claude.ai/directory): find archgram there
+and add it to your claude.ai account. Claude Code loads it, as
+`archgram@synced`, the next time it starts signed in with that account
+([plugins synced from claude.ai](https://code.claude.com/docs/en/plugins/loading#synced-plugins)).
+
 Or take it from the release, into your agent's skills folder
 (`~/.agents/skills`, or `~/.claude/skills` for Claude Code):
 
@@ -219,7 +225,10 @@ and lists both.
 
 Keep the spec in git beside the code. archgram redraws the diagram from
 it, and its agent skill can write the spec again from the code, so the
-diagram changes in the same pull request as the system.
+diagram changes in the same pull request as the system. When the spec
+names the code behind each part and line (`source`), `archgram check`
+says which of it is gone, so CI can fail a pull request that leaves the
+diagram behind.
 
 ### Can it use my design system's colours?
 
