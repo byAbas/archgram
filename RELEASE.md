@@ -84,6 +84,25 @@ version goes in by a pull request and the tag follows the merge.
    mkdir -p .claude/skills && curl -sL https://github.com/byAbas/archgram/releases/download/vX.Y.Z/archgram-skill-X.Y.Z.tar.gz | tar -xz -C .claude/skills
    ```
 
+   The released skill must be the only archgram that Claude Code loads
+   there. A personal skill of the same name runs instead of the
+   project's
+   ([skills](https://code.claude.com/docs/en/skills#resolve-skills-that-share-a-name)),
+   such as the one `npx skills add -g` links into
+   `~/.claude/skills/archgram`, and the plugin from the directory,
+   `archgram@synced`, loads beside it. Look for both:
+
+   ```sh
+   ls -d ~/.claude/skills/archgram ~/.agents/skills/archgram 2>/dev/null
+   claude plugin list | grep -i archgram
+   ```
+
+   Remove a personal copy (`npx skills remove --global archgram -y`) or
+   move it out of the skills folder until the run is done, and turn the
+   plugin off for the run with `claude plugin disable archgram@synced`,
+   on again after with `claude plugin enable archgram@synced`
+   ([plugin commands](https://code.claude.com/docs/en/plugins/cli-reference#plugin-disable)).
+
    Start Claude Code there and ask, as the eval
    `repairs-what-lost-its-code` does: "CI says the architecture diagram
    no longer matches the code. Fix it." The run passes when the skill
