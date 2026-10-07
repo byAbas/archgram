@@ -2,14 +2,18 @@
 
 | Field   | Value      |
 |---------|------------|
-| Version | 0.22       |
-| Date    | 2026-10-04 |
+| Version | 0.23       |
+| Date    | 2026-10-07 |
 | Status  | Draft      |
 | Owner   | Abas Turabli |
 
 This document describes what archgram is and why it exists; which
 document holds every other fact is in `CONTRIBUTING.md` (Each fact lives
-in one document). If a requirement changes, this document changes first.
+in one document). A feature that needs more than a few lines here has
+its own document in `docs/features/`, with its problem, requirements,
+limits and success criteria; this one says what it is and points there.
+If a requirement changes, this document, or the feature's own, changes
+first.
 
 ## 1. Problem
 
@@ -24,6 +28,13 @@ format, it stays in the repository, but the output is generic: no visual
 vocabulary for what a box is, weak layout for nested groups such as a VPC
 or a trust boundary, no dark mode of its own, no way to show the order in
 which things happen.
+
+A diagram kept as text beside the code is cheap to change, but nothing
+says when it must change. A box still names a module deleted a month
+ago, a line still shows a call no longer made, and the diagram stays
+plausible and wrong. With coding agents changing a project many times a
+day, a diagram goes stale faster than anyone reads it closely enough to
+notice.
 
 AI coding agents hit the same wall from the other side. Asked for a
 diagram, an agent writes the SVG by hand, every coordinate and every
@@ -79,6 +90,8 @@ same file every time.
 | 0.3 | Flows and their animation, timed automatically; importing a project's DTCG design tokens as a theme; the `archgram` command on npm for Node, a native binary per platform; open-source release under MIT |
 | 0.4 | An edge's label lights with its signal; an optional "by archgram" credit; a spec named `<name>.archgram.yaml` draws `<name>.svg`, into a folder created when missing; `archgram spec`, the format the command reads; the `archgram` skill for Claude Code, which draws a project's architecture from its code |
 | 0.5 | A flow may stop at a step, and the refusal goes back to where the flow began; a card's border is drawn from the arrow that reaches it, in a colour for passing and one for a refusal, in one of four styles; only a signal glows, faintly |
+| 0.6 | A step's number lights as its signal passes it; the skill works with any coding agent that reads the Agent Skills format |
+| 0.7 | A node or an edge names the code behind it, and archgram says when that code is gone ([docs/features/sources.md](features/sources.md)) |
 | Later | The WASM package, for the browser; the PNG module, drawn from the same scene as the SVG by archgram's own rasterizer |
 
 ## 6. Functional requirements
@@ -90,6 +103,9 @@ same file every time.
   location, never ignored.
 - The spec holds no coordinates. It may carry layout hints: direction,
   which nodes share a column or a row, and the order of nodes within one.
+- A node or an edge may name the code behind it, and archgram says when
+  that code is not there; it is never drawn. It finds what the code lost,
+  not what it gained ([docs/features/sources.md](features/sources.md)).
 
 ### 6.2 Layout and routing
 - Edges flow in one main direction, left to right or top to bottom.
@@ -175,7 +191,10 @@ same file every time.
   that reads skills follows the same steps.
 - A part is drawn only when a file in the project backs it, and the skill
   notes that file; an edge only where a line of code makes it, and the
-  skill notes that line. It finds the parts by walking from the project's
+  skill notes that line. The spec keeps both as each node's and edge's
+  source, so `archgram check` holds them to the code as the skill draws
+  and whenever it runs later ([docs/features/sources.md](features/sources.md)).
+  It finds the parts by walking from the project's
   entry points, keeps one level of detail per diagram, and names each part
   after the file that decides, found by following the imports. Where the
   code and the documentation disagree, or the architecture is unclear, it
@@ -188,10 +207,14 @@ same file every time.
   to npm later runs only once a reviewed skill names it, as Anthropic's
   plugin directory asks of a package a plugin runs. Each release sets that
   version in the skill, and a test holds the two equal. The spec is kept,
-  so a later call changes it and draws again, and says what changed.
+  so a later call changes it and draws again, and says what changed,
+  starting from what `archgram check` says has lost its code.
 - It learns the spec format from that same command (`archgram spec`), so
   the format it writes always matches the command that draws it; it keeps
-  no copy of the format that could fall behind.
+  no copy of the format that could fall behind, nor of how to fill it.
+  What a version adds, and how a writer fills it, is in that format, so a
+  new field needs no change to the skill, and a skill newer or older than
+  the archgram it runs never writes a field that archgram cannot read.
 - It works on its own: everything it needs is in its folder or comes from
   archgram through npx, so it needs nothing installed in the project; its
   plugin manifest only lets Claude Code take the same folder as a plugin.
@@ -251,6 +274,8 @@ archgram records each logo's source and guidelines for them.
 - With archgram, an agent produces an approved diagram in less than half
   the time it took without it (baseline: 9.3 minutes on average, the
   hand-drawing skill of the test in §1).
+- Each feature with a document of its own meets the criteria there:
+  [the code behind a diagram](features/sources.md#success-criteria).
 
 ## 9. Non-goals
 
@@ -292,3 +317,4 @@ None.
 | 0.20    | 2026-10-04 | Where the project has no archgram of its own, the skill runs the version released with it, named exactly, not the latest; each release sets it, and a test holds it to the release (§6.6). |
 | 0.21    | 2026-10-04 | The skill's folder is also a Claude Code plugin of that one skill, with a manifest, an icon and a README, so Anthropic's plugin directory can list it without the rest of the repository (§6.5, §6.6). |
 | 0.22    | 2026-10-04 | The agents' baseline as measured: 6.3 minutes per diagram drawn by hand, 9.3 with a skill that added previews and self-critique, with no measure of how the time split; §8's baseline names that skill (§1, §8). |
+| 0.23    | 2026-10-07 | Features with more than a few lines of requirements get their own document in `docs/features/`, which this one points to. The problem names a stale diagram nobody notices (§1). 0.6 is in the scope; 0.7 names the code behind each node and edge, checked by `check` and `build`, with its limit; the skill writes a source for each and starts an update from what the check names (§5, §6.1, §6.6, `docs/features/sources.md`). Each feature's own success criteria count here (§8). |
