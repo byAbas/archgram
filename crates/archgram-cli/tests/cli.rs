@@ -14,12 +14,14 @@ fn example(name: &str) -> String {
     format!("{}/../../examples/{name}", env!("CARGO_MANIFEST_DIR"))
 }
 
-/// A fresh directory for one test's files.
+/// A fresh directory for one test's files, by its real path: on macOS the
+/// temporary folder is under `/var`, a symbolic link archgram does not
+/// follow (SECURITY.md, What archgram reads).
 fn scratch(test: &str) -> PathBuf {
     let dir = std::env::temp_dir().join(format!("archgram-cli-{test}-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir).unwrap();
-    dir
+    std::fs::canonicalize(&dir).unwrap()
 }
 
 fn read(p: &Path) -> String {
