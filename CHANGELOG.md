@@ -28,9 +28,6 @@ follow [Semantic Versioning](https://semver.org/).
 - A spec or theme file reached through a symbolic link under the folder
   archgram runs in is refused, where before it was followed: give
   archgram the file the link leads to.
-
-### Changed
-
 - The `archgram` skill runs the archgram released with it, named exactly
   (`archgram@0.6.1`), when the project has no archgram of its own, rather
   than the latest on npm. A version published later runs only once a new
@@ -40,6 +37,10 @@ follow [Semantic Versioning](https://semver.org/).
   which only prints the spec format, rather than any command that starts
   with `npx --yes archgram`. `check`, `build`, `theme check` and the
   project's own archgram ask first.
+- The skill runs npx with `--loglevel=error`, so npm's own warnings,
+  such as `Unknown project config` in a project whose `.npmrc` holds
+  pnpm's settings, no longer reach the agent. archgram's output and exit
+  code are the same.
 
 ### Security
 

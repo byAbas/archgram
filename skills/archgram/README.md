@@ -27,9 +27,9 @@ own colours. The report lists each part drawn with the file behind it.
   `docs/diagrams/theme/archgram.resolver.json`.
 - It opens the SVG once with the system's own viewer.
 - It pre-approves one command, the one that only prints the spec format,
-  at that version: `npx --yes archgram@0.6.1 spec`. Every other command,
-  `check`, `build`, `theme check` and the project's own archgram
-  included, asks the user first.
+  at that version: `npx --yes --loglevel=error archgram@0.6.1 spec`.
+  Every other command, `check`, `build`, `theme check` and the project's
+  own archgram included, asks the user first.
 - It sends nothing anywhere, and edits the README or commits only when
   asked.
 

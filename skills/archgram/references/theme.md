@@ -1,13 +1,13 @@
 # The project's colours
 
 archgram draws in black and white by default: every icon and a flow's
-signal in the text colour, and colour only in the technology logos and in
-what happens on a flow: a green border on a card a signal passes, red
-where a step refuses it. A project with a design of its own gets its colours through a
-mapping file, `archgram.theme.json` at the project's root, passed to
-`build` with `--theme-file archgram.theme.json`. Its format is in
-`npx --yes archgram@0.6.1 spec`, under "Theme file"; read that section
-before writing one.
+signal in the text colour, and colour only in the technology logos and
+in what happens on a flow: a green border on a card a signal passes, red
+where a step refuses it. A project with a design of its own gets its
+colours through a mapping file, `archgram.theme.json` at the project's
+root, passed to `build` with `--theme-file archgram.theme.json`. Its
+format is in `npx --yes --loglevel=error archgram@0.6.1 spec`, under
+"Theme file"; read that section before writing one.
 
 The mapping sits at the root because archgram reads a theme's files only
 under the mapping's own folder: a mapping in `docs/diagrams/` could not
@@ -117,7 +117,7 @@ the report that dark mode repeats light.
 ## Checking the theme
 
 ```bash
-npx --yes archgram@0.6.1 theme check archgram.theme.json
+npx --yes --loglevel=error archgram@0.6.1 theme check archgram.theme.json
 ```
 
 It prints each role's colour in both themes, or every problem at its file
