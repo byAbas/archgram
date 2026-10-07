@@ -9,10 +9,10 @@ follow [Semantic Versioning](https://semver.org/).
 ### Added
 
 - The `archgram` skill's folder is also a Claude Code plugin of that one
-  skill, with a manifest, an icon and a README, so Anthropic's plugin
-  directory can list it. Installing it takes the skill's folder alone,
-  not the repository. The README says what the skill runs, its privacy
-  (it collects nothing) and its terms (MIT).
+  skill, with a manifest, an icon and a README, listed in Anthropic's
+  directory for Claude Code. Installing it takes the skill's folder
+  alone, not the repository. The README says what the skill runs, its
+  privacy (it collects nothing) and its terms (MIT).
 - A node or an edge may name the code behind it, `source`: a path from
   the spec's folder, with a few words of the line that makes it after
   `#`. `archgram check` fails, and `archgram build` warns, when that code

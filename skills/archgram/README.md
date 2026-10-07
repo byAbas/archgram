@@ -1,6 +1,7 @@
 # archgram
 
-A skill, and a Claude Code plugin of that one skill, that draws a
+A skill, and a Claude Code plugin of that one skill in
+[Anthropic's directory](https://claude.ai/directory), that draws a
 project's software architecture as an animated SVG for its README and
 docs. The agent reads the code and the documentation, writes a spec to
 `docs/diagrams/<name>.archgram.yaml`, and archgram lays it out and draws
@@ -14,6 +15,12 @@ own colours. The report lists each part drawn with the file behind it.
   released with this skill. npx downloads that version from the npm
   registry the first time.
 - It reads the project's code, documentation and styling files.
+- From archgram 0.7, a spec may name the file behind each part and a few
+  words of the line behind each edge, and `check` and `build` look for
+  them, to say which of that code is gone. archgram reads those files
+  only under the project's folder, never `.git` nor a file that commonly
+  holds secrets, and keeps only whether each holds the words
+  ([SECURITY.md, What archgram reads](https://github.com/byAbas/archgram/blob/main/SECURITY.md#what-archgram-reads)).
 - It writes the spec and the SVG under `docs/diagrams/`. When the project
   has colours of its own, it also writes `archgram.theme.json` at the
   project's root and, where the colours are not already design tokens,
