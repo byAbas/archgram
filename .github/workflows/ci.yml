@@ -107,6 +107,10 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
       - run: node --test packages/archgram/lib/platform.test.js
+      # npm shows the launcher's README, a copy of the repository's; the
+      # release's `cargo xtask npm` refuses a copy that differs, so a pull
+      # request does too, before a tag is pushed (RELEASE.md, step 1).
+      - run: cmp README.md packages/archgram/README.md
 
   # The one check main's ruleset requires, as uv's "all required jobs
   # passed": it passes only when every job above passed. `always()` runs it
