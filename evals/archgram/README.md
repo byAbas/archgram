@@ -12,7 +12,7 @@ prompts run in.
 | `draws-a-project` | It draws a project from its code, every part backed by a file and every edge by a line, no wider than 1,300 px, in the colours of its CSS, without starting a browser |
 | `asks-when-unclear` | It asks when the README and the code disagree, rather than drawing what does not exist |
 | `updates-an-existing-diagram` | It changes an existing spec and says what changed |
-| `not-for-other-work` | It stays out of a request that is not a diagram |
+| `not-for-other-work` | It stays out of a request that is not a diagram, and the work asked for is done |
 | `draws-a-pipeline` | It recognises a data pipeline and follows one day's rows from their sources to the warehouse, with where bad rows go |
 | `draws-ports-and-adapters` | It recognises ports and adapters and shows the rules depending on nothing outside their ports |
 | `merges-parts-with-the-same-relations` | It merges parts no question tells apart and keeps a crowded system within about 10 nodes and 12 edges |
@@ -54,6 +54,9 @@ sh evals/archgram/run.sh --out ~/archgram-evals/iteration-1 --repeat 3 --jobs 4 
   (`--permission-prompts none`), which also takes away the tool that asks
   the user a question, so a question is asked in the run's reply. Each run
   stops at `--budget` dollars (5 by default) and 80 turns.
+- **One runner per folder:** a second `run.sh` on the same `--out` is
+  refused while the first runs, and a run already in the folder is never
+  started again.
 
 Follow them live, in a second terminal, one line for each thing a run
 does: its start, with the plugins and skill it loaded, what the model

@@ -31,8 +31,10 @@ if [ "${1:-}" = __one ]; then
     const c = require(process.argv[1]).evals.find((e) => e.id === Number(process.argv[2]));
     console.log(`eval-${c.id}-${c.name}`);' "$here/evals.json" "$id")
   dir="$EVAL_OUT/$case_dir/$config/run-$k"
-  [ ! -e "$dir" ] || die "$dir exists; give a new --out"
-  mkdir -p "$dir"
+  # mkdir, without -p, fails when the folder exists: one step, so two
+  # runners sharing an --out never start the same run.
+  mkdir -p "$(dirname "$dir")"
+  mkdir "$dir" 2>/dev/null || die "$dir exists; give a new --out"
   files=$(node -e '
     const c = require(process.argv[1]).evals.find((e) => e.id === Number(process.argv[2]));
     console.log(c.files[0]);' "$here/evals.json" "$id")
@@ -150,6 +152,11 @@ $yes || die "each run is a paid model call; read the line above and run again wi
 
 mkdir -p "$out"
 out=$(cd "$out" && pwd)
+# One runner per folder: a second one, started by mistake, would share
+# the snapshot and the settings and race the first for each run.
+mkdir "$out/.running" 2>/dev/null ||
+  die "another run.sh is running in $out; if none is, one stopped early: remove $out/.running"
+trap 'rmdir "$out/.running"' EXIT
 # The skill as it is now, so the runs test one version even if the
 # working tree changes while they run.
 [ -e "$out/skill-snapshot" ] || { mkdir -p "$out/skill-snapshot" && cp -R "$root/skills/archgram" "$out/skill-snapshot/archgram"; }
