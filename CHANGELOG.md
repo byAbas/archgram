@@ -18,6 +18,10 @@ follow [Semantic Versioning](https://semver.org/).
   (`wrote architecture.svg (541 × 678 px, top to bottom)`), and warns
   when the drawing is wider than 1,300 px, with what would bring it
   within.
+- `archgram spec --brief` prints the format's short part, about a tenth
+  of it: one complete spec that uses each field most diagrams need, and
+  a line for each other section. `archgram spec --section <name>` prints
+  one section, by its heading or its short name (`theme-file`).
 
 ## [0.7.0] - 2026-10-07
 

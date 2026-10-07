@@ -740,3 +740,111 @@ fn build_warns_of_a_drawing_too_wide_for_a_readme_and_still_draws() {
         "{warning}"
     );
 }
+
+fn stdout(run: &Output) -> String {
+    String::from_utf8_lossy(&run.stdout).into_owned()
+}
+
+/// `spec --brief` prints the format's short part alone: a part of the
+/// document, not a copy (docs/PRD.md 6.5).
+#[test]
+fn spec_brief_is_the_short_part_of_the_format() {
+    let full = stdout(&archgram(&["spec"]));
+    let run = archgram(&["spec", "--brief"]);
+    assert!(run.status.success(), "{}", stderr(&run));
+    let brief = stdout(&run);
+    assert!(brief.starts_with("## In brief\n"), "{brief}");
+    assert!(
+        full.contains(&brief),
+        "the brief is the document's own section"
+    );
+    assert!(brief.len() < 3 * 1024, "{} bytes", brief.len());
+    assert!(brief.len() * 5 < full.len());
+}
+
+/// The short part names every other section once, by the name `--section`
+/// takes, so it cannot point at a section that is gone or miss a new one.
+#[test]
+fn spec_brief_lists_every_section_by_its_name() {
+    let brief = stdout(&archgram(&["spec", "--brief"]));
+    let listed: Vec<&str> = brief
+        .lines()
+        .filter_map(|l| l.strip_prefix("- `"))
+        .filter_map(|l| l.split('`').next())
+        .collect();
+    let run = archgram(&["spec", "--section", "no-such-section"]);
+    assert_eq!(run.status.code(), Some(2));
+    let err = stderr(&run);
+    let all: Vec<&str> = err
+        .split("its sections are: ")
+        .nth(1)
+        .and_then(|s| s.lines().next())
+        .unwrap()
+        .split(", ")
+        .filter(|s| *s != "in-brief")
+        .collect();
+    assert_eq!(listed, all);
+    for name in &listed {
+        let run = archgram(&["spec", "--section", name]);
+        assert!(run.status.success(), "{name}: {}", stderr(&run));
+    }
+}
+
+/// The short part's example is a spec this archgram draws, with every
+/// source found once its files hold the words.
+#[test]
+fn spec_brief_example_is_a_valid_spec() {
+    let brief = stdout(&archgram(&["spec", "--brief"]));
+    let yaml = brief
+        .split("```yaml\n")
+        .nth(1)
+        .unwrap()
+        .split("```")
+        .next()
+        .unwrap();
+    let dir = scratch("brief-example");
+    std::fs::create_dir_all(dir.join(".git")).unwrap();
+    std::fs::create_dir_all(dir.join("docs/diagrams")).unwrap();
+    let mut files: std::collections::BTreeMap<String, String> = std::collections::BTreeMap::new();
+    for part in yaml.split("source: ").skip(1) {
+        let source = match part.chars().next() {
+            Some(q @ ('\'' | '"')) => part[1..].split(q).next().unwrap(),
+            _ => part.split([',', '}', ' ', '\n']).next().unwrap(),
+        };
+        let (path, words) = source.split_once('#').unwrap_or((source, ""));
+        let file = files
+            .entry(path.trim_start_matches("../../").to_owned())
+            .or_default();
+        file.push_str(words);
+        file.push('\n');
+    }
+    assert!(!files.is_empty(), "the example names sources");
+    for (path, text) in &files {
+        let path = dir.join(path);
+        std::fs::create_dir_all(path.parent().unwrap()).unwrap();
+        std::fs::write(path, text).unwrap();
+    }
+    std::fs::write(dir.join("docs/diagrams/brief.archgram.yaml"), yaml).unwrap();
+    let run = archgram_in(&dir, &["check", "docs/diagrams/brief.archgram.yaml"]);
+    assert!(run.status.success(), "{}", stderr(&run));
+    assert!(stdout(&run).contains("valid ("), "{}", stdout(&run));
+}
+
+/// `spec --section` takes a heading or its short form, and prints that
+/// section alone.
+#[test]
+fn spec_section_prints_one_section_by_heading_or_name() {
+    let by_name = stdout(&archgram(&["spec", "--section", "theme-file"]));
+    assert_eq!(
+        by_name,
+        stdout(&archgram(&["spec", "--section", "Theme file"]))
+    );
+    assert!(by_name.starts_with("## Theme file\n"), "{by_name}");
+    assert!(!by_name.contains("\n## "), "one section only");
+    assert!(stdout(&archgram(&["spec"])).contains(&by_name));
+    let examples = stdout(&archgram(&["spec", "--section", "examples"]));
+    assert!(
+        examples.contains("\n### "),
+        "a section keeps its own subsections"
+    );
+}
