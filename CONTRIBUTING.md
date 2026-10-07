@@ -41,6 +41,7 @@ cargo fmt --check
 cargo clippy --workspace --all-targets --locked -- -D warnings
 cargo test --workspace --locked
 node --test packages/archgram/lib/platform.test.js
+cmp README.md packages/archgram/README.md
 sh scripts/check-change.test
 sh scripts/git-hooks.test
 sh scripts/claude-hooks.test
