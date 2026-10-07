@@ -4,7 +4,7 @@ Each release's changes, newest first. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions
 follow [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [0.8.0] - 2026-10-07
 
 ### Added
 
@@ -22,6 +22,23 @@ follow [Semantic Versioning](https://semver.org/).
   of it: one complete spec that uses each field most diagrams need, and
   a line for each other section. `archgram spec --section <name>` prints
   one section, by its heading or its short name (`theme-file`).
+
+### Changed
+
+- The `archgram` skill reads the short part of the format (`archgram
+  spec --brief`), and a section only when it needs one, such as the
+  theme file. It pre-approves those two commands, which only print.
+- The skill leaves the direction to archgram (`direction: auto`) and
+  reads the drawing's size from `archgram build`, rather than editing
+  the spec and drawing again when the drawing came out too wide. It
+  checks the spec again after every change, the last one included,
+  before it draws.
+- The skill draws only what the code shows: a note taken from the README
+  alone goes to the report as a gap. It names a merged node's parts in
+  its note, gives an edge from outside the code the line that receives
+  it, changes only what an update found, and names the style it
+  recognised; when two styles fit, the one with the more specific sign,
+  so a registry that hands its extensions an API makes a plugin host.
 
 ## [0.7.0] - 2026-10-07
 
@@ -240,7 +257,7 @@ same release.
   subset of Geist.
 - `archgram build` and `archgram check`.
 
-[Unreleased]: https://github.com/byAbas/archgram/compare/v0.7.0...HEAD
+[0.8.0]: https://github.com/byAbas/archgram/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/byAbas/archgram/compare/v0.6.1...v0.7.0
 [0.6.1]: https://github.com/byAbas/archgram/compare/v0.5.0...v0.6.1
 [0.5.0]: https://github.com/byAbas/archgram/compare/v0.4.0...v0.5.0

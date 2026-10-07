@@ -11,7 +11,7 @@ own colours. The report lists each part drawn with the file behind it.
 ## What it runs, reads and writes
 
 - It runs archgram through npx: the project's own archgram when its
-  `package.json` lists one, and otherwise `archgram@0.7.0`, the version
+  `package.json` lists one, and otherwise `archgram@0.8.0`, the version
   released with this skill. npx downloads that version from the npm
   registry the first time.
 - It reads the project's code, documentation and styling files.
@@ -26,10 +26,12 @@ own colours. The report lists each part drawn with the file behind it.
   project's root and, where the colours are not already design tokens,
   `docs/diagrams/theme/archgram.resolver.json`.
 - It opens the SVG once with the system's own viewer.
-- It pre-approves one command, the one that only prints the spec format,
-  at that version: `npx --yes --loglevel=error archgram@0.7.0 spec`.
-  Every other command, `check`, `build`, `theme check` and the project's
-  own archgram included, asks the user first.
+- It pre-approves two commands, at that version, which only print parts
+  of the spec format:
+  `npx --yes --loglevel=error archgram@0.8.0 spec --brief` and
+  `npx --yes --loglevel=error archgram@0.8.0 spec --section theme-file`.
+  Every other command, `check`, `build`, `theme check`, another section
+  and the project's own archgram included, asks the user first.
 - It sends nothing anywhere, and edits the README or commits only when
   asked.
 
@@ -42,7 +44,7 @@ and send none: there is no account, no telemetry and no analytics.
   and writes the diagram's files there, where you can change or delete
   them; the archgram command makes no network request.
 - The one request goes to the npm registry, when npx downloads
-  `archgram@0.7.0` the first time; a project that lists archgram has
+  `archgram@0.8.0` the first time; a project that lists archgram has
   installed it already. npm's
   [privacy policy](https://docs.npmjs.com/policies/privacy) covers that
   request.

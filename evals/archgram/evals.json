@@ -20,7 +20,8 @@
         "The run asked the user no question",
         "The report gives each edge with the file and line that makes it, and each cited line holds the code it quotes",
         "No browser was started and no screenshot taken",
-        "The finished SVG was opened with the system's viewer (`open`, `xdg-open` or `start`); a run whose attempt was denied counts as having opened it"
+        "The finished SVG was opened with the system's viewer (`open`, `xdg-open` or `start`); a run whose attempt was denied counts as having opened it",
+        "README.md is left unchanged, and the report offers the line that shows the drawing in it"
       ]
     },
     {
@@ -87,7 +88,8 @@
         "The SVG is no wider than 1,300 px",
         "The report gives each edge with the file and line that makes it, and each cited line holds the code it quotes",
         "No browser was started and no screenshot taken",
-        "The finished SVG was opened with the system's viewer (`open`, `xdg-open` or `start`); a run whose attempt was denied counts as having opened it"
+        "The finished SVG was opened with the system's viewer (`open`, `xdg-open` or `start`); a run whose attempt was denied counts as having opened it",
+        "README.md is left unchanged, and the report offers the line that shows the drawing in it"
       ]
     },
     {
@@ -110,7 +112,8 @@
         "The SVG is no wider than 1,300 px",
         "The report gives each edge with the file and line that makes it, and each cited line holds the code it quotes",
         "No browser was started and no screenshot taken",
-        "The finished SVG was opened with the system's viewer (`open`, `xdg-open` or `start`); a run whose attempt was denied counts as having opened it"
+        "The finished SVG was opened with the system's viewer (`open`, `xdg-open` or `start`); a run whose attempt was denied counts as having opened it",
+        "README.md is left unchanged, and the report offers the line that shows the drawing in it"
       ]
     },
     {
