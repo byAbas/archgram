@@ -1,5 +1,6 @@
 archgram: 1
 title: notes
+# Drawn for the onboarding page: keep it to the parts a new reader meets.
 description: >-
   A reader asks the API for a note, which reads it from the Redis cache
   and, on a miss, from Postgres. A digest route mails the team through
