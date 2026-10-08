@@ -2,8 +2,8 @@
 
 | Field   | Value      |
 |---------|------------|
-| Version | 0.27       |
-| Date    | 2026-10-07 |
+| Version | 0.29       |
+| Date    | 2026-10-08 |
 | Status  | Draft      |
 | Owner   | Abas Turabli |
 
@@ -104,6 +104,7 @@ same file every time.
 | 0.6 | A step's number lights as its signal passes it; the skill works with any coding agent that reads the Agent Skills format |
 | 0.7 | A node or an edge names the code behind it, and archgram says when that code is gone ([docs/features/sources.md](features/sources.md)) |
 | 0.8 | archgram chooses the direction that fits a README, and `build` says the size it drew; `archgram spec` prints a short part of the format, or one section |
+| 0.9 | A spec says how wide it is shown; `build` and `direction: auto` measure against it; the skill keeps a drawing's direction once chosen ([docs/features/shown-width.md](features/shown-width.md)) |
 | Later | The WASM package, for the browser; the PNG module, drawn from the same scene as the SVG by archgram's own rasterizer |
 
 ## 6. Functional requirements
@@ -116,16 +117,20 @@ same file every time.
 - The spec holds no coordinates. It may carry layout hints: direction,
   which nodes share a column or a row, and the order of nodes within one.
   The direction may be left to archgram (`auto`), which chooses the one
-  that fits (§6.2).
+  that fits (§6.2). It may say how wide it is shown (`shownWidth`), a
+  README on GitHub when it does not
+  ([docs/features/shown-width.md](features/shown-width.md)).
 - A node or an edge may name the code behind it, and archgram says when
   that code is not there; it is never drawn. It finds what the code lost,
   not what it gained ([docs/features/sources.md](features/sources.md)).
 
 ### 6.2 Layout and routing
 - Edges flow in one main direction, left to right or top to bottom.
-- With the direction `auto`, it is left to right while that is no wider
-  than 1,300 px (§6.6), and otherwise whichever of the two directions is
-  narrower: top to bottom can be wider still, for a wide, shallow tree.
+- With the direction `auto`, it is left to right while that keeps the
+  text readable where the diagram is shown (no wider than 1,300 px in a
+  README, `shownWidth × 1300 / 880` elsewhere, §6.6), and otherwise
+  whichever of the two directions is narrower: top to bottom can be wider
+  still, for a wide, shallow tree.
   The choice is made from the spec alone, so the same spec still draws
   the same bytes; a spec that names no direction keeps left to right.
 - No two boxes overlap. No edge passes through a box it does not start
@@ -190,8 +195,9 @@ same file every time.
   line for each other section, which `archgram spec --brief` prints alone;
   `--section` prints one section. Both are parts of the same document, not
   a copy of it.
-- `archgram build` says the size it drew, and warns when it is wider than
-  1,300 px (§6.6).
+- `archgram build` says the size it drew and the direction, and warns,
+  still drawing, when it is wider than keeps its text readable where it
+  is shown (§6.2).
 - A library, usable from Rust and, later through WASM, from the browser
   (§5).
 - PNG, one file per theme, through the optional module (later, §5).
@@ -275,10 +281,15 @@ same file every time.
   nodes and twelve edges: parts with the same relations, which no question
   tells apart, are one node naming them all; what is still over goes to
   a second diagram, or is left out and said so.
-- A drawing is at most 1,300 px wide, so its text stays readable in a
-  README on GitHub. The skill leaves the direction to archgram (`auto`)
-  unless the user asks for one, reads the size from `build`, and splits a
-  drawing that fits neither way in two.
+- A drawing keeps its text readable where it is shown: at most 1,300 px
+  wide in a README on GitHub, and `shownWidth × 1300 / 880` where the
+  user or the project says it is shown elsewhere, which the skill writes
+  as `shownWidth`. The skill leaves the first drawing's direction to
+  archgram (`auto`) unless the user asks for one, reads the size from
+  `build`, then writes the direction archgram chose into the spec, so an
+  edit never turns the drawing on its side; it turns one only when the
+  user asks or the drawing no longer fits, and says so. A drawing that
+  fits neither way is split in two.
 - The skill judges a drawing from its spec and its size. It never starts a
   browser or takes a screenshot.
 - When done, `archgram check` passes, the SVG is opened with the
@@ -320,7 +331,8 @@ archgram records each logo's source and guidelines for them.
   median of three runs on Claude Opus 5.5). The evaluation of §1 took
   74 and 36.
 - Each feature with a document of its own meets the criteria there:
-  [the code behind a diagram](features/sources.md#success-criteria).
+  [the code behind a diagram](features/sources.md#success-criteria),
+  [where a diagram is shown](features/shown-width.md#success-criteria).
 
 ## 9. Non-goals
 
@@ -331,6 +343,9 @@ archgram records each logo's source and guidelines for them.
 - A hand-drawn or sketch style.
 - Graphs larger than about 300 nodes.
 - A hosted rendering service.
+- A layout that changes with the reader's screen. A diagram keeps one
+  shape, so a reader's picture of it holds from one screen, and one
+  version, to the next ([docs/features/shown-width.md](features/shown-width.md)).
 
 ## 10. Open questions
 
@@ -368,3 +383,4 @@ None.
 | 0.26    | 2026-10-07 | `direction: auto` keeps left to right while it fits 1,300 px, and otherwise the narrower direction, not top to bottom always: a 100-node tree measured 1,648 px left to right and 10,424 px top to bottom (§6.2). |
 | 0.27    | 2026-10-07 | The skill draws in archgram's own palette unless the user asks for other colours, as §4 says of a project's design system; asked, it finds the project's as before, and a mapping file already at the root keeps being used (§6.6). |
 | 0.28    | 2026-10-08 | The kinds' icons come from Hugeicons' free Stroke Rounded set (MIT), copied once, in place of archgram's own drawings (§6.3). |
+| 0.29    | 2026-10-08 | 0.9: a spec says how wide it is shown, a README by default; `build` and `direction: auto` keep the text readable there, and `build` warns but still draws; the skill writes the direction it chose into the spec, so an edit never turns a drawing; no layout per screen (§5, §6.1, §6.2, §6.5, §6.6, §8, §9, `docs/features/shown-width.md`, #114). |
