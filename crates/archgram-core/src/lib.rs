@@ -28,6 +28,21 @@ use spec::Direction;
 /// it, and otherwise chooses the narrower direction.
 pub const README_WIDTH: f64 = 1300.0;
 
+/// How wide a README on GitHub shows a drawing, about: the width
+/// [`README_WIDTH`] is measured against.
+pub const README_SHOWN_WIDTH: f64 = 880.0;
+
+/// The widest drawing that keeps its text readable where `spec` is shown
+/// (docs/features/shown-width.md): [`README_WIDTH`] in a README, and
+/// `shownWidth` scaled by the same ratio elsewhere, so the smallest text
+/// shows at the size it does in a README.
+#[must_use]
+pub fn readable_width(spec: &Spec) -> f64 {
+    spec.shown_width.map_or(README_WIDTH, |shown| {
+        shown * README_WIDTH / README_SHOWN_WIDTH
+    })
+}
+
 /// A drawing, with its size and the direction it was laid out in.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Drawing {
@@ -143,7 +158,7 @@ pub fn draw_with(
 
 /// The spec laid out in its direction, `auto` decided (docs/SPEC.md, Top
 /// level): left to right when the drawing is no wider than
-/// [`README_WIDTH`], and otherwise the narrower of the two directions, so
+/// [`readable_width`], and otherwise the narrower of the two directions, so
 /// a wide, shallow diagram does not turn wider still. The spec returned
 /// names the direction it was laid out in, so layout only ever sees right
 /// or down.
@@ -168,7 +183,7 @@ fn fit(
         render::scene(spec, placement, options, logos).width
     };
     let right = lay(Direction::Right)?;
-    if width(&right) <= README_WIDTH {
+    if width(&right) <= readable_width(spec) {
         return Ok(right);
     }
     let down = lay(Direction::Down)?;

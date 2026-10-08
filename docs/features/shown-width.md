@@ -9,9 +9,9 @@
 | Issue   | [#114](https://github.com/byAbas/archgram/issues/114) |
 
 What this feature does and why, in more detail than `docs/PRD.md`, which
-points here. The field it adds goes into `docs/SPEC.md` (Top-level), and
-how archgram measures a drawing against it into `ARCHITECTURE.md`, when
-the feature is built.
+points here. The field it adds is in `docs/SPEC.md` (Top level); how
+archgram measures a drawing against it is in `ARCHITECTURE.md` (Layout,
+Direction).
 
 ## Problem
 

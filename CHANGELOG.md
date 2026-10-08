@@ -6,6 +6,15 @@ follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- `shownWidth` says how wide a diagram is shown, in CSS pixels, when it
+  is not a README on GitHub. `direction: auto` keeps left to right while
+  the drawing keeps its text readable there (`shownWidth × 1300 / 880`,
+  996 px for a 674 px column), and `build` warns, still drawing, when it
+  is wider, with the other direction's width when that one fits. A spec
+  without it draws the same bytes as before.
+
 ### Changed
 
 - Edges entering one side of a card each arrive at a point of their own,
