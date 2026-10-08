@@ -3,6 +3,7 @@
 Thank you for helping. archgram is small on purpose; a change is easiest to
 accept when it fits what [docs/PRD.md](docs/PRD.md) sets out, so for
 anything larger than a fix, open an issue first and describe the problem.
+Everyone taking part follows the [code of conduct](CODE_OF_CONDUCT.md).
 
 ## Setting up
 
@@ -92,8 +93,10 @@ sh scripts/claude-hooks.test
   [README.md](README.md); each release's changes are
   [CHANGELOG.md](CHANGELOG.md); how a change lands is this file, and how a
   release is made [RELEASE.md](RELEASE.md); the security policy is
-  [SECURITY.md](SECURITY.md); what only a coding agent must do is
-  [AGENTS.md](AGENTS.md). Change the document that owns a fact, and only
+  [SECURITY.md](SECURITY.md); how people treat each other here is
+  [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md); what archgram commits to for
+  accessibility is [ACCESSIBILITY.md](ACCESSIBILITY.md); what only a
+  coding agent must do is [AGENTS.md](AGENTS.md). Change the document that owns a fact, and only
   that one; elsewhere, link to it. A change to what archgram does
   searches for the old wording and leaves none of it in a document, a
   comment or a test name, and its pull request says so.

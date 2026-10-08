@@ -1,0 +1,63 @@
+name: Bug
+description: archgram does something it should not, or draws something wrong.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        One problem per issue. A vulnerability goes to the Security tab, never here ([SECURITY.md](https://github.com/byAbas/archgram/blob/main/SECURITY.md)).
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: What `npx archgram --version` prints.
+      placeholder: archgram 0.8.0
+    validations:
+      required: true
+  - type: dropdown
+    id: install
+    attributes:
+      label: How it was installed
+      options:
+        - npm
+        - From source (cargo)
+        - Through the archgram skill, by a coding agent
+    validations:
+      required: true
+  - type: input
+    id: system
+    attributes:
+      label: System
+      description: The operating system and the CPU.
+      placeholder: macOS 15, arm64
+    validations:
+      required: true
+  - type: textarea
+    id: command
+    attributes:
+      label: Command
+      description: The command you ran.
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: spec
+    attributes:
+      label: Spec
+      description: The smallest spec that shows the problem. Leave out anything private.
+      render: yaml
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: What happened
+      description: What the command printed, or what the drawing shows. A screenshot helps; say whether it is the light or the dark theme.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+    validations:
+      required: true
