@@ -111,7 +111,11 @@ Map the facts onto the format: each part a node of the kind that fits it,
 with its technology's logo (`tech`) when the part is built on one; each
 call or data movement an edge; a boundary (a service, a trust zone, the
 plugin versus the project) a frame; the path the contract's questions
-follow a flow, so it animates. Keep labels to the words a reader needs.
+follow a flow, so it animates. Keep labels to the words a reader needs:
+an edge's label is a few words, two or three, naming the call or the data
+(`POST /orders`, `enqueue`, `read-through`); what the reader needs beyond
+that goes in a node's `note` or the report, not onto the line, since a
+long label pushes the cards apart.
 Say where the drawing is shown when it is not a README on GitHub: a docs
 site, a blog, a wiki, any page that shows it narrower. Write that width
 as `shownWidth`, in CSS pixels, the place at its widest, from the user's

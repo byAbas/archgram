@@ -113,8 +113,8 @@ Run it on the drawing before you report, and fix what it finds.
    1,300 px in a README, `shownWidth × 1300 / 880` elsewhere (SKILL.md,
    step 6); over it, `build` warns with what brings it within: the other
    direction, written in the spec, or two diagrams.
-8. **Clutter.** A label on an edge that could be a node's note; a line that
-   detours round the whole drawing; a frame that groups nothing a reader
-   needs.
+8. **Clutter.** An edge label longer than two or three words; a label on
+   an edge that could be a node's note; a line that detours round the
+   whole drawing; a frame that groups nothing a reader needs.
 9. **Honest gaps.** What the diagram still does not show. Say it in the
    report; do not hide it.
