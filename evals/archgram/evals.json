@@ -5,7 +5,7 @@
       "id": 1,
       "name": "draws-a-project",
       "prompt": "Draw the architecture of this project for the README.",
-      "expected_output": "docs/diagrams/<name>.archgram.yaml passes `archgram check`, and <name>.svg is drawn beside it. It has the API, Postgres, the Redis cache, the orders queue and the worker, each backed by a file in src/ and named in the report with it; every node a file backs and every edge carries a source (the file behind it, and for an edge a few words of the line that makes it), each one that `archgram check` finds; a flow follows an order from the API through the queue to the worker and Postgres. The prompt asks for no colours, so the drawing keeps archgram's own, though src/styles.css has colours of its own: no theme is written and the report says the project's colours can be asked for. The skill did not ask any question. Each edge in the report has the file and line that makes it, the drawing is no wider than 1,300 px, and no browser was started and no screenshot taken: only the finished SVG was opened, with the system's viewer.",
+      "expected_output": "docs/diagrams/<name>.archgram.yaml passes `archgram check`, and <name>.svg is drawn beside it. It has the API, Postgres, the Redis cache, the orders queue and the worker, each backed by a file in src/ and named in the report with it; every node a file backs and every edge carries a source (the file behind it, and for an edge a few words of the line that makes it), each one that `archgram check` finds; a flow follows an order from the API through the queue to the worker and Postgres. The prompt asks for no colours, so the drawing keeps archgram's own, though src/styles.css has colours of its own: no theme is written and the report says the project's colours can be asked for. The skill did not ask any question. Each edge in the report has the file and line that makes it, the drawing is no wider than 1,300 px, its spec names the direction archgram chose rather than `auto`, and no browser was started and no screenshot taken: only the finished SVG was opened, with the system's viewer.",
       "files": ["files/shop"],
       "expectations": [
         "A spec at docs/diagrams/<name>.archgram.yaml and <name>.svg beside it exist",
@@ -17,6 +17,7 @@
         "No theme is written (no archgram.theme.json, no resolver) and no build passes --theme-file: the prompt asked for no colours",
         "The report says the colours are archgram's own, and that the project's can be asked for",
         "The SVG is no wider than 1,300 px",
+        "The final spec names the direction `build` chose (`right` or `down`), not `auto`, and no `shownWidth`: the prompt asks for a README",
         "The run asked the user no question",
         "The report gives each edge with the file and line that makes it, and each cited line holds the code it quotes",
         "No browser was started and no screenshot taken",
@@ -41,7 +42,7 @@
       "id": 3,
       "name": "updates-an-existing-diagram",
       "prompt": "The code changed, update the architecture diagram.",
-      "expected_output": "The skill changes docs/diagrams/architecture.archgram.yaml rather than starting a new spec: it keeps the reader, the API and Postgres, adds Elasticsearch and the search call backed by src/api.ts, gives every node a file backs (not the reader) and every edge a source, the new ones and the ones already there, which `archgram check` finds, draws architecture.svg, and says in the report what changed. Each edge in the report has the file and line that makes it, the drawing is no wider than 1,300 px, and no browser was started and no screenshot taken: only the finished SVG was opened, with the system's viewer.",
+      "expected_output": "The skill changes docs/diagrams/architecture.archgram.yaml rather than starting a new spec: it keeps the reader, the API and Postgres, adds Elasticsearch and the search call backed by src/api.ts, gives every node a file backs (not the reader) and every edge a source, the new ones and the ones already there, which `archgram check` finds, draws architecture.svg, and says in the report what changed. Each edge in the report has the file and line that makes it, the drawing is no wider than 1,300 px and keeps the direction the spec had, and no browser was started and no screenshot taken: only the finished SVG was opened, with the system's viewer.",
       "files": ["files/search"],
       "expectations": [
         "docs/diagrams/architecture.archgram.yaml is changed in place; no second spec is written",
@@ -50,6 +51,7 @@
         "Every node a file backs (not the reader) and every edge has a source, the new ones and those already there",
         "The run ran `archgram check` on the final spec, and it passes",
         "docs/diagrams/architecture.svg is drawn, no wider than 1,300 px",
+        "The spec's direction is as it was: no `direction` is added, so the drawing stays left to right",
         "The report says what changed",
         "The report gives each edge with the file and line that makes it, and each cited line holds the code it quotes",
         "No browser was started and no screenshot taken",
@@ -145,7 +147,7 @@
       "id": 8,
       "name": "repairs-what-lost-its-code",
       "prompt": "CI says the architecture diagram no longer matches the code. Fix it.",
-      "expected_output": "The skill runs `archgram check` on docs/diagrams/architecture.archgram.yaml first, which names the Note cache (src/cache.ts no longer exists) and the API's call to it (src/api.ts no longer holds `cached(`). It changes that spec where it stands, keeping the author's comment, rather than starting a new one: it removes the cache and its edge, and does not draw them again under another name; the flow now goes from the reader through the API to Postgres; the API's edge to Postgres is no longer dashed or labelled 'on a miss', since every read now goes there; the description no longer mentions Redis. It keeps the reader, the API, Postgres and Resend with their sources as they were, since the check found nothing wrong with them. `archgram check` passes, architecture.svg is drawn, and the report says what the check found and what changed. No browser was started and no screenshot taken.",
+      "expected_output": "The skill runs `archgram check` on docs/diagrams/architecture.archgram.yaml first, which names the Note cache (src/cache.ts no longer exists) and the API's call to it (src/api.ts no longer holds `cached(`). It changes that spec where it stands, keeping the author's comment, rather than starting a new one: it removes the cache and its edge, and does not draw them again under another name; the flow now goes from the reader through the API to Postgres; the API's edge to Postgres is no longer dashed or labelled 'on a miss', since every read now goes there; the description no longer mentions Redis. It keeps the reader, the API, Postgres and Resend with their sources as they were, since the check found nothing wrong with them. `archgram check` passes, architecture.svg is drawn in the direction the spec had, and the report says what the check found and what changed. No browser was started and no screenshot taken.",
       "files": ["files/notes"],
       "expectations": [
         "The run runs `archgram check` on docs/diagrams/architecture.archgram.yaml before changing it",
@@ -158,6 +160,7 @@
         "The reader, the API, Postgres and Resend are kept, with their sources as they were",
         "The run ran `archgram check` on the final spec, and it passes",
         "architecture.svg is drawn",
+        "The spec's direction is as it was: no `direction` is added, so the drawing stays left to right",
         "The report says what changed in the spec",
         "No browser was started and no screenshot taken"
       ]

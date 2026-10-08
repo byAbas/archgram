@@ -9,14 +9,14 @@ prompts run in.
 
 | Case | What it checks |
 |---|---|
-| `draws-a-project` | It draws a project from its code, every part backed by a file and every edge by a line, no wider than 1,300 px, in archgram's colours since none were asked for, without starting a browser |
+| `draws-a-project` | It draws a project from its code, every part backed by a file and every edge by a line, no wider than 1,300 px with the direction archgram chose written in the spec, in archgram's colours since none were asked for, without starting a browser |
 | `asks-when-unclear` | It asks when the README and the code disagree, rather than drawing what does not exist |
-| `updates-an-existing-diagram` | It changes an existing spec and says what changed |
+| `updates-an-existing-diagram` | It changes an existing spec, keeping its direction, and says what changed |
 | `not-for-other-work` | It stays out of a request that is not a diagram, and the work asked for is done |
 | `draws-a-pipeline` | It recognises a data pipeline and follows one day's rows from their sources to the warehouse, with where bad rows go |
 | `draws-ports-and-adapters` | It recognises ports and adapters and shows the rules depending on nothing outside their ports |
 | `merges-parts-with-the-same-relations` | It merges parts no question tells apart and keeps a crowded system within about 10 nodes and 12 edges |
-| `repairs-what-lost-its-code` | It starts from what `archgram check` says has lost its code, removes only that, and keeps every source the check found |
+| `repairs-what-lost-its-code` | It starts from what `archgram check` says has lost its code, removes only that, keeps every source the check found and the spec's direction |
 | `draws-in-the-project-colours` | Asked for the project's colours, it reads them from its CSS, writes them as tokens and a mapping that `archgram theme check` passes, and draws with them |
 
 Every case that draws expects a source on each node a file backs and on

@@ -109,8 +109,10 @@ Run it on the drawing before you report, and fix what it finds.
    embedding call, a build step, a check? Any entry point, mode, output or
    enforcement at this level that is neither drawn nor listed as left out
    (`references/architecture.md`, What is easy to miss)?
-7. **Width.** No wider than 1,300 px (SKILL.md, step 6); over it, redraw
-   top to bottom or split it.
+7. **Width.** No wider than keeps its text readable where it is shown:
+   1,300 px in a README, `shownWidth × 1300 / 880` elsewhere (SKILL.md,
+   step 6); over it, `build` warns with what brings it within: the other
+   direction, written in the spec, or two diagrams.
 8. **Clutter.** A label on an edge that could be a node's note; a line that
    detours round the whole drawing; a frame that groups nothing a reader
    needs.
