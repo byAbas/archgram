@@ -17,6 +17,7 @@
         "No theme is written (no archgram.theme.json, no resolver) and no build passes --theme-file: the prompt asked for no colours",
         "The report says the colours are archgram's own, and that the project's can be asked for",
         "The SVG is no wider than 1,300 px",
+        "Each edge label is a few words, two or three; any longer detail is in a node's note or the report",
         "The final spec names the direction `build` chose (`right` or `down`), not `auto`, and no `shownWidth`: the prompt asks for a README",
         "The run asked the user no question",
         "The report gives each edge with the file and line that makes it, and each cited line holds the code it quotes",

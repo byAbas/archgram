@@ -13,6 +13,9 @@ follow [Semantic Versioning](https://semver.org/).
   long label no longer pushes two columns apart. Flowing down, a wrapped
   label reaches half as far across, so its card grows less. A label with
   no space stays on one line.
+- The `archgram` skill keeps an edge's label to a few words, two or
+  three, naming the call or the data, and puts any detail in a node's
+  `note` or its report: a long label pushes the cards apart.
 
 ## [0.9.0] - 2026-10-08
 
