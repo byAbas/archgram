@@ -19,6 +19,10 @@ pub struct Spec {
     pub description: String,
     #[serde(default)]
     pub direction: Direction,
+    /// How wide the diagram is shown, in CSS pixels; a README on GitHub
+    /// when absent ([`crate::readable_width`]).
+    #[serde(default, rename = "shownWidth")]
+    pub shown_width: Option<f64>,
     #[serde(default)]
     pub card: CardStyle,
     #[serde(default)]
@@ -106,7 +110,7 @@ pub enum Direction {
     #[default]
     Right,
     Down,
-    /// Right while it fits [`crate::README_WIDTH`], and otherwise the
+    /// Right while it fits [`crate::readable_width`], and otherwise the
     /// narrower of right and down; decided before layout
     /// ([`crate::draw_with`]).
     Auto,

@@ -1,10 +1,13 @@
 //! `direction: auto` (docs/SPEC.md, Top level): left to right while the
-//! drawing fits [`README_WIDTH`], top to bottom when it would not, and the
-//! same bytes as naming that direction outright.
+//! drawing fits where it is shown ([`readable_width`]: [`README_WIDTH`] in
+//! a README), top to bottom when it would not, and the same bytes as naming
+//! that direction outright.
 
 use archgram_core::render::Options;
 use archgram_core::spec::Direction;
-use archgram_core::{Drawing, README_WIDTH, draw_themes, draw_with, logos::NoLogos, parse_spec};
+use archgram_core::{
+    Drawing, README_WIDTH, draw_themes, draw_with, logos::NoLogos, parse_spec, readable_width,
+};
 
 /// A chain of `n` services, each calling the next: the longer the chain,
 /// the wider it is drawn left to right.
@@ -130,4 +133,43 @@ fn auto_keeps_the_narrower_direction_when_neither_fits() {
     let auto = drawn(&tree(100, "auto"));
     assert_eq!(auto.direction, Direction::Right);
     assert_eq!(auto.svg, right.svg);
+}
+
+/// Where a diagram is shown sets the width `auto` keeps within: the README's
+/// 1,300 px by default, and the same ratio of `shownWidth` elsewhere.
+#[test]
+fn readable_width_is_the_readme_s_ratio_of_where_it_is_shown() {
+    let spec = |rest: &str| {
+        parse_spec(&chain(2, "auto").replacen(
+            r#""direction""#,
+            &format!(r#"{rest} "direction""#),
+            1,
+        ))
+        .unwrap()
+    };
+    assert!((readable_width(&spec("")) - README_WIDTH).abs() < f64::EPSILON);
+    assert!((readable_width(&spec(r#""shownWidth": 880,"#)) - README_WIDTH).abs() < 1e-9);
+    let column = readable_width(&spec(r#""shownWidth": 674,"#));
+    assert!((column - 674.0 * 1300.0 / 880.0).abs() < 1e-9, "{column}");
+}
+
+/// A chain that fits a README left to right but not a 674 px column turns
+/// top to bottom there, and only there.
+#[test]
+fn auto_turns_for_a_narrower_place_only() {
+    let column = 674.0 * README_WIDTH / 880.0;
+    let n = (2..12)
+        .find(|&n| {
+            let w = drawn(&chain(n, "right")).width;
+            w > column && w <= README_WIDTH
+        })
+        .expect("a chain between the column's width and the README's");
+    let shown =
+        |json: String| json.replacen(r#""direction""#, r#""shownWidth": 674, "direction""#, 1);
+    assert_eq!(drawn(&chain(n, "auto")).direction, Direction::Right);
+    let narrow = drawn(&shown(chain(n, "auto")));
+    assert_eq!(narrow.direction, Direction::Down);
+    assert!(narrow.width <= column, "{}", narrow.width);
+    // A named direction stays, however narrow the place.
+    assert_eq!(drawn(&shown(chain(n, "right"))).direction, Direction::Right);
 }

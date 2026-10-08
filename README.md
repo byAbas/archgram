@@ -78,10 +78,11 @@ one file.
 
 Draws the diagram. A spec named `<name>.archgram.yaml` (or `.yml`,
 `.json`) draws `<name>.svg` beside it. It says the size it drew and the
-direction, and warns when the drawing is wider than 1,300 px, more than
-a README on GitHub shows at a readable size. With `direction: auto` in
-the spec, archgram keeps left to right while it fits, and otherwise the
-narrower direction ([docs/SPEC.md](docs/SPEC.md)).
+direction, and warns, still drawing, when the drawing is wider than keeps
+its text readable where it is shown: 1,300 px in a README on GitHub, or
+the ratio of `shownWidth` when the spec says it is shown elsewhere. With
+`direction: auto` in the spec, archgram keeps left to right while it
+fits, and otherwise the narrower direction ([docs/SPEC.md](docs/SPEC.md)).
 
 ```sh
 npx archgram build docs/diagrams/linkshort.archgram.yaml

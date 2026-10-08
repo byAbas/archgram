@@ -105,7 +105,8 @@ drawing keeps a plain name; any other spec draws its own name with `.svg`.
 | `archgram` | yes | `1` | | The spec format's version |
 | `title` | yes | text | | The diagram's name; the SVG's `<title>` |
 | `description` | yes | text | | The whole diagram in prose; the SVG's `<desc>`, read by screen readers |
-| `direction` | no | `right`, `down`, `auto` | `right` | The direction of the flow. `auto` lets archgram choose: left to right while it is no wider than 1,300 px, the most a README on GitHub shows at a readable size, and otherwise whichever of left to right and top to bottom is narrower. It is chosen from the spec alone, so the same spec draws the same bytes, and `archgram build` says which it chose |
+| `direction` | no | `right`, `down`, `auto` | `right` | The direction of the flow. `auto` lets archgram choose: left to right while it keeps its text readable where the diagram is shown (`shownWidth`), and otherwise whichever of left to right and top to bottom is narrower. It is chosen from the spec alone, so the same spec draws the same bytes, and `archgram build` says which it chose |
+| `shownWidth` | no | a number of CSS pixels, 200 to 4,000 | a README on GitHub, 880 | How wide the diagram is shown where it is read. The widest drawing that keeps its text readable there is `shownWidth × 1300 / 880`: 1,300 px in a README, 996 px for 674. `direction: auto` chooses against it, and `archgram build` warns, still drawing, when a drawing is wider; width never fails `check` (docs/features/shown-width.md) |
 | `card` | no | `horizontal`, `vertical` | `horizontal` | The card style for every node |
 | `logo` | no | `corner`, `inline`, `chip`, `icon` | `corner` | Where technology logos go: the card's corner, before the note (or the technology's name), a chip on the icon, or in place of the icon |
 | `palette` | no | a palette name | `mono` | The palette; light and dark are chosen when rendering |
@@ -297,6 +298,7 @@ its JSON pointer (or its line and column in YAML), when:
 
 - a required field is missing, a field is unknown, or a value is not one
   of those allowed;
+- `shownWidth` is not a number from 200 to 4,000;
 - a text (the title, the description, a label, a note or a flow's name)
   holds a character XML does not allow, such as a control character
   other than tab, line feed and carriage return: the SVG would not open;

@@ -9,6 +9,11 @@ use crate::spec::{Flow, Sources, Spec, Step};
 
 use crate::tokens::PALETTES;
 
+/// The narrowest and widest a diagram may say it is shown, in CSS pixels
+/// (docs/SPEC.md, Top level).
+const SHOWN_WIDTH_MIN: f64 = 200.0;
+const SHOWN_WIDTH_MAX: f64 = 4000.0;
+
 /// The only version of the spec format.
 pub const FORMAT_VERSION: u32 = 1;
 
@@ -82,6 +87,18 @@ impl<'a> Validator<'a> {
             self.error(
                 "/description".into(),
                 "the description is empty; it is what screen readers announce".into(),
+            );
+        }
+        // A width outside this is a typo, not a place: a column narrower
+        // than a phone, or wider than a wall.
+        if let Some(w) = s.shown_width
+            && !(SHOWN_WIDTH_MIN..=SHOWN_WIDTH_MAX).contains(&w)
+        {
+            self.error(
+                "/shownWidth".into(),
+                format!(
+                    "`shownWidth` is {w}; it is how wide the diagram is shown, in CSS pixels, from {SHOWN_WIDTH_MIN} to {SHOWN_WIDTH_MAX}"
+                ),
             );
         }
         if !PALETTES.contains(&s.palette.as_str()) {

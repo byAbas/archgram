@@ -434,11 +434,11 @@ fn build(
         }
     };
     if let Some((_, drawing)) = drawings.first()
-        && drawing.width > archgram_core::README_WIDTH
+        && drawing.width > archgram_core::readable_width(&spec)
     {
         eprintln!(
             "archgram: warning: {path}: {}",
-            too_wide(spec.direction, drawing)
+            too_wide(&spec, options, drawing)
         );
     }
     for (file, drawing) in drawings {
@@ -470,20 +470,42 @@ fn build(
     ExitCode::SUCCESS
 }
 
-/// What to say of a drawing wider than a README shows at a readable size
-/// (docs/PRD.md 6.6), and what would bring it within: `auto` where the
-/// spec named right, and otherwise a second diagram, since `auto` has
-/// already chosen the narrower direction, and `down` was the spec's own.
-fn too_wide(asked: Direction, drawing: &archgram_core::Drawing) -> String {
-    let advice = if asked == Direction::Right {
-        "set `direction: auto` to let archgram choose the narrower direction, or split it in two"
-    } else {
-        "split it into two diagrams"
+/// What to say of a drawing wider than keeps its text readable where it
+/// is shown (docs/features/shown-width.md), and what would bring it
+/// within: the other direction, written in the spec, when that one fits;
+/// otherwise two diagrams. `auto` has already chosen the narrower.
+fn too_wide(spec: &Spec, options: Options, drawing: &archgram_core::Drawing) -> String {
+    let limit = archgram_core::readable_width(spec);
+    let place = match spec.shown_width {
+        Some(shown) => format!("that keep its text readable at the {shown:.0} px it is shown at"),
+        None => "a README on GitHub shows at a readable size".to_owned(),
     };
+    let other = match drawing.direction {
+        Direction::Down => Some((Direction::Right, "right")),
+        Direction::Right | Direction::Auto if spec.direction != Direction::Auto => {
+            Some((Direction::Down, "down"))
+        }
+        Direction::Right | Direction::Auto => None,
+    };
+    let turned = other.and_then(|(direction, name)| {
+        let turned = Spec {
+            direction,
+            ..spec.clone()
+        };
+        archgram_core::draw_with(&turned, options, &Icons::load())
+            .ok()
+            .filter(|d| d.width <= limit)
+            .map(|d| {
+                format!(
+                    "write `direction: {name}`, which draws it {:.0} px wide, or split it in two",
+                    d.width
+                )
+            })
+    });
+    let advice = turned.unwrap_or_else(|| "split it into two diagrams".to_owned());
     format!(
-        "the drawing is {:.0} px wide, wider than the {:.0} px a README on GitHub shows at a readable size; {advice}",
-        drawing.width,
-        archgram_core::README_WIDTH
+        "the drawing is {:.0} px wide, wider than the {limit:.0} px {place}; {advice}",
+        drawing.width
     )
 }
 

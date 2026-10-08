@@ -193,10 +193,13 @@ the units would find the same errors. The steps:
 6. Direction. The layout is computed left to right; top to bottom is a
    transform of the result. `direction: auto` is decided before layout,
    in `draw_with` and `draw_themes`: the spec is laid out and its scene
-   built left to right, and when the scene is wider than 1,300 px
-   (`README_WIDTH`), top to bottom too, keeping the narrower. Layout
-   itself only ever sees right or down, and the drawing reports its size
-   and the direction chosen, which `archgram build` prints.
+   built left to right, and when the scene is wider than keeps its text
+   readable where the diagram is shown (`readable_width`: 1,300 px,
+   `README_WIDTH`, in a README; `shownWidth × 1300 / 880` elsewhere), top
+   to bottom too, keeping the narrower. Layout itself only ever sees right
+   or down, and the drawing reports its size and the direction chosen,
+   which `archgram build` prints, with a warning when the drawing is
+   wider than that width.
 
 ### Route
 

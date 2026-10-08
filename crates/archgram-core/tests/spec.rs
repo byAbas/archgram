@@ -186,6 +186,28 @@ fn top_level_rules() {
     );
 }
 
+/// `shownWidth` is a width a place can have, in CSS pixels: from 200 to
+/// 4,000, so a typo is caught rather than drawn for.
+#[test]
+fn shown_width_is_a_width_a_place_can_have() {
+    for ok in ["200", "674", "880.5", "4000"] {
+        let json = spec_with(TWO, &format!(r#", "shownWidth": {ok}"#));
+        assert!(parse_spec(&json).is_ok(), "{ok}");
+    }
+    for bad in ["90", "0", "-674", "5000"] {
+        let e = errors(&spec_with(TWO, &format!(r#", "shownWidth": {bad}"#)));
+        assert_eq!(pointers(&e), ["/shownWidth"], "{bad}");
+        assert!(
+            e[0].message.contains("from 200 to 4000"),
+            "{}",
+            e[0].message
+        );
+    }
+    // Not a number: refused as any field of the wrong type is.
+    let e = errors(&spec_with(TWO, r#", "shownWidth": "wide""#));
+    assert!(e[0].message.contains("invalid type"), "{}", e[0].message);
+}
+
 /// A text holds only what XML allows, so the SVG opens; a line break or a
 /// tab is allowed.
 #[test]

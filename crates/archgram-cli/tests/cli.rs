@@ -732,13 +732,40 @@ fn build_warns_of_a_drawing_too_wide_for_a_readme_and_still_draws() {
     assert!(out.exists());
     let warning = stderr(&run);
     assert!(
-        warning.contains("px wide, wider than the 1300 px"),
+        warning.contains("px wide, wider than the 1300 px a README on GitHub shows"),
         "{warning}"
     );
     assert!(
-        warning.contains("set `direction: auto` to let archgram choose"),
+        warning.contains("write `direction: down`, which draws it"),
         "{warning}"
     );
+}
+
+/// With `shownWidth`, the warning measures against where the diagram is
+/// shown, and the drawing is still written: width is never a failure.
+#[test]
+fn build_warns_against_where_the_diagram_is_shown() {
+    let dir = scratch("build-shown");
+    let spec = chain_spec(&dir, 6, "right");
+    let text = std::fs::read_to_string(&spec).unwrap();
+    std::fs::write(
+        &spec,
+        text.replacen(r#""direction""#, r#""shownWidth": 674, "direction""#, 1),
+    )
+    .unwrap();
+    let out = dir.join("shown.svg");
+    let run = archgram(&["build", spec.to_str().unwrap(), "-o", out.to_str().unwrap()]);
+    assert!(run.status.success(), "{}", stderr(&run));
+    assert!(out.exists());
+    let warning = stderr(&run);
+    assert!(
+        warning.contains(
+            "wider than the 996 px that keep its text readable at the 674 px it is shown at"
+        ),
+        "{warning}"
+    );
+    let check = archgram(&["check", spec.to_str().unwrap()]);
+    assert!(check.status.success(), "{}", stderr(&check));
 }
 
 fn stdout(run: &Output) -> String {
