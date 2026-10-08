@@ -499,8 +499,9 @@ fn a_step_number_keeps_clear_of_a_frames_name() {
 }
 
 #[test]
-fn lines_that_meet_before_a_card_show_their_numbers_in_one_badge() {
-    // Two flows reach c by two lines that join before its arrowhead (#18).
+fn lines_into_one_card_show_their_own_numbers() {
+    // Two flows reach c by two lines; each arrives at a point of its own, so
+    // each shows its own number, apart from the other's.
     let spec = r#"{ "archgram": 1, "title": "t", "description": "d", "direction": "down", "still": "numbers",
         "nodes": [{ "id": "a", "kind": "service", "label": "A" }, { "id": "b", "kind": "service", "label": "B" },
                   { "id": "c", "kind": "database", "label": "C" }],
@@ -514,5 +515,10 @@ fn lines_that_meet_before_a_card_show_their_numbers_in_one_badge() {
             &svg[start..start + svg[start..].find('<').unwrap()]
         })
         .collect();
-    assert_eq!(texts, ["1,2"]);
+    assert_eq!(texts, ["1", "2"]);
+    let steps = boxes(&svg, "step", None);
+    let apart = |s: [f64; 4], n: [f64; 4]| {
+        s[0] + s[2] <= n[0] || n[0] + n[2] <= s[0] || s[1] + s[3] <= n[1] || n[1] + n[3] <= s[1]
+    };
+    assert!(apart(steps[0], steps[1]), "{steps:?}");
 }

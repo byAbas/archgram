@@ -388,7 +388,9 @@ card, so the arrowhead never touches the card's edge. The arrowhead takes
 the colour of the signal that reaches it, for `motion.hop-gap` from its
 arrival, or until a refusal leaves from it. Edges leaving one
 side of a card leave from its middle as one trunk and fork in the gap;
-edges entering one side merge into one point. An edge with a label near
+edges entering one side each arrive at a point of their own,
+`spacing.edge-edge` apart, so a reader can follow every line to the card
+it comes from. An edge with a label near
 the card, or one drawn against the flow, keeps a port of its own,
 `spacing.edge-edge` or more from the trunk. Two edges between four
 different cards never run along one line: where one card's trunk would
@@ -482,8 +484,9 @@ labels joined by arrows and a branch's by commas, in the legend's type; or
 each step's number on the lines it takes (`step-number`): a pill
 `signal.number` high, edged like a line, just before the arrowhead where
 the step arrives (behind the ✕ where a flow stops), or as near as it fits
-clear of cards, labels, frames' names, a refusal's ✕ and other numbers. Lines that meet before a card share their number there. Steps
-are counted on from one flow to the next. A refused step keeps its ✕ and
+clear of cards, labels, frames' names, a refusal's ✕ and other numbers. Each
+line into a card arrives at a point of its own, so each shows its own
+number. Steps are counted on from one flow to the next. A refused step keeps its ✕ and
 the refusing card its border in the refusal colour; the flow's words end
 with the step that refused it.
 

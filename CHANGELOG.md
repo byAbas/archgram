@@ -8,6 +8,12 @@ follow [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
+- Edges entering one side of a card each arrive at a point of their own,
+  `spacing.edge-edge` apart, instead of merging into one: lines from
+  different cards merged into one point read as one trunk, and a reader
+  could not tell which card each came from. The one level with the card
+  stays in the middle and straight. With `still: numbers`, each such line
+  shows its own number.
 - Every node kind's icon now comes from the free Stroke Rounded set of
   Hugeicons, drawn in archgram's own stroke, with round caps and joins.
   A diagram grows by about 4 to 19 %, by its number of cards.
