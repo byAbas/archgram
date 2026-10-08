@@ -21,6 +21,9 @@ follow [Semantic Versioning](https://semver.org/).
 
 - `--help` (or `-h`) after a command, such as `archgram build --help`,
   prints the help instead of reading `--help` as a spec's name.
+- In a YAML spec, an unquoted comma inside `{ }` (`note: TLS, auth`) is
+  named as the cause of the unknown field it makes, with the way out:
+  quote a value that holds a comma.
 - The `archgram` skill's description holds no angle brackets: a
   description cannot contain XML tags, and `<name>` read as one. It
   triggers as before.
