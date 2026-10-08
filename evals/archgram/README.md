@@ -1,6 +1,6 @@
 # Evaluations of the archgram skill
 
-Nine cases for `skills/archgram`, in the format of Anthropic's
+Ten cases for `skills/archgram`, in the format of Anthropic's
 [skill-creator](https://github.com/anthropics/skills/tree/main/skills/skill-creator),
 the one the Agent Skills format's own guide to evaluating skills uses:
 `evals.json` holds each prompt, what a good run produces and the checks a
@@ -18,6 +18,7 @@ prompts run in.
 | `merges-parts-with-the-same-relations` | It merges parts no question tells apart and keeps a crowded system within about 10 nodes and 12 edges |
 | `repairs-what-lost-its-code` | It starts from what `archgram check` says has lost its code, removes only that, keeps every source the check found and the spec's direction |
 | `draws-in-the-project-colours` | Asked for the project's colours, it reads them from its CSS, writes them as tokens and a mapping that `archgram theme check` passes, and draws with them |
+| `draws-from-a-document` | Named a document and no code, it draws the example the document describes, each part and edge sourced to the sentence that states it, in the document's own words, with nothing the text does not state |
 
 Every case that draws expects a source on each node a file backs and on
 each edge, so it needs an archgram that reads them (0.7 or later;
@@ -78,3 +79,16 @@ estimated cost), `transcript.jsonl` (the session's whole transcript) and
 `stderr.log`. skill-creator's
 grader then marks each run against its case's `expectations`, and its
 `aggregate_benchmark` and viewer read the same folders.
+
+## Third-party material
+
+`files/bff-pattern/docs/patterns/backends-for-frontends.md` is
+"Backends for Frontends pattern" from the Azure Architecture Center on
+Microsoft Learn, by Microsoft and its contributors, copied unchanged from
+[MicrosoftDocs/architecture-center](https://github.com/MicrosoftDocs/architecture-center/blob/130a96c829e7/docs/patterns/backends-for-frontends.md)
+at commit `130a96c829e7`. It is licensed under the
+[Creative Commons Attribution 4.0 International License](https://creativecommons.org/licenses/by/4.0/)
+(the repository's [LICENSE](https://github.com/MicrosoftDocs/architecture-center/blob/main/LICENSE)),
+not under archgram's MIT license. Only text whose license allows it is
+kept here.
+

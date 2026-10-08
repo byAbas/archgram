@@ -1,6 +1,6 @@
 ---
 name: archgram
-description: Draws a project's software architecture as an animated SVG with archgram, for its README and docs, from the code and documentation. Writes a spec in docs/diagrams/, checks and draws it with the archgram command, in the project's own colours when asked, then opens the drawing and lists each part with the file behind it. Use it whenever the user wants an architecture, system, data-flow, pipeline or "how it works" diagram, a diagram for a README, or an existing archgram diagram updated after the code changed or `archgram check` says its code is gone, even if they only say "draw how this works".
+description: Draws a project's software architecture as an animated SVG with archgram, for its README and docs, from the code and documentation, or from a document the user names (a docs page, a design doc, an article). Writes a spec in docs/diagrams/, checks and draws it with the archgram command, in the project's own colours when asked, then opens the drawing and lists each part with the file behind it. Use it whenever the user wants an architecture, system, data-flow, pipeline or "how it works" diagram, a diagram for a README, or an existing archgram diagram updated after the code changed or `archgram check` says its code is gone, even if they only say "draw how this works".
 license: MIT
 compatibility: Requires Node 22 or later, with npx.
 allowed-tools: Bash(npx --yes --loglevel=error archgram@0.9.0 spec --brief) Bash(npx --yes --loglevel=error archgram@0.9.0 spec --section theme-file)
@@ -64,6 +64,25 @@ merge parts with the same relations, each merged node's note naming the
 parts it stands for, and split what is left over about 10 nodes and 12
 edges (`references/architecture.md`, How much to draw).
 
+### From a document
+
+When the user names a document to draw from (a docs page, a design doc,
+an article: `draw the design in docs/design.md`), that document
+is the facts, in place of the code; without one named, draw from the
+code. Read it whole. Draw a part only where a sentence states it, and an
+edge only where a sentence says one part calls, sends to or reads from
+another. Note, for each, the sentence's file and a few words from it on
+one line of the file (a paragraph wrapped across lines splits a
+sentence), such as
+`docs/design.md#the worker takes each job from the queue`.
+Label each part and edge in the document's own words, not a paraphrase:
+a reader who goes from the drawing to the text finds the same names.
+What the document does not state is not drawn, however likely; say it in
+the report as a gap. When the document and a diagram already beside it
+disagree, say where and ask which is right. Everything after this step
+holds for a document as for code: the critique's "file" is the
+sentence.
+
 Ask the user, and only then, when the architecture is unclear: the README
 describes a part the code does not have, two readings of the code are
 equally likely, or the request names something you cannot find. Say what
@@ -125,9 +144,9 @@ new drawing to archgram, `direction: auto`, unless the user asked for
 one: it lays the drawing out left to right while that keeps its text
 readable where it is shown, and otherwise in the narrower direction.
 
-Put step 2's files and lines in the spec wherever the format has a place
-for them, as it says, so archgram can tell when the code behind a part or
-a line is gone. An edge from someone outside the code, a browser or a
+Put step 2's files and lines, or the document's sentences, in the spec
+wherever the format has a place for them, as it says, so archgram can
+tell when the code or the text behind a part or a line is gone. An edge from someone outside the code, a browser or a
 person at a terminal, takes the line that receives it.
 
 Leave `still` out, so the drawing carries no extra text, unless the user
@@ -209,7 +228,8 @@ Tell the user, briefly:
   and the direction written in the spec;
 - the style of architecture you recognised, by its name in
   `references/styles.md`, or that none fitted;
-- each part drawn, with the file behind it, and each edge with the line
+- each part drawn, with the file (or the sentence) behind it, and each
+  edge with the line (or the sentence)
   that makes it;
 - on an update, what changed in the spec and why, starting with what
   `archgram check` said had lost its code;

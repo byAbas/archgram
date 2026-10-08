@@ -6,6 +6,16 @@ follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- The `archgram` skill draws from a document the user names, such as a
+  docs page, a design doc or an article, in place of the code: a part
+  only where a sentence states it, an edge only where a sentence says one
+  part reaches another, each with that sentence's words as its source,
+  so `archgram check` holds the drawing to the text. Labels use the
+  document's own words; what it does not state is reported as a gap. A
+  tenth evaluation case draws Azure's Backends for Frontends example.
+
 ### Changed
 
 - An edge label wider than `label.max-width` (120 px) wraps onto two

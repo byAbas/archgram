@@ -181,6 +181,28 @@
         "The report says the colours came from src/styles.css",
         "The run asked the user no question"
       ]
+    },
+    {
+      "id": 10,
+      "name": "draws-from-a-document",
+      "prompt": "Draw the example architecture that docs/patterns/backends-for-frontends.md describes, for the README.",
+      "expected_output": "The project has no code, and the user names a document, so the skill draws from it. docs/diagrams/<name>.archgram.yaml passes `archgram check`, and <name>.svg is drawn beside it. It has the example's parts: the mobile client and the desktop client, API Management, Microsoft Entra ID, Azure Monitor, the mobile BFF service and the desktop BFF service, and the microservices; each client reaches API Management, API Management reaches Microsoft Entra ID, Azure Monitor and each BFF service, and each BFF service reaches the microservices. Every node and edge carries a source in docs/patterns/backends-for-frontends.md with a few words from one line of the sentence that states it, and nothing the document does not state is drawn. Labels use the document's own words. The report lists each part and edge with its sentence and what the document leaves out. The skill did not ask any question; no browser was started and no screenshot taken: only the finished SVG was opened, with the system's viewer.",
+      "files": ["files/bff-pattern"],
+      "expectations": [
+        "A spec at docs/diagrams/<name>.archgram.yaml and <name>.svg beside it exist",
+        "The run ran `archgram check` on the final spec, and it passes",
+        "The spec has nodes for the mobile client, the desktop client, API Management, Microsoft Entra ID, Azure Monitor, the mobile BFF service, the desktop BFF service and the microservices",
+        "Edges go from each client to API Management, from API Management to Microsoft Entra ID, to Azure Monitor and to each BFF service, and from each BFF service to the microservices",
+        "Every node and every edge has a source in docs/patterns/backends-for-frontends.md whose words sit on one line of the sentence that states it",
+        "No node or edge the document does not state: no database, cache store, CDN or service of the run's own",
+        "Labels use the document's own words, such as API Management, Microsoft Entra ID and Azure Monitor, not paraphrases",
+        "The report lists each part and edge with the sentence behind it, and what the document leaves out",
+        "The SVG is no wider than 1,300 px",
+        "The run asked the user no question",
+        "No browser was started and no screenshot taken",
+        "The finished SVG was opened with the system's viewer (`open`, `xdg-open` or `start`); a run whose attempt was denied counts as having opened it",
+        "README.md is left unchanged, and the report offers the line that shows the drawing in it"
+      ]
     }
   ]
 }
