@@ -136,7 +136,10 @@ same file every time.
 
 ### 6.3 Rendering
 - Each node kind has its own shape, so a reader recognises it before
-  reading its label.
+  reading its label. The shapes are icons from the free Stroke Rounded
+  set of Hugeicons (MIT), a family drawn to one grid and one stroke,
+  copied once and drawn in archgram's own stroke; which icon each kind
+  takes is in DESIGN.md (Components: Node card).
 - The diagram is monochrome: the icon's shape, not a colour, tells a
   node's kind. Colour belongs to the technology logos and to what happens
   on a flow: one colour where a signal passes a card, another where a step
@@ -364,3 +367,4 @@ None.
 | 0.25    | 2026-10-07 | Without a skill, an agent now answers with a Mermaid chart in seconds, tied to no code and checked by nothing; the skill's first evaluation measured both (§1). 0.8: `direction: auto` chooses left to right or top to bottom to fit 1,300 px, `build` says the size it drew, and `archgram spec --brief` and `--section` print part of the format (§5, §6.1, §6.2, §6.5, §6.6). The skill is measured by its evaluation's checks, at least 90 % in all and 75 % in each case, and by its time on two cases, not against the hand-drawing baseline (§8). |
 | 0.26    | 2026-10-07 | `direction: auto` keeps left to right while it fits 1,300 px, and otherwise the narrower direction, not top to bottom always: a 100-node tree measured 1,648 px left to right and 10,424 px top to bottom (§6.2). |
 | 0.27    | 2026-10-07 | The skill draws in archgram's own palette unless the user asks for other colours, as §4 says of a project's design system; asked, it finds the project's as before, and a mapping file already at the root keeps being used (§6.6). |
+| 0.28    | 2026-10-08 | The kinds' icons come from Hugeicons' free Stroke Rounded set (MIT), copied once, in place of archgram's own drawings (§6.3). |

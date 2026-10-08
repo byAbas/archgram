@@ -8,6 +8,9 @@ follow [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
+- Every node kind's icon now comes from the free Stroke Rounded set of
+  Hugeicons, drawn in archgram's own stroke, with round caps and joins.
+  A diagram grows by about 4 to 19 %, by its number of cards.
 - The `archgram` skill draws in archgram's own colours unless the user
   asks for others, such as the project's own: it no longer reads the
   styling code nor writes a theme unasked. Asked, it finds the project's
