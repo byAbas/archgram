@@ -19,6 +19,8 @@ follow [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- `--help` (or `-h`) after a command, such as `archgram build --help`,
+  prints the help instead of reading `--help` as a spec's name.
 - The `archgram` skill's description holds no angle brackets: a
   description cannot contain XML tags, and `<name>` read as one. It
   triggers as before.
