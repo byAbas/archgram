@@ -559,10 +559,10 @@ pub fn step_label(numbers: &[u32]) -> String {
 /// (`still: numbers`): a badge where the step arrives, just before the
 /// arrowhead (and behind the ✕ on a line a flow stops on), or else as near
 /// to it along the line as clears every card, edge label, frame name and
-/// badge in `blocked`, and every ✕ in `timeline`. Lines that meet before a
-/// card share their last stretch, and show all their numbers there in one
-/// badge. With the badges, each as drawn with the edges whose lines it
-/// sits on.
+/// badge in `blocked`, and every ✕ in `timeline`. Each line into a card
+/// arrives at a point of its own (`layout`); should two still end at one
+/// point, they show all their numbers there in one badge. With the badges,
+/// each as drawn with the edges whose lines it sits on.
 fn step_numbers(
     spec: &Spec,
     drawn: &[edge::Drawn],

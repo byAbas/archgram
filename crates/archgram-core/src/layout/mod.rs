@@ -547,13 +547,15 @@ fn lay_out_sized(spec: &Spec, sizes: &[Size]) -> Result<(Placement, Vec<f64>), V
         .collect();
     // For a card, its hops on one side, ordered by where their other ends lie
     // across the layers, get ports spread around the side's middle. The
-    // plain ones share a single port, as a bundle: edges leaving a side
-    // leave as one trunk and fork in the gap; edges entering a side merge
-    // into one point. An edge with its label near the card, and an edge
-    // drawn against the flow (its arrowhead would sit among lines leaving),
-    // keeps a port of its own. So does a hop `split` from its bundle below,
-    // and then the bundle keeps the side's middle, so a straight hop in it
-    // stays straight.
+    // plain ones leaving a side share a single port, as a bundle: they leave
+    // as one trunk and fork in the gap. Edges entering a side each keep a
+    // port of their own, the one level with the card in the middle: lines
+    // from different cards merged into one point could not be told apart.
+    // An edge with its label near the card, and an edge drawn against the
+    // flow (its arrowhead would sit among lines leaving), keeps a port of
+    // its own. So does a hop `split` from its bundle below, and then the
+    // bundle keeps the side's middle, so a straight hop in it stays
+    // straight.
     let level_of = |out: &[f64], inn: &[f64], h: usize| (out[h] - inn[h]).abs() < 0.5;
     // Two lines closer than a line's width read as one.
     let on_one_line = |a: f64, b: f64| (a - b).abs() < STROKE_CONNECTOR;
@@ -595,7 +597,9 @@ fn lay_out_sized(spec: &Spec, sizes: &[Size]) -> Result<(Placement, Vec<f64>), V
                     }
                 };
                 let split = |h: usize| if outgoing { split_out[h] } else { split_in[h] };
-                let alone = |h: usize| reach(h) > 0.0 || reversed[hops[h].0] || split(h);
+                // Edges entering a side each keep a port of their own (above).
+                let alone =
+                    |h: usize| !outgoing || reach(h) > 0.0 || reversed[hops[h].0] || split(h);
                 // One entry per port: the bundle, then each hop on its own,
                 // ordered by where their other ends lie (a bundle by its middle).
                 let bundle: Vec<usize> = mine.iter().copied().filter(|&h| !alone(h)).collect();
@@ -628,12 +632,20 @@ fn lay_out_sized(spec: &Spec, sizes: &[Size]) -> Result<(Placement, Vec<f64>), V
                 entries.sort_by(|a, b| a.0.total_cmp(&b.0).then(a.1[0].cmp(&b.1[0])));
                 let reach: Vec<f64> = entries.iter().map(|(_, hs)| reach(hs[0])).collect();
                 // Ports stay on the front card's side, centred on its anchor,
-                // or with the bundle on it when a hop was split from it.
+                // or with the bundle on it when a hop was split from it. Edges
+                // entering a side keep the one whose other end is level with
+                // the card in the middle, so it stays straight.
                 let side = 2.0 * cross_lo[v].min(cross_hi[v]);
-                let anchor = entries
+                let split_from = entries
                     .iter()
                     .position(|(_, hs)| hs.iter().any(|&h| !alone(h)))
                     .filter(|_| mine.iter().any(|&h| split(h)));
+                let anchor = split_from.or_else(|| {
+                    let level = entries
+                        .iter()
+                        .position(|(at, _)| (at - cross[v]).abs() < 0.5);
+                    level.filter(|_| !outgoing && entries.len() > 1)
+                });
                 // A hop split while alone on its side stands a step from the
                 // middle, toward its other end: off the line it would share.
                 let lone = match entries.as_slice() {
@@ -646,8 +658,8 @@ fn lay_out_sized(spec: &Spec, sizes: &[Size]) -> Result<(Placement, Vec<f64>), V
                 // A split hop stands a bend's width from its bundle where the
                 // side has room, so the line it crosses beside the card is
                 // straight there, not turning. Beside a label the ports keep
-                // their usual spacing.
-                let step = match anchor {
+                // their usual spacing, and so do edges entering a side.
+                let step = match split_from {
                     Some(a) => {
                         let far = a.max(entries.len() - 1 - a).max(1);
                         #[allow(clippy::cast_precision_loss)] // ports per side are few

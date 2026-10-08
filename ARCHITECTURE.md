@@ -212,13 +212,13 @@ does) rather than a general search:
   gap, and into its end. A long edge runs straight through the layers it
   crosses, at the place the layout kept for it, `spacing.edge-edge` clear of
   the cards beside it.
-- Each card's edges on one side get ports. The plain ones share one port
-  as a bundle, and a bundle turns at one track: edges leaving a side leave
-  as a trunk that forks in the gap, edges entering a side merge into one
-  point along one trunk (the look of hand-drawn flow diagrams). A hop in
-  both kinds of bundle follows the one leaving. An edge whose label sits
-  just past the card, and an edge reversed against the flow, get ports of
-  their own; all ports are spread `spacing.edge-edge` apart around the
+- Each card's edges on one side get ports. The plain ones leaving a side
+  share one port as a bundle, which turns at one track: they leave as a
+  trunk that forks in the gap. Edges entering a side each get a port of
+  their own, the one whose other end is level with the card in the middle
+  so it stays straight: lines from different cards merged into one point
+  could not be told apart. An edge whose label sits just past the card,
+  and an edge reversed against the flow, get ports of their own too; all ports are spread `spacing.edge-edge` apart around the
   side's middle, ordered by where their other ends lie (a bundle by its
   middle) so they do not cross as they leave. A port whose
   edge carries its label just past the card keeps its neighbours that
