@@ -251,7 +251,9 @@ does) rather than a general search:
   before the card it points at a bend's radius, twice the arrowhead's
   length and its gap, so the last bend is whole and the arrowhead sits on
   a straight run. A gap needing more room than it has widens.
-- An edge label gets room of its own, as in dagre and ELK. On an edge
+- An edge label gets room of its own, as in dagre and ELK. A label is
+  measured on one line, or on two when it is wider than `label.max-width`
+  (`measure::label_lines`, DESIGN.md, Components: Connector). On an edge
   longer than one layer it stands in for the middle dummy vertex, sized to
   the label, so crossing reduction and coordinates keep it clear of cards.
   On an edge between neighbouring layers, the gap it leaves into reserves

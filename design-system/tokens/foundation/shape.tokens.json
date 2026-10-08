@@ -131,6 +131,16 @@
       }
     }
   },
+  "label": {
+    "$type": "dimension",
+    "$description": "An edge label's text: the widest it runs on one line before it wraps onto two.",
+    "max-width": {
+      "$value": {
+        "value": 120,
+        "unit": "px"
+      }
+    }
+  },
   "legend": {
     "$type": "dimension",
     "$description": "A legend entry's swatch: its size, and the gap before its text.",

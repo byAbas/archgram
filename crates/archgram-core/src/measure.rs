@@ -9,7 +9,8 @@ use crate::spec::{CardStyle, LogoPlace, Node, Spec, Variant};
 use crate::tokens::{
     CARD_HORIZONTAL_BADGE, CARD_HORIZONTAL_HEIGHT, CARD_HORIZONTAL_MIN_WIDTH, CARD_LOGO_CORNER,
     CARD_LOGO_INLINE, CARD_LOGO_INLINE_GAP, CARD_MULTI_OFFSET, CARD_PADDING, CARD_VERTICAL_HEIGHT,
-    CARD_VERTICAL_MIN_WIDTH, TYPOGRAPHY_FRAME_LABEL, TYPOGRAPHY_SUBTITLE, TYPOGRAPHY_TITLE,
+    CARD_VERTICAL_MIN_WIDTH, LABEL_MAX_WIDTH, TYPOGRAPHY_FRAME_LABEL, TYPOGRAPHY_SUBTITLE,
+    TYPOGRAPHY_TITLE,
 };
 
 /// What a card's second line shows.
@@ -105,13 +106,42 @@ fn front_card_size(node: &Node, style: CardStyle, logo: LogoPlace, logos: &dyn L
     }
 }
 
-/// The patch an edge's label sits on: its text on one line, with half a
-/// card's padding on either side (DESIGN.md, Components: Connector).
+/// An edge label's lines (DESIGN.md, Components: Connector): the label
+/// itself while it fits `label.max-width` ([`LABEL_MAX_WIDTH`]), and
+/// otherwise two lines split at the space that makes the longer of them
+/// shortest. A label with no space stays one line.
+#[must_use]
+pub fn label_lines(label: &str) -> Vec<&str> {
+    let width = |s: &str| text_width(s, &TYPOGRAPHY_SUBTITLE);
+    if width(label) <= LABEL_MAX_WIDTH {
+        return vec![label];
+    }
+    label
+        .match_indices(' ')
+        .map(|(i, _)| (label[..i].trim_end(), label[i + 1..].trim_start()))
+        .filter(|(a, b)| !a.is_empty() && !b.is_empty())
+        .min_by(|x, y| {
+            width(x.0)
+                .max(width(x.1))
+                .total_cmp(&width(y.0).max(width(y.1)))
+        })
+        .map_or_else(|| vec![label], |(a, b)| vec![a, b])
+}
+
+/// The patch an edge's label sits on: its lines ([`label_lines`]), with
+/// half a card's padding on either side (DESIGN.md, Components: Connector).
 #[must_use]
 pub fn label_size(label: &str) -> Size {
+    let lines = label_lines(label);
+    let widest = lines
+        .iter()
+        .map(|l| text_width(l, &TYPOGRAPHY_SUBTITLE))
+        .fold(0.0, f64::max);
+    #[allow(clippy::cast_precision_loss)] // one or two lines
+    let count = lines.len() as f64;
     Size {
-        w: text_width(label, &TYPOGRAPHY_SUBTITLE) + CARD_PADDING,
-        h: TYPOGRAPHY_SUBTITLE.size * TYPOGRAPHY_SUBTITLE.line_height,
+        w: widest + CARD_PADDING,
+        h: count * TYPOGRAPHY_SUBTITLE.size * TYPOGRAPHY_SUBTITLE.line_height,
     }
 }
 
@@ -207,6 +237,33 @@ mod tests {
             variant: Variant::Single,
             frame: None,
             source: None,
+        }
+    }
+
+    #[test]
+    fn a_label_wraps_onto_two_lines_only_past_the_token() {
+        assert_eq!(label_lines("on a miss"), ["on a miss"]);
+        // Split where the longer line is shortest, not at the first space.
+        assert_eq!(
+            label_lines("response + Cache-Control"),
+            ["response +", "Cache-Control"]
+        );
+        // With no space there is nowhere to split.
+        assert_eq!(
+            label_lines("response+Cache-Control+ETag"),
+            ["response+Cache-Control+ETag"]
+        );
+        for lines in [
+            label_lines("fetches on first render"),
+            label_lines("route exists in new app"),
+        ] {
+            assert_eq!(lines.len(), 2, "{lines:?}");
+            assert!(
+                lines
+                    .iter()
+                    .all(|l| text_width(l, &TYPOGRAPHY_SUBTITLE) <= LABEL_MAX_WIDTH),
+                "{lines:?}"
+            );
         }
     }
 
