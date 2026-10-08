@@ -91,6 +91,8 @@ pub fn parse_spec(yaml: &str) -> Result<Spec, Vec<SpecError>> {
 /// Every problem, located by its line and column in the YAML.
 pub fn parse(yaml: &str) -> Result<(Spec, Positions), Vec<SpecError>> {
     let root = read_tree(yaml).map_err(|e| vec![e])?;
+    let mut bare = Vec::new();
+    bare_keys(&root, yaml, &mut bare);
     let mut json = Json::default();
     json.value(&root, None, "");
     let positions = Positions {
@@ -101,18 +103,66 @@ pub fn parse(yaml: &str) -> Result<(Spec, Positions), Vec<SpecError>> {
         Ok(spec) => Ok((spec, positions)),
         Err(errors) => Err(errors
             .into_iter()
-            .map(|e| positions.locate(hint(e)))
+            .map(|e| {
+                let written = match e.location {
+                    Location::LineColumn { line, .. } => {
+                        positions.lines.get(line.saturating_sub(1)).copied()
+                    }
+                    Location::Pointer(_) => None,
+                };
+                let comma = written.is_some_and(|at| bare.contains(&at));
+                positions.locate(hint(e, comma))
+            })
             .collect()),
     }
 }
 
-/// A plain YAML scalar the core wanted as text: say how to keep it text.
-fn hint(mut e: SpecError) -> SpecError {
+/// Where each key written with no `:` and no value stands. Only `{ }` lets
+/// a key go without a colon, so each one is the text after a comma inside
+/// a value meant as one: `note: TLS, auth` reads as `note` and a key `auth`.
+fn bare_keys(node: &Node, yaml: &str, found: &mut Vec<At>) {
+    match &node.value {
+        Value::Map(entries) => {
+            for (key, at, value) in entries {
+                let empty = matches!(&value.value, Value::Scalar { literal, text } if literal == "null" && text.is_empty());
+                if empty && followed_by_separator(yaml, *at, key) {
+                    found.push(*at);
+                }
+                bare_keys(value, yaml, found);
+            }
+        }
+        Value::Seq(items) => items.iter().for_each(|n| bare_keys(n, yaml, found)),
+        Value::Scalar { .. } => {}
+    }
+}
+
+/// Whether the key written at `at` is followed, past spaces, by `,` or `}`
+/// rather than by `:`.
+fn followed_by_separator(yaml: &str, (line, column): At, key: &str) -> bool {
+    let Some(text) = yaml.lines().nth(line.saturating_sub(1)) else {
+        return false;
+    };
+    let mut rest = text.chars().skip(column.saturating_sub(1));
+    if !key.chars().all(|k| rest.next() == Some(k)) {
+        return false;
+    }
+    matches!(rest.find(|c| *c != ' ' && *c != '\t'), Some(',' | '}'))
+}
+
+/// What YAML did that the core cannot see, said beside its problem: a plain
+/// scalar the core wanted as text, and an unknown field that is the text
+/// after a comma inside `{ }` (`comma`, from [`bare_keys`]).
+fn hint(mut e: SpecError, comma: bool) -> SpecError {
     let plain = ["integer", "floating point", "boolean", "null"]
         .iter()
         .any(|t| e.message.contains(&format!("invalid type: {t}")));
     if plain && e.message.contains("expected a string") {
         e.message.push_str("; in YAML, quote it to keep it as text");
+    }
+    if comma && e.message.starts_with("unknown field") {
+        e.message.push_str(
+            "; inside `{ }` a comma ends a value, so the text after it reads as a field: quote a value that holds a comma",
+        );
     }
     e
 }

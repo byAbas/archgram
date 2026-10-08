@@ -65,6 +65,34 @@ fn a_problem_points_at_its_line_and_column() {
 }
 
 #[test]
+fn a_comma_inside_braces_is_named_as_the_cause() {
+    // `{ }` ends a value at its comma, so `auth` and `rate limit` read as
+    // keys of their own; the first of them says why, at its key.
+    let e = errors(
+        "archgram: 1\ntitle: t\ndescription: d\nnodes:\n  - { id: gw, kind: service, label: GW, note: TLS, auth, rate limit }\n",
+    );
+    assert_eq!(places(&e), ["5:52"], "{e:?}");
+    assert!(
+        e[0].message.contains("a comma ends a value"),
+        "{}",
+        e[0].message
+    );
+    // A key written with its colon is a misspelt field, not a comma.
+    for yaml in [
+        "archgram: 1\ntitle: t\ndescription: d\nnodes:\n  - { id: gw, kind: service, label: GW, auth: }\n",
+        "archgram: 1\ntitle: t\ndescription: d\nnodes:\n  - id: gw\n    kind: service\n    label: GW\n    auth:\n",
+    ] {
+        let e = errors(yaml);
+        assert!(
+            e[0].message.starts_with("unknown field"),
+            "{}",
+            e[0].message
+        );
+        assert!(!e[0].message.contains("comma"), "{}", e[0].message);
+    }
+}
+
+#[test]
 fn a_key_comes_once() {
     let e = errors("archgram: 1\ntitle: t\ntitle: u\n");
     assert_eq!(places(&e), ["3:1"]);
