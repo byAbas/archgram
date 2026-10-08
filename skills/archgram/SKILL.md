@@ -97,10 +97,13 @@ The spec lives at `docs/diagrams/<name>.archgram.yaml`, where `<name>` says
 what the diagram shows (`architecture`, `request-flow`). Create the folder
 when it is missing. When the file already exists, this is an update:
 change it rather than starting over, keep what still holds, and note what
-you changed for the report. Start an update with `archgram check` on the
-spec as it is: whatever it says has lost its code, find where that code
-went, if anywhere, and move or remove the part or line. The check cannot
-see what the code gained, so step 2's walk still finds what is new.
+you changed for the report. Keep its `direction` as it is written; if it
+is `auto`, first draw the spec as it is (step 6) and write the direction
+`build` reports in its place, so the update cannot turn the drawing on
+its side. Start an update with `archgram check` on the spec as it is:
+whatever it says has lost its code, find where that code went, if
+anywhere, and move or remove the part or line. The check cannot see what
+the code gained, so step 2's walk still finds what is new.
 Change what the check and the walk found, and nothing more: a part or a
 flow the request did not ask for is the user's to add.
 
@@ -109,9 +112,14 @@ with its technology's logo (`tech`) when the part is built on one; each
 call or data movement an edge; a boundary (a service, a trust zone, the
 plugin versus the project) a frame; the path the contract's questions
 follow a flow, so it animates. Keep labels to the words a reader needs.
-Leave the direction to archgram, `direction: auto`, unless the user asked
-for one: it lays the drawing out left to right when that fits a README,
-and otherwise in the narrower direction.
+Say where the drawing is shown when it is not a README on GitHub: a docs
+site, a blog, a wiki, any page that shows it narrower. Write that width
+as `shownWidth`, in CSS pixels, the place at its widest, from the user's
+words or the page's own styles; ask only when nothing tells you. A
+drawing shown in two places takes the narrower. Leave the direction of a
+new drawing to archgram, `direction: auto`, unless the user asked for
+one: it lays the drawing out left to right while that keeps its text
+readable where it is shown, and otherwise in the narrower direction.
 
 Put step 2's files and lines in the spec wherever the format has a place
 for them, as it says, so archgram can tell when the code behind a part or
@@ -165,10 +173,18 @@ Add `--theme-file archgram.theme.json` when the project's root has one.
 The drawing lands beside the spec as `docs/diagrams/<name>.svg`, and
 `build` says its size and the direction it chose: `wrote … (588 × 740 px,
 top to bottom)`.
-Wider than 1,300 px, its text shrinks below a comfortable size on GitHub,
-which shows a README image about 880 px wide, and `build` warns. With
-`direction: auto` it has already chosen the narrower direction, so split
-the diagram in two, check each, and build again.
+A drawing wider than keeps its text readable where it is shown, 1,300 px
+in a README on GitHub (which shows an image about 880 px wide) or
+`shownWidth × 1300 / 880` elsewhere, is still drawn, and `build` warns
+with what would bring it within: the other direction, with the width it
+would draw, or two diagrams. Do what it says: write that direction in the
+spec, or split the diagram in two, check each, and build again.
+
+Once the drawing passes the critique below, write the direction `build`
+reported (`right` or `down`) in place of `direction: auto`, and check
+again: the drawing stays the same bytes, and a later edit cannot turn it
+on its side. Turn a drawing only when the user asks or `build` warns that
+it no longer fits where it is shown, and say so in the report.
 
 Run the critique in `references/reader.md` against the contract and fix
 what it finds: a question the picture cannot answer, a box no file backs,
@@ -185,6 +201,8 @@ Then open the drawing for the user, once, with the system's own viewer:
 Tell the user, briefly:
 
 - the reader contract, and how the drawing answers it;
+- where it is drawn to be shown (a README, or `shownWidth`), its size,
+  and the direction written in the spec;
 - the style of architecture you recognised, by its name in
   `references/styles.md`, or that none fitted;
 - each part drawn, with the file behind it, and each edge with the line

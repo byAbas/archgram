@@ -17,6 +17,11 @@ follow [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
+- The `archgram` skill writes `shownWidth` when a diagram is shown
+  anywhere but a README on GitHub, and once a drawing is accepted writes
+  the direction archgram chose in place of `direction: auto`, so a later
+  edit never turns it on its side. An update keeps the spec's direction;
+  a drawing too wide for where it is shown follows `build`'s advice.
 - Edges entering one side of a card each arrive at a point of their own,
   `spacing.edge-edge` apart, instead of merging into one: lines from
   different cards merged into one point read as one trunk, and a reader
