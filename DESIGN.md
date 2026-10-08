@@ -312,14 +312,29 @@ holds is in docs/SPEC.md (Nodes).
 | Build and tooling | `icon-build` |
 | Clients | `icon-client` |
 
-Each kind has one icon, drawn for archgram as line art on a square grid:
-a code window for a service, a cylinder for a database, a segmented pill
-for a queue, a bolt for a cache, a bucket for storage, a person for users,
-a four-pointed star for a model, a cylinder with points for a vector store,
-a wrench for a tool, a looping arrow around a point for an agent, a folded
-page for a file, a terminal prompt for a script, a folded page with a star
-for a generated file, a shield with a check for a check, a window with a
-title bar for a browser, a phone for mobile and a monitor for desktop.
+Each kind has one icon from the free Stroke Rounded set of
+[Hugeicons](https://hugeicons.com/icons/stroke-rounded), line art on a
+24 square, drawn in `stroke.icon` with round caps and joins:
+
+| Kind | Hugeicons icon |
+|---|---|
+| service | `code-square` |
+| database | `database` |
+| queue | `queue-02` |
+| cache | `flash` |
+| storage | `bucket` |
+| users | `user` |
+| model | `sparkle` |
+| vector store | `database-search` |
+| tool | `wrench-01` |
+| agent | `refresh-dot` |
+| file | `file-empty-02` |
+| script | `command-line` |
+| generated file | `ai-file` |
+| check | `shield-check` |
+| browser | `app-window-mac` |
+| mobile | `smart-phone-01` |
+| desktop | `computer` |
 
 ### Variants
 

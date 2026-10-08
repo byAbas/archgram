@@ -1,6 +1,6 @@
 THIRD-PARTY LICENSES
 
-archgram is under the MIT license (LICENSE). Its binary carries two works
+archgram is under the MIT license (LICENSE). Its binary carries three works
 of others, under their own licenses, reproduced or referenced below.
 
 -------------------------------------------------------------------------------
@@ -118,3 +118,34 @@ Icons that Simple Icons lists under another license are left out.
 
 Each logo is a trademark of its owner. Its use in a diagram does not imply
 that the owner endorses archgram or the diagram.
+
+-------------------------------------------------------------------------------
+
+Hugeicons, free Stroke Rounded set (commit 9c48f3723dfb243909fa83501aa7c6423ab972c0)
+https://github.com/hugeicons/hugeicons
+
+The node kinds' icons: 17 of its drawings, copied into
+crates/archgram-core/src/render/icons.rs with their numbers rounded to two
+decimals. Their license:
+
+MIT License
+
+Copyright (c) 2025 Hugeicons
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.

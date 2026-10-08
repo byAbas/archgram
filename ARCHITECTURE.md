@@ -267,7 +267,8 @@ naming its style by class, with the style sheet beside it. The classes a
 still drawing uses and their declarations are one table (`render::styles`):
 the SVG writes it as CSS, and a rasterizer reads the same rules, so a PNG
 cannot drift from the SVG. What moves is SVG markup kept as it is written,
-invisible in the still image. The icons are lists of shapes, not markup.
+invisible in the still image. The icons are lists of shapes, not markup:
+Hugeicons' drawings, copied once into `render::icons`.
 
 The SVG writer (`render::svg`) turns the scene into a string with fixed
 number formatting (two decimals) and a fixed attribute order, the second
@@ -397,6 +398,11 @@ These hold for every output and are checked by tests on every change.
   change. The data is CC0-1.0, on the allowed list for that crate; a logo
   carrying a licence of its own other than CC0 is left out, and
   `provenance.tsv` keeps each logo's source and brand guidelines.
+- The node kinds' icons are copied, not pinned: 17 drawings from
+  Hugeicons (MIT), taken once from the commit `render/icons.rs` names,
+  with their numbers rounded to two decimals. Nothing fetches them again;
+  an update is a reviewed change by hand, and THIRD-PARTY-LICENSES keeps
+  their licence.
 
 ## Testing
 
