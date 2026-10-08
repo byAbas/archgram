@@ -866,3 +866,21 @@ fn help_after_a_command_is_the_help() {
         assert_eq!(stdout(&run), general, "{args:?}");
     }
 }
+
+/// A logo archgram does not carry is refused with the nearest slugs, each
+/// beside its brand's name, since one letter away can be another product,
+/// and with the way out when none is the technology.
+#[test]
+fn a_missing_logo_names_each_suggestion_s_brand() {
+    let dir = scratch("logo");
+    std::fs::write(
+        dir.join("d.archgram.yaml"),
+        "archgram: 1\ntitle: t\ndescription: d\nnodes:\n  - { id: docs, kind: service, label: Docs, tech: storybook }\n",
+    )
+    .unwrap();
+    let run = archgram_in(&dir, &["check", "d.archgram.yaml"]);
+    assert_eq!(run.status.code(), Some(1));
+    let message = stderr(&run);
+    assert!(message.contains("`storyblok` (Storyblok)"), "{message}");
+    assert!(message.contains("leave `tech` out"), "{message}");
+}

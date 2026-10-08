@@ -592,16 +592,20 @@ pub fn logos(spec: &Spec, logos: &dyn crate::logos::Logos) -> Vec<SpecError> {
         if logos.path(tech).is_some() {
             continue;
         }
+        // Each suggestion with its brand's name: a slug one letter away can
+        // be another product (`storybook`, `storyblok`), which the name shows.
+        let named = |s: &str| match logos.title(s) {
+            Some(title) => format!("`{s}` ({title})"),
+            None => format!("`{s}`"),
+        };
         let close = nearest_few(tech, slugs.iter().copied(), 3);
         let hint = match close.as_slice() {
-            [] => String::new(),
-            [one] => format!("; did you mean `{one}`?"),
+            [] => "; leave `tech` out".to_owned(),
+            [one] => format!("; did you mean {}? If not, leave `tech` out", named(one)),
             [rest @ .., last] => format!(
-                "; did you mean {} or `{last}`?",
-                rest.iter()
-                    .map(|s| format!("`{s}`"))
-                    .collect::<Vec<_>>()
-                    .join(", ")
+                "; did you mean {} or {}? If none, leave `tech` out",
+                rest.iter().map(|s| named(s)).collect::<Vec<_>>().join(", "),
+                named(last)
             ),
         };
         errors.push(SpecError::at(
