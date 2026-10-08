@@ -819,7 +819,9 @@ fn two_cards_leading_to_the_same_two_share_no_stretch() {
 /// Labels on edges leaving one side of a card never meet, even when the
 /// card is narrower than they are side by side: the card grows. Flowing
 /// down, labels lie across the lines, so a short card meets this first
-/// (the module federation diagram of a reference site did).
+/// (the module federation diagram of a reference site did). Its labels
+/// are written without spaces here, so they cannot wrap and the card must
+/// grow.
 #[test]
 fn labels_leaving_one_side_never_meet() {
     let json = r#"{ "archgram": 1, "title": "t", "description": "d", "direction": "down",
@@ -831,10 +833,10 @@ fn labels_leaving_one_side_never_meet() {
       ],
       "frames": [ { "id": "host", "label": "Host deploy" } ],
       "edges": [
-        { "from": "shell", "to": "entry", "label": "fetches at run time" },
-        { "from": "shell", "to": "chunk", "label": "fetches on first render" },
-        { "from": "shell", "to": "react", "label": "shared singleton" },
-        { "from": "chunk", "to": "react", "label": "shared singleton" }
+        { "from": "shell", "to": "entry", "label": "fetches-at-run-time" },
+        { "from": "shell", "to": "chunk", "label": "fetches-on-first-render" },
+        { "from": "shell", "to": "react", "label": "shared-singleton" },
+        { "from": "chunk", "to": "react", "label": "shared-singleton" }
       ] }"#;
     let spec = parse_spec(json).unwrap();
     let sizes = card_sizes(&spec);
@@ -846,4 +848,30 @@ fn labels_leaving_one_side_never_meet() {
         "the card grew to hold its labels"
     );
     check_labels(0, &spec, &p);
+}
+
+/// A label wider than `label.max-width` wraps onto two lines, so a long
+/// label flowing right needs about half the room between two columns that
+/// it did on one line.
+#[test]
+fn a_long_label_wraps_and_keeps_the_columns_closer() {
+    let pair = |label: &str| {
+        let json = format!(
+            r#"{{ "archgram": 1, "title": "t", "description": "d", "direction": "right",
+              "nodes": [ {{ "id": "a", "kind": "service", "label": "A" }}, {{ "id": "b", "kind": "service", "label": "B" }} ],
+              "edges": [ {{ "from": "a", "to": "b", "label": "{label}" }} ] }}"#
+        );
+        let spec = parse_spec(&json).unwrap();
+        let p = place(&spec, &card_sizes(&spec)).unwrap();
+        check_labels(0, &spec, &p);
+        (p.nodes[1].x - p.nodes[0].right(), p.labels[0].unwrap())
+    };
+    let (wrapped_gap, wrapped) = pair("response + Cache-Control");
+    let (single_gap, single) = pair("response+Cache-Control");
+    assert!(
+        wrapped.h > single.h,
+        "two lines: {wrapped:?}, one: {single:?}"
+    );
+    assert!(wrapped.w < single.w * 0.7, "{wrapped:?} {single:?}");
+    assert!(wrapped_gap < single_gap, "{wrapped_gap} {single_gap}");
 }

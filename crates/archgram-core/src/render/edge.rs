@@ -33,7 +33,9 @@ pub fn edge(e: &Edge, drawn: &Drawn, label: Option<Rect>, id: Option<&str>) -> V
         arrowhead: true,
     }];
     if let (Some(text), Some(at)) = (&e.label, label) {
-        items.extend(edge_label(text, at, ("label-patch", "sub")));
+        let (patch, lines) = edge_label(text, at, ("label-patch", "sub"));
+        items.push(patch);
+        items.extend(lines);
     }
     items
 }
@@ -357,9 +359,25 @@ fn length(a: Point, b: Point) -> f64 {
 /// through the text; `classes` are the patch's and the text's, and a
 /// signal's copy of the label takes its colour through the text's
 /// (`signal::signals`).
-pub fn edge_label(label: &str, at: Rect, (patch, text): (&str, &str)) -> [Item; 2] {
+pub fn edge_label(label: &str, at: Rect, (patch, text): (&str, &str)) -> (Item, Vec<Item>) {
     let pad = CARD_PADDING / 2.0;
-    [
+    let line = TYPOGRAPHY_SUBTITLE.size * TYPOGRAPHY_SUBTITLE.line_height;
+    let lines = crate::measure::label_lines(label)
+        .into_iter()
+        .enumerate()
+        .map(|(i, l)| {
+            #[allow(clippy::cast_precision_loss)] // one or two lines
+            let down = i as f64 * line;
+            Item::Text {
+                class: text.into(),
+                x: at.x + at.w / 2.0,
+                y: at.y + down + crate::font::baseline_in_line(&TYPOGRAPHY_SUBTITLE),
+                anchor: Anchor::Middle,
+                text: l.to_owned(),
+            }
+        })
+        .collect();
+    (
         Item::Rect {
             class: patch.into(),
             x: at.x,
@@ -368,14 +386,8 @@ pub fn edge_label(label: &str, at: Rect, (patch, text): (&str, &str)) -> [Item; 
             h: at.h,
             rx: Some(pad),
         },
-        Item::Text {
-            class: text.into(),
-            x: at.x + at.w / 2.0,
-            y: at.y + crate::font::baseline_in_line(&TYPOGRAPHY_SUBTITLE),
-            anchor: Anchor::Middle,
-            text: label.to_owned(),
-        },
-    ]
+        lines,
+    )
 }
 
 #[cfg(test)]

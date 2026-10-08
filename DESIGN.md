@@ -29,6 +29,10 @@ components:
   node-subtitle:
     textColor: "{color.text-muted}"
     typography: "{typography.subtitle}"
+  edge-label:
+    textColor: "{color.text-muted}"
+    typography: "{typography.subtitle}"
+    width: "{label.max-width}"
   node-external:
     backgroundColor: "{color.canvas}"
     textColor: "{color.text}"
@@ -402,7 +406,10 @@ passes through a card. Where it must change level between two layers it turns tw
 gap between them, a symmetric step, never a slant; a step shorter than two
 radii is one S curve instead, so it never kinks. An edge label, when
 there is one, uses `typography.subtitle` on a straight stretch of the line,
-in room kept for it: it never covers a card.
+in room kept for it: it never covers a card. A label wider than
+`label.max-width` wraps onto two lines, centred, split at the space that
+keeps the longer line shortest, so a long label does not push two columns
+apart; a label with no space stays on one line.
 
 ### Signal
 

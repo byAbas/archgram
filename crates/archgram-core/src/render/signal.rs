@@ -219,10 +219,10 @@ pub fn signals(
         };
         let (body, label) = match labels.get(hop.edge).copied().flatten() {
             Some((text, at)) => {
-                let [_, copy] = edge_label(text, at, ("label-patch", "sub lit-text"));
+                let (_, copy) = edge_label(text, at, ("label-patch", "sub lit-text"));
                 (
                     format!(r#"<g mask="url(#{GAP})">{body}</g>"#),
-                    inline(&[copy]),
+                    inline(&copy),
                 )
             }
             None => (body, String::new()),
