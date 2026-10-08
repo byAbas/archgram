@@ -24,6 +24,10 @@ follow [Semantic Versioning](https://semver.org/).
 - In a YAML spec, an unquoted comma inside `{ }` (`note: TLS, auth`) is
   named as the cause of the unknown field it makes, with the way out:
   quote a value that holds a comma.
+- A `tech` archgram has no logo for is refused with each suggested slug
+  beside its brand's name, such as `storyblok` (Storyblok) for
+  `storybook`, since a slug one letter away can be another product, and
+  says to leave `tech` out when none is the technology.
 - The `archgram` skill's description holds no angle brackets: a
   description cannot contain XML tags, and `<name>` read as one. It
   triggers as before.
