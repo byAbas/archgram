@@ -2,7 +2,7 @@
 
 | Field   | Value      |
 |---------|------------|
-| Version | 0.29       |
+| Version | 0.30       |
 | Date    | 2026-10-08 |
 | Status  | Draft      |
 | Owner   | Abas Turabli |
@@ -34,7 +34,9 @@ says when it must change. A box still names a module deleted a month
 ago, a line still shows a call no longer made, and the diagram stays
 plausible and wrong. With coding agents changing a project many times a
 day, a diagram goes stale faster than anyone reads it closely enough to
-notice.
+notice. The same holds for a diagram drawn from a document rather than
+from code, a pattern on a docs site or a system in a design doc or an
+engineering blog post: nothing says when the text beside it changes.
 
 AI coding agents hit the same wall from the other side. Asked for a
 diagram, an agent writes the SVG by hand, every coordinate and every
@@ -60,6 +62,7 @@ skill, the same agent passed 64 of 71, in 56 seconds on average against
 |---|---|
 | A developer documenting a system | Writes or edits a spec next to the code and regenerates the diagram when the system changes |
 | An AI coding agent | Reads the code, writes the spec, runs archgram, checks the result; archgram removes the layout work |
+| A writer of docs, a design doc or an engineering blog | Draws what a document describes, each part backed by the sentence that states it, and is told when the text no longer says so |
 | The reader of the diagram | Never touches archgram. Everything is judged by what they understand in thirty seconds |
 
 ## 3. Product promise
@@ -120,9 +123,10 @@ same file every time.
   that fits (§6.2). It may say how wide it is shown (`shownWidth`), a
   README on GitHub when it does not
   ([docs/features/shown-width.md](features/shown-width.md)).
-- A node or an edge may name the code behind it, and archgram says when
-  that code is not there; it is never drawn. It finds what the code lost,
-  not what it gained ([docs/features/sources.md](features/sources.md)).
+- A node or an edge may name what backs it, the code or the document that
+  states it, and archgram says when that is no longer there; it is never
+  drawn. It finds what the code or the text lost, not what it gained
+  ([docs/features/sources.md](features/sources.md)).
 
 ### 6.2 Layout and routing
 - Edges flow in one main direction, left to right or top to bottom.
@@ -223,16 +227,28 @@ same file every time.
 - It is written to the Agent Skills format alone: its frontmatter keeps the
   format's fields, and its steps name no one agent's tools, so every agent
   that reads skills follows the same steps.
-- A part is drawn only when a file in the project backs it, and the skill
-  notes that file; an edge only where a line of code makes it, and the
-  skill notes that line. The spec keeps both as each node's and edge's
-  source, so `archgram check` holds them to the code as the skill draws
-  and whenever it runs later ([docs/features/sources.md](features/sources.md)).
-  It finds the parts by walking from the project's
-  entry points, keeps one level of detail per diagram, and names each part
-  after the file that decides, found by following the imports. Where the
-  code and the documentation disagree, or the architecture is unclear, it
-  asks the user; it asks for no other approval.
+- Drawing from code, a part is drawn only when a file in the project backs
+  it, and the skill notes that file; an edge only where a line of code
+  makes it, and the skill notes that line. The spec keeps both as each
+  node's and edge's source, so `archgram check` holds them to the code as
+  the skill draws and whenever it runs later
+  ([docs/features/sources.md](features/sources.md)). It finds the parts
+  by walking from the project's entry points, keeps one level of detail
+  per diagram, and names each part after the file that decides, found by
+  following the imports. Where the code and the documentation disagree,
+  or the architecture is unclear, it asks the user; it asks for no other
+  approval.
+- It draws what a document describes when the user names the document:
+  a pattern on a docs page, a system in a design doc or an article.
+  Without a named document it draws from the code. From a document, a
+  part is drawn only where a sentence states it, and an edge only where a
+  sentence says one part calls, sends to or reads from another; each
+  takes a few words of that sentence, from one line, as its source, so
+  `archgram check` holds the drawing to the text as it does to code.
+  Labels use the document's own words. What the document does not state
+  is not drawn, and is reported as a gap; where the document and a
+  diagram already beside it disagree, the skill says so and asks which
+  is right ([docs/features/sources.md](features/sources.md)).
 - It writes `docs/diagrams/<name>.archgram.yaml`, creating the folder when
   missing, and draws `<name>.svg` beside it with archgram through npx: the
   project's own archgram when its `package.json` lists one, pinned by the
@@ -331,7 +347,7 @@ archgram records each logo's source and guidelines for them.
   median of three runs on Claude Opus 5.5). The evaluation of §1 took
   74 and 36.
 - Each feature with a document of its own meets the criteria there:
-  [the code behind a diagram](features/sources.md#success-criteria),
+  [what backs a diagram](features/sources.md#success-criteria),
   [where a diagram is shown](features/shown-width.md#success-criteria).
 
 ## 9. Non-goals
@@ -384,3 +400,4 @@ None.
 | 0.27    | 2026-10-07 | The skill draws in archgram's own palette unless the user asks for other colours, as §4 says of a project's design system; asked, it finds the project's as before, and a mapping file already at the root keeps being used (§6.6). |
 | 0.28    | 2026-10-08 | The kinds' icons come from Hugeicons' free Stroke Rounded set (MIT), copied once, in place of archgram's own drawings (§6.3). |
 | 0.29    | 2026-10-08 | 0.9: a spec says how wide it is shown, a README by default; `build` and `direction: auto` keep the text readable there, and `build` warns but still draws; the skill writes the direction it chose into the spec, so an edit never turns a drawing; no layout per screen (§5, §6.1, §6.2, §6.5, §6.6, §8, §9, `docs/features/shown-width.md`, #114). |
+| 0.30    | 2026-10-08 | A diagram may be drawn from a document the user names rather than from code: the skill takes its facts from the text, in its own words, and each part and line takes the sentence that states it as its source, which `check` holds to the text as it does to code (§1, §2, §6.1, §6.6, §8, `docs/features/sources.md`, #122). |
