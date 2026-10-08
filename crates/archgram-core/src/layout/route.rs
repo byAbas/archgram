@@ -172,22 +172,13 @@ pub fn tracks(
 /// further when a label sits on one of their lines near the card: `reach`
 /// is how far that label reaches across the line on either side (0 for a
 /// line without one), and a label keeps half a `step` clear of the next
-/// line. When the side is too short, every gap shrinks in proportion.
+/// line. When the side is too short, every gap shrinks in proportion; a
+/// side with a label never is, since its card grows ([`label_shortfall`]).
 pub fn ports(reach: &[f64], centre: f64, side: f64, step: f64, margin: f64) -> Vec<f64> {
     if reach.len() <= 1 {
         return vec![centre; reach.len()];
     }
-    let gaps: Vec<f64> = reach
-        .windows(2)
-        .map(|w| {
-            let labelled = w[0] + w[1];
-            if labelled > 0.0 {
-                step.max(labelled + step / 2.0)
-            } else {
-                step
-            }
-        })
-        .collect();
+    let gaps = port_gaps(reach, step);
     let total: f64 = gaps.iter().sum();
     let room = (side - 2.0 * margin).max(0.0);
     let scale = if total > room { room / total } else { 1.0 };
@@ -198,6 +189,34 @@ pub fn ports(reach: &[f64], centre: f64, side: f64, step: f64, margin: f64) -> V
         out.push(at);
     }
     out
+}
+
+/// The distance between each pair of neighbouring ports, as [`ports`] wants
+/// it before any shrinking: `step`, or a label's reach on either side plus
+/// half a `step`.
+fn port_gaps(reach: &[f64], step: f64) -> Vec<f64> {
+    reach
+        .windows(2)
+        .map(|w| {
+            let labelled = w[0] + w[1];
+            if labelled > 0.0 {
+                step.max(labelled + step / 2.0)
+            } else {
+                step
+            }
+        })
+        .collect()
+}
+
+/// How much longer a side must be for [`ports`] to keep every label clear
+/// of its neighbours' lines without shrinking: 0 when it is long enough, or
+/// when no port carries a label (unlabelled ports may shrink).
+pub fn label_shortfall(reach: &[f64], side: f64, step: f64, margin: f64) -> f64 {
+    if reach.len() <= 1 || reach.iter().all(|&r| r <= 0.0) {
+        return 0.0;
+    }
+    let total: f64 = port_gaps(reach, step).iter().sum();
+    (total + 2.0 * margin - side).max(0.0)
 }
 
 /// Ports as [`ports`] places them, moved along the side so that entry

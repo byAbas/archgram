@@ -28,6 +28,10 @@ follow [Semantic Versioning](https://semver.org/).
   beside its brand's name, such as `storyblok` (Storyblok) for
   `storybook`, since a slug one letter away can be another product, and
   says to leave `tech` out when none is the technology.
+- Edge labels no longer overlap or lie across a frame's border. A card
+  too short for the labels of the edges leaving one side, as happens
+  flowing down, grows instead of pressing them together, and a label on
+  an edge leaving a frame sits past the frame's border.
 - The `archgram` skill's description holds no angle brackets: a
   description cannot contain XML tags, and `<name>` read as one. It
   triggers as before.

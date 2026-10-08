@@ -256,9 +256,35 @@ fn ordered_pair(group: &[usize], dag: &[(usize, usize)], ids: &[usize]) -> Optio
     None
 }
 
-/// Lays out one connected unit (all of the spec when it is one), steps 1 to 6.
-#[allow(clippy::too_many_lines)] // the steps above, in order
+/// Lays out one connected unit (all of the spec when it is one), steps 1 to
+/// 6. A card whose side is too short for the labels of the edges leaving it
+/// (`route::label_shortfall`) grows across the flow by what it lacks, and
+/// the unit is laid out again with it, so no label is pressed onto a
+/// neighbour's line or another label. Growing a card can move the others,
+/// so this repeats while a side still falls short, a few times at most.
 fn lay_out(spec: &Spec, sizes: &[Size]) -> Result<Placement, Vec<SpecError>> {
+    let mut sizes = sizes.to_vec();
+    let mut placed = lay_out_sized(spec, &sizes)?;
+    for _ in 0..4 {
+        if placed.1.iter().all(|&s| s < 0.5) {
+            break;
+        }
+        for (size, &s) in sizes.iter_mut().zip(&placed.1) {
+            let grow = s.ceil();
+            match spec.direction {
+                Direction::Right | Direction::Auto => size.h += grow,
+                Direction::Down => size.w += grow,
+            }
+        }
+        placed = lay_out_sized(spec, &sizes)?;
+    }
+    Ok(placed.0)
+}
+
+/// Lays out one unit with these card sizes, steps 1 to 6, and says for each
+/// card how much longer a side of it must be to keep its labels clear.
+#[allow(clippy::too_many_lines)] // the steps above, in order
+fn lay_out_sized(spec: &Spec, sizes: &[Size]) -> Result<(Placement, Vec<f64>), Vec<SpecError>> {
     let n = spec.nodes.len();
     let index = |id: &str| {
         spec.nodes
@@ -542,6 +568,7 @@ fn lay_out(spec: &Spec, sizes: &[Size]) -> Result<Placement, Vec<SpecError>> {
         let mut in_port = vec![0.0; hops.len()];
         let mut out_bundle: Vec<Option<usize>> = vec![None; hops.len()];
         let mut in_bundle: Vec<Option<usize>> = vec![None; hops.len()];
+        let mut shortfall = vec![0.0f64; n];
         for v in 0..total {
             for (outgoing, ports_of) in [(true, &mut out_port), (false, &mut in_port)] {
                 let mine: &[usize] = if outgoing { &outs_of[v] } else { &ins_of[v] };
@@ -616,29 +643,35 @@ fn lay_out(spec: &Spec, sizes: &[Size]) -> Result<Placement, Vec<SpecError>> {
                     }
                     _ => None,
                 };
+                // A split hop stands a bend's width from its bundle where the
+                // side has room, so the line it crosses beside the card is
+                // straight there, not turning. Beside a label the ports keep
+                // their usual spacing.
+                let step = match anchor {
+                    Some(a) => {
+                        let far = a.max(entries.len() - 1 - a).max(1);
+                        #[allow(clippy::cast_precision_loss)] // ports per side are few
+                        let room = (side / 2.0 - ROUNDED_CARD) / far as f64;
+                        let wanted = if reach.iter().any(|&r| r > 0.0) {
+                            SPACING_EDGE_EDGE
+                        } else {
+                            2.0 * ROUNDED_CONNECTOR
+                        };
+                        wanted.min(room).max(SPACING_EDGE_EDGE)
+                    }
+                    None => SPACING_EDGE_EDGE,
+                };
+                // A side too short to keep each label clear of its
+                // neighbours' lines says by how much: the card grows by it
+                // (`lay_out`).
+                shortfall[v] =
+                    shortfall[v].max(route::label_shortfall(&reach, side, step, ROUNDED_CARD));
                 let places = match (lone, anchor) {
                     (Some(p), _) => vec![p],
-                    (None, anchor) => match anchor {
-                        // A split hop stands a bend's width from its bundle where
-                        // the side has room, so the line it crosses beside the
-                        // card is straight there, not turning.
-                        Some(a) => {
-                            let far = a.max(entries.len() - 1 - a).max(1);
-                            #[allow(clippy::cast_precision_loss)] // ports per side are few
-                            let room = (side / 2.0 - ROUNDED_CARD) / far as f64;
-                            // Beside a label the ports keep their usual spacing.
-                            let wanted = if reach.iter().any(|&r| r > 0.0) {
-                                SPACING_EDGE_EDGE
-                            } else {
-                                2.0 * ROUNDED_CONNECTOR
-                            };
-                            let step = wanted.min(room).max(SPACING_EDGE_EDGE);
-                            route::ports_around(&reach, a, cross[v], side, step, ROUNDED_CARD)
-                        }
-                        None => {
-                            route::ports(&reach, cross[v], side, SPACING_EDGE_EDGE, ROUNDED_CARD)
-                        }
-                    },
+                    (None, Some(a)) => {
+                        route::ports_around(&reach, a, cross[v], side, step, ROUNDED_CARD)
+                    }
+                    (None, None) => route::ports(&reach, cross[v], side, step, ROUNDED_CARD),
                 };
                 for ((_, hs), p) in entries.iter().zip(places) {
                     for &h in hs {
@@ -647,7 +680,7 @@ fn lay_out(spec: &Spec, sizes: &[Size]) -> Result<Placement, Vec<SpecError>> {
                 }
             }
         }
-        (out_port, in_port, out_bundle, in_bundle)
+        (out_port, in_port, out_bundle, in_bundle, shortfall)
     };
     // Tracks per gap; a gap with more tracks than its width holds is widened.
     let gaps = layers.len().saturating_sub(1);
@@ -732,7 +765,7 @@ fn lay_out(spec: &Spec, sizes: &[Size]) -> Result<Placement, Vec<SpecError>> {
         .collect();
     let mut split_out = vec![false; hops.len()];
     let mut split_in = vec![false; hops.len()];
-    let (mut out_port, mut in_port, mut out_bundle, mut in_bundle) =
+    let (mut out_port, mut in_port, mut out_bundle, mut in_bundle, mut shortfall) =
         assign_ports(&split_out, &split_in);
     let (mut track, mut track_count) = assign_tracks(&out_port, &in_port, &out_bundle, &in_bundle);
     let mut in_gap: Vec<Vec<usize>> = vec![Vec::new(); gaps];
@@ -796,7 +829,7 @@ fn lay_out(spec: &Spec, sizes: &[Size]) -> Result<Placement, Vec<SpecError>> {
         if !changed {
             break;
         }
-        (out_port, in_port, out_bundle, in_bundle) = assign_ports(&split_out, &split_in);
+        (out_port, in_port, out_bundle, in_bundle, shortfall) = assign_ports(&split_out, &split_in);
         (track, track_count) = assign_tracks(&out_port, &in_port, &out_bundle, &in_bundle);
     }
     let level = |h: usize| level_of(&out_port, &in_port, h);
@@ -989,8 +1022,24 @@ fn lay_out(spec: &Spec, sizes: &[Size]) -> Result<Placement, Vec<SpecError>> {
                 // In the room the gap keeps before its tracks, level or not:
                 // another edge's riser may stand in the rest of the gap.
                 let gap = vertex_layer[a];
-                let end = start[gap] + depth[gap] + lead[gap];
-                (f64::midpoint(leave_main(a), end), out_port[hop])
+                // Past the border of each frame the edge leaves here, so the
+                // label never sits on that border: the gap's room for frames
+                // ending here comes before the tracks, as the label's does.
+                let mut exit = 0.0f64;
+                let mut f = fr.frame_of[a];
+                while let Some(g) = f {
+                    if fr.span[g].1 == gap {
+                        exit = exit.max(end_depth[g]);
+                    }
+                    f = fr.parent[g];
+                }
+                let end = start[gap] + depth[gap] + exit + lead[gap];
+                let begin = if exit > 0.0 {
+                    start[gap] + depth[gap] + exit
+                } else {
+                    leave_main(a)
+                };
+                (f64::midpoint(begin, end), out_port[hop])
             };
             let (width, height) = match spec.direction {
                 Direction::Right | Direction::Auto => (along, across),
@@ -1081,19 +1130,22 @@ fn lay_out(spec: &Spec, sizes: &[Size]) -> Result<Placement, Vec<SpecError>> {
         .map(Rect::bottom)
         .chain(paths.iter().flatten().map(|p| p.y))
         .fold(0.0, f64::max);
-    Ok(Placement {
-        nodes,
-        edges: paths,
-        labels,
-        units: vec![0; layer.len()],
-        frames: frame_rects,
-        frame_labels,
-        legend: Vec::new(),
-        flow_lines: Vec::new(),
-        credit: None,
-        layers: layer,
-        size: Size { w, h },
-    })
+    Ok((
+        Placement {
+            nodes,
+            edges: paths,
+            labels,
+            units: vec![0; layer.len()],
+            frames: frame_rects,
+            frame_labels,
+            legend: Vec::new(),
+            flow_lines: Vec::new(),
+            credit: None,
+            layers: layer,
+            size: Size { w, h },
+        },
+        shortfall,
+    ))
 }
 
 /// Appends `p` to an orthogonal path, dropping repeats and merging a point

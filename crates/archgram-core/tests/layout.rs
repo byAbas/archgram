@@ -2,9 +2,10 @@
 //! seeded generator: no two cards overlap, every edge spans layers, every
 //! edge is orthogonal, starts and ends on its cards and passes through no
 //! card, no two edges between four different cards share a stretch, every
-//! label sits on its edge and clear of every card, cards in one layer
-//! share its depth, and the same spec lays out the same way. The generator
-//! is a fixed xorshift, so a failing seed reproduces.
+//! label sits on its edge, clear of every card and every other label and
+//! across no frame's border, cards in one layer share its depth, and the
+//! same spec lays out the same way. The generator is a fixed xorshift, so a
+//! failing seed reproduces.
 
 use archgram_core::layout::place;
 use archgram_core::measure::card_sizes;
@@ -426,13 +427,19 @@ fn check_labels(seed: u64, spec: &archgram_core::spec::Spec, p: &archgram_core::
                 "seed {seed}: the label of edge {k} covers node {i}"
             );
         }
-        // An edge sharing a card with the labelled one keeps clear of the
-        // label too, unless that card's side is too short for all its
-        // ports and every gap shrinks (`route::ports`); any other edge
-        // never runs under it.
+        // An edge leaving the same card on the same side keeps clear of it:
+        // a card too short for its labelled ports grows rather than pressing
+        // them together. Another edge at either of its cards may still pass
+        // it; any other edge never runs under it.
         let same_card = |j: usize| {
             let (a, b) = (&spec.edges[k], &spec.edges[j]);
-            a.from == b.from || a.to == b.to || a.from == b.to || a.to == b.from
+            let leaving_together = a.from == b.from
+                && p.edges[j]
+                    .first()
+                    .zip(p.edges[k].first())
+                    .is_some_and(|(x, y)| (x.x - y.x).abs() < 1e-6 || (x.y - y.y).abs() < 1e-6);
+            !leaving_together
+                && (a.from == b.from || a.to == b.to || a.from == b.to || a.to == b.from)
         };
         for (j, other) in p.edges.iter().enumerate() {
             if j == k || same_card(j) {
@@ -444,6 +451,24 @@ fn check_labels(seed: u64, spec: &archgram_core::spec::Spec, p: &archgram_core::
                     "seed {seed}: edge {j} runs under the label of edge {k}"
                 );
             }
+        }
+        // No two labels meet, and none lies across a frame's border.
+        for (j, other) in p.labels.iter().enumerate().skip(k + 1) {
+            if let Some(o) = other {
+                assert!(
+                    !r.overlaps(o),
+                    "seed {seed}: the labels of edges {k} and {j} overlap"
+                );
+            }
+        }
+        for (f, frame) in p.frames.iter().enumerate() {
+            let Some(fr) = frame else { continue };
+            let inside =
+                r.x >= fr.x && r.y >= fr.y && r.right() <= fr.right() && r.bottom() <= fr.bottom();
+            assert!(
+                inside || !r.overlaps(fr),
+                "seed {seed}: the label of edge {k} lies across frame {f}'s border"
+            );
         }
     }
 }
@@ -789,4 +814,36 @@ fn two_cards_leading_to_the_same_two_share_no_stretch() {
             assert_eq!(p.edges[k].len(), 2, "{direction}: edge {k} is not straight");
         }
     }
+}
+
+/// Labels on edges leaving one side of a card never meet, even when the
+/// card is narrower than they are side by side: the card grows. Flowing
+/// down, labels lie across the lines, so a short card meets this first
+/// (the module federation diagram of a reference site did).
+#[test]
+fn labels_leaving_one_side_never_meet() {
+    let json = r#"{ "archgram": 1, "title": "t", "description": "d", "direction": "down",
+      "nodes": [
+        { "id": "shell", "kind": "service", "label": "Shell", "frame": "host" },
+        { "id": "entry", "kind": "file", "label": "remoteEntry.js" },
+        { "id": "chunk", "kind": "file", "label": "ProductCard chunk" },
+        { "id": "react", "kind": "file", "label": "React 18" }
+      ],
+      "frames": [ { "id": "host", "label": "Host deploy" } ],
+      "edges": [
+        { "from": "shell", "to": "entry", "label": "fetches at run time" },
+        { "from": "shell", "to": "chunk", "label": "fetches on first render" },
+        { "from": "shell", "to": "react", "label": "shared singleton" },
+        { "from": "chunk", "to": "react", "label": "shared singleton" }
+      ] }"#;
+    let spec = parse_spec(json).unwrap();
+    let sizes = card_sizes(&spec);
+    let p = place(&spec, &sizes).unwrap();
+    let (a, b) = (p.labels[0].unwrap(), p.labels[1].unwrap());
+    assert!(!a.overlaps(&b), "{a:?} {b:?}");
+    assert!(
+        p.nodes[0].w > sizes[0].w,
+        "the card grew to hold its labels"
+    );
+    check_labels(0, &spec, &p);
 }
