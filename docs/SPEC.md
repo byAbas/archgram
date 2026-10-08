@@ -41,8 +41,9 @@ flows:
   - { name: an order, steps: [browser, api, queue, worker, [db, mail]] }
 ```
 
-A writer that reads the code gives a `source` to every node a file backs
-and to every edge, as above, and quotes each source that holds a `#`.
+A writer that reads the code, or a document the user names, gives a
+`source` to every node a file or a sentence backs and to every edge, as
+above, and quotes each source that holds a `#`.
 
 - `formats`: JSON or YAML, and the file name that draws `<name>.svg`.
 - `top-level`: every field above the lists, with its values and
@@ -140,7 +141,7 @@ Examples.
 | `tech` | no | A technology, by its Simple Icons slug (`postgresql`, `redis`, `react`); shows its logo. Lowercase letters, digits and `_` |
 | `variant` | no | `single` (default), `multi` (several instances), `external` (not ours) |
 | `frame` | no | The id of the frame the node sits in |
-| `source` | no | The code behind the node: a path, or a list of paths for a node that stands for several parts (Sources, below) |
+| `source` | no | What backs the node, its code or the document that states it: a path, or a list of paths for a node that stands for several parts (Sources, below) |
 
 Kinds, by category:
 
@@ -239,8 +240,8 @@ feeds it) is an error, reported with both nodes named.
 
 ## Sources
 
-A node or an edge may name the code behind it, so archgram can say when
-that code is gone. Sources are never drawn: a spec gives the same SVG
+A node or an edge may name what backs it, its code or the document that
+states it, so archgram can say when that is gone. Sources are never drawn: a spec gives the same SVG
 with or without them. Why, and what the check cannot find, is in
 `docs/features/sources.md`.
 
@@ -261,10 +262,13 @@ commonly holds secrets rather than code (`.env`, `.env.*`, `.npmrc`,
 `*.pfx`, `id_rsa`, `id_dsa`, `id_ecdsa`, `id_ed25519`, or anything in
 `.ssh`, `.aws`, `.gnupg` or `.docker`). After the first `#` (so a path
 cannot hold one), it may carry a few words copied from one line of that
-file: the line that makes the edge, or that defines the part, at least 3
-characters other than spaces. The words are looked for as written, anywhere in the
+file: the line that makes the edge, or that defines the part, or in a
+document the line of the sentence that states it, at least 3 characters
+other than spaces. The words are looked for as written, anywhere in the
 file, so the source holds while the file changes around them; they are
-found in a comment too, so pick words from the code itself. `source` is
+found in a comment too, so pick words from the code itself. In a
+document, take them from within one line: a paragraph wrapped across
+lines splits a sentence, and words across the break are not found. `source` is
 one source or a list of them, never an empty list, and a spec names at
 most 1000 sources.
 
@@ -286,7 +290,16 @@ people or systems outside the code, such as a browser) and to every
 edge: the file behind a node (the files, for a node that stands for
 several parts), and for an edge the file with a few words copied exactly
 from the line that makes it. From `docs/diagrams/`, the paths start with
-`../../`.
+`../../`. A writer drawing from a document the user names gives every
+node and edge the document, with a few words of the sentence that
+states it:
+
+```yaml
+nodes:
+  - { id: queue, kind: queue, label: job queue, source: "../design.md#jobs wait in the job queue" }
+edges:
+  - { from: queue, to: worker, source: "../design.md#the worker takes each job from the queue" }
+```
 
 In YAML, quote every source that holds a `#`: unquoted, ` #` starts a
 comment, which drops the rest of the words, and `: ` starts a key.
@@ -324,7 +337,7 @@ its JSON pointer (or its line and column in YAML), when:
   line there, or is an empty list; or the spec names more than 1000
   sources.
 
-`archgram check` then holds each source to the code (Sources).
+`archgram check` then holds each source to the code or the document behind it (Sources).
 
 ## Theme file
 

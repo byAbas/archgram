@@ -1,7 +1,8 @@
-//! The code behind a diagram (docs/SPEC.md, Sources): the form of each
-//! node's and edge's `source`, checked with the rest of the spec, and its
-//! presence, checked against what the caller finds. The core reads no file:
-//! the caller looks each path up (ARCHITECTURE.md, Parse and validate).
+//! What backs a diagram, its code or its document (docs/SPEC.md,
+//! Sources): the form of each node's and edge's `source`, checked with the
+//! rest of the spec, and its presence, checked against what the caller
+//! finds. The core reads no file: the caller looks each path up
+//! (ARCHITECTURE.md, Parse and validate).
 
 use std::collections::BTreeMap;
 
