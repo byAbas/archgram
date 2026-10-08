@@ -71,6 +71,14 @@ fn main() -> ExitCode {
     let args: Vec<String> = std::env::args().skip(1).collect();
     let args: Vec<&str> = args.iter().map(String::as_str).collect();
     match args.as_slice() {
+        // Help asked after a command, anywhere among its arguments, is still
+        // help: never a spec named `--help`.
+        ["build" | "check" | "spec" | "theme", rest @ ..]
+            if rest.iter().any(|a| matches!(*a, "--help" | "-h")) =>
+        {
+            println!("{USAGE}");
+            ExitCode::SUCCESS
+        }
         ["check", path] => check(path),
         ["spec"] => {
             print!("{SPEC}");

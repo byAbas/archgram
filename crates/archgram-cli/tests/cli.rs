@@ -848,3 +848,21 @@ fn spec_section_prints_one_section_by_heading_or_name() {
         "a section keeps its own subsections"
     );
 }
+
+/// `--help` after a command prints the help, wherever it stands among the
+/// command's arguments, rather than being read as a spec's name.
+#[test]
+fn help_after_a_command_is_the_help() {
+    let general = stdout(&archgram(&["--help"]));
+    for args in [
+        &["build", "--help"][..],
+        &["build", "spec.yaml", "-h"],
+        &["check", "--help"],
+        &["spec", "--help"],
+        &["theme", "check", "--help"],
+    ] {
+        let run = archgram(args);
+        assert!(run.status.success(), "{args:?}: {}", stderr(&run));
+        assert_eq!(stdout(&run), general, "{args:?}");
+    }
+}
