@@ -49,9 +49,9 @@ Themes: auto (light, dark under the reader's dark mode; the default), light, dar
   project's DTCG resolver, its light and dark inputs, and the token for each
   role (docs/SPEC.md, Theme file).
 
-A node or an edge may name the code behind it (source, a path from the spec's
-folder). check fails, and build warns, when that code is not there
-(docs/SPEC.md, Sources).";
+A node or an edge may name what backs it, its code or a document (source, a
+path from the spec's folder). check fails, and build warns, when that is not
+there (docs/SPEC.md, Sources).";
 
 /// The spec format this archgram reads, carried in the binary so a spec's
 /// writer, a person or an agent, reads the format of the very command that

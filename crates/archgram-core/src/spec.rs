@@ -219,7 +219,8 @@ pub struct Node {
     /// The id of the frame the node sits in.
     #[serde(default)]
     pub frame: Option<String>,
-    /// The code behind the node (docs/SPEC.md, Sources). Never drawn.
+    /// What backs the node, its code or its document (docs/SPEC.md,
+    /// Sources). Never drawn.
     #[serde(default)]
     pub source: Option<Sources>,
 }
@@ -309,8 +310,9 @@ pub struct Edge {
     pub source: Option<Sources>,
 }
 
-/// The code behind a node or an edge: one source, or several for a node
-/// that stands for several parts (docs/SPEC.md, Sources).
+/// What backs a node or an edge, its code or its document: one source, or
+/// several for a node that stands for several parts (docs/SPEC.md,
+/// Sources).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Sources {
     One(String),

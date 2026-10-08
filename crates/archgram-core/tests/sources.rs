@@ -1,6 +1,6 @@
-//! The code behind a diagram (docs/SPEC.md, Sources): a source's form is
-//! checked with the spec, its presence against what the caller finds, and
-//! it is never drawn.
+//! What backs a diagram, its code or its document (docs/SPEC.md,
+//! Sources): a source's form is checked with the spec, its presence
+//! against what the caller finds, and it is never drawn.
 
 use std::cell::RefCell;
 

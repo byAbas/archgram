@@ -100,9 +100,10 @@ npx archgram build docs/diagrams/linkshort.archgram.yaml
 
 Checks a spec without drawing it, and lists every problem at its line and
 column, with the nearest id or logo when one is misspelt. When a node or
-an edge names the code behind it (`source`), it also says which of that
-code is gone: a part or a line whose code was removed is reported, and
-`archgram build` warns of the same and still draws.
+an edge names what backs it (`source`), its code or the document that
+states it, it also says which of that is gone: a part or a line whose
+code or sentence was removed is reported, and `archgram build` warns of
+the same and still draws.
 
 ```sh
 npx archgram check docs/diagrams/linkshort.archgram.yaml
@@ -234,9 +235,9 @@ and lists both.
 Keep the spec in git beside the code. archgram redraws the diagram from
 it, and its agent skill can write the spec again from the code, so the
 diagram changes in the same pull request as the system. When the spec
-names the code behind each part and line (`source`), `archgram check`
-says which of it is gone, so CI can fail a pull request that leaves the
-diagram behind.
+names the code behind each part and line (`source`), or the document
+that states them, `archgram check` says which of it is gone, so CI can
+fail a pull request that leaves the diagram behind.
 
 ### Can it use my design system's colours?
 
