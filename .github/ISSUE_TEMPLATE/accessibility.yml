@@ -1,0 +1,43 @@
+name: Accessibility barrier
+description: Something in archgram, a drawing or the docs that you cannot use, or can use only with difficulty.
+labels: [accessibility]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        What archgram commits to, and what it does not do yet, is in [ACCESSIBILITY.md](https://github.com/byAbas/archgram/blob/main/ACCESSIBILITY.md). A barrier is worth reporting even when it is listed there.
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where
+      options:
+        - A drawn diagram
+        - The archgram command
+        - The documentation
+        - The archgram skill
+    validations:
+      required: true
+  - type: textarea
+    id: barrier
+    attributes:
+      label: Barrier
+      description: What you tried to do, and what got in the way.
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: Optional. The assistive technology, browser or terminal, and their versions, and any setting such as dark mode, reduced motion or zoom.
+      placeholder: VoiceOver on macOS 15, Safari 18, reduced motion on
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Optional. What `npx archgram --version` prints.
+  - type: textarea
+    id: spec
+    attributes:
+      label: Spec
+      description: Optional. The smallest spec whose drawing shows the barrier.
+      render: yaml

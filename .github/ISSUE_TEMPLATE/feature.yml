@@ -1,0 +1,32 @@
+name: Feature
+description: Something archgram does not do yet.
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        archgram is small on purpose. A feature is easiest to accept when it fits what [docs/PRD.md](https://github.com/byAbas/archgram/blob/main/docs/PRD.md) sets out, so start from the problem, not the solution.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What you are trying to do, and what stops you today.
+    validations:
+      required: true
+  - type: textarea
+    id: who
+    attributes:
+      label: Who it serves
+      description: Who meets this problem, and how often.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What archgram could do
+      description: Optional. What the spec would say, and what the drawing or the command would do.
+  - type: textarea
+    id: workaround
+    attributes:
+      label: What you do instead
+      description: Optional. How you work around it now, or another tool that does it.

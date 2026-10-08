@@ -1,0 +1,7 @@
+# Every issue starts from a form, so it holds what is needed to act on it
+# (CONTRIBUTING.md). A vulnerability is never reported here (SECURITY.md).
+blank_issues_enabled: false
+contact_links:
+  - name: Report a vulnerability
+    url: https://github.com/byAbas/archgram/security/advisories/new
+    about: Privately, never in a public issue (SECURITY.md).
