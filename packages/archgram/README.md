@@ -163,7 +163,7 @@ Or take it from the release, into your agent's skills folder
 (`~/.agents/skills`, or `~/.claude/skills` for Claude Code):
 
 ```sh
-mkdir -p ~/.agents/skills && curl -sL https://github.com/byAbas/archgram/releases/download/v0.8.0/archgram-skill-0.8.0.tar.gz | tar -xz -C ~/.agents/skills
+mkdir -p ~/.agents/skills && curl -sL https://github.com/byAbas/archgram/releases/download/v0.9.0/archgram-skill-0.9.0.tar.gz | tar -xz -C ~/.agents/skills
 ```
 
 The skill's archive carries a signed record of the build that made it:
