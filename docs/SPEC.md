@@ -53,6 +53,8 @@ above, and quotes each source that holds a `#`.
 - `edges`: an edge's fields, and what an edge means.
 - `flows`: steps, branches, a flow that stops, and how archgram times them.
 - `hints`: `first`, `last`, `sameLayer` and `order`.
+- `sequence`: a sequence diagram, `diagram: sequence`: participants,
+  messages, replies and fragments.
 - `sources`: what a source may name, and how archgram looks it up.
 - `validation`: what makes a spec invalid.
 - `theme-file`: drawing in a project's own colours.
@@ -104,6 +106,7 @@ drawing keeps a plain name; any other spec draws its own name with `.svg`.
 | Field | Required | Values | Default | Meaning |
 |---|---|---|---|---|
 | `archgram` | yes | `1` | | The spec format's version |
+| `diagram` | no | `architecture`, `sequence` | `architecture` | The kind of diagram. Without it, a spec is an architecture diagram, and every field in this section and the sections up to Sequence is its. A sequence takes the fields in Sequence, below |
 | `title` | yes | text | | The diagram's name; the SVG's `<title>` |
 | `description` | yes | text | | The whole diagram in prose; the SVG's `<desc>`, read by screen readers |
 | `direction` | no | `right`, `down`, `auto` | `right` | The direction of the flow. `auto` lets archgram choose: left to right while it keeps its text readable where the diagram is shown (`shownWidth`), and otherwise whichever of left to right and top to bottom is narrower. It is chosen from the spec alone, so the same spec draws the same bytes, and `archgram build` says which it chose |
@@ -238,6 +241,151 @@ The layout needs no help, but it accepts some.
 A hint that contradicts the edges (a node placed before the node that
 feeds it) is an error, reported with both nodes named.
 
+## Sequence
+
+A sequence diagram shows, in order, the messages between participants:
+who calls whom, what comes back, and where a request is turned away. Its
+meaning is UML's (Unified Modeling Language 2.5.1, clause 17); archgram
+draws the part of it listed here (docs/features/sequence.md).
+
+```yaml
+archgram: 1
+diagram: sequence
+title: sign in
+description: >-
+  The browser posts the login to the API, which finds the user in
+  Postgres; with the right password the API returns a session, and
+  otherwise refuses with a 401.
+participants:
+  - { id: browser, kind: browser, label: Browser }
+  - { id: api, kind: service, label: API, tech: nodedotjs, source: ../../src/api.ts }
+  - { id: db, kind: database, label: Users, tech: postgresql }
+messages:
+  - { from: browser, to: api, label: POST /login, source: "../../src/api.ts#app.post(\"/login\"" }
+  - { from: api, to: db, label: find user, source: "../../src/api.ts#db.users.find(" }
+  - { reply: db, label: user }
+  - alt:
+      - when: password matches
+        messages:
+          - { reply: api, label: session }
+      - when: else
+        messages:
+          - { reply: api, label: "401", refused: true }
+```
+
+### Top level
+
+| Field | Required | Values | Default | Meaning |
+|---|---|---|---|---|
+| `archgram`, `title`, `description` | yes | | | As in Top level |
+| `diagram` | yes | `sequence` | | This section's kind |
+| `participants` | yes | list | | At least two |
+| `messages` | yes | list | | At least one; their order is time's |
+| `still` | no | `numbers`, `none` | `numbers` | Where nothing moves, each message's number by its line, or nothing more: in a sequence the order is the meaning |
+| `shownWidth`, `card`, `logo`, `palette`, `signal`, `border`, `wait`, `glow`, `credit` | no | | | As in Top level |
+
+`nodes`, `frames`, `edges`, `flows`, `hints`, `direction` and `legend`
+are errors in a sequence: time runs down the page, and the participants'
+order is the list's.
+
+### Participants
+
+```yaml
+- { id: api, kind: service, label: API, tech: nodedotjs, source: ../../src/api.ts }
+```
+
+A participant has a node's fields, `id`, `kind`, `label`, `note`, `tech`,
+`variant` and `source`, with the same values (Nodes). Participants are
+drawn left to right in the order listed, each a card over its lifeline.
+
+### Messages
+
+```yaml
+- { from: browser, to: api, label: POST /login }
+- { from: api, to: queue, label: enqueue, async: true }
+- { from: api, to: api, label: hash password }
+- { reply: db, label: user }
+```
+
+| Field | Required | Meaning |
+|---|---|---|
+| `from`, `to` | yes | Participant ids; the message goes from `from` to `to`, the same one for a message to itself |
+| `label` | no | A few words on the line: the call, or the data |
+| `async` | no | `true` for a send that does not wait for a reply; a call waits by default |
+| `refused` | no | `true` when the message turns the request away (below) |
+| `source` | no | The code that sends the message, as an edge's (Sources) |
+
+A reply has `reply` in place of `from`:
+
+| Field | Required | Meaning |
+|---|---|---|
+| `reply` | yes | The participant that replies |
+| `to` | no | Who it replies to: by default the caller of the latest call to `reply` not yet answered, and when given it must be that caller |
+| `label`, `refused`, `source` | no | As a message's |
+
+A call is drawn as a solid line with a filled arrowhead, a send that does
+not wait with an open one, and a reply as a dashed line.
+
+### Fragments
+
+A fragment is an item of a `messages` list that holds messages of its
+own, so fragments nest.
+
+```yaml
+- alt:
+    - { when: cached, messages: [ { reply: cache, label: page } ] }
+    - { when: else, messages: [ { from: cache, to: db, label: read } ] }
+- opt:
+    when: the user asked for a receipt
+    messages:
+      - { from: api, to: mail, label: send receipt, async: true }
+- loop:
+    when: for each line
+    messages:
+      - { from: worker, to: db, label: insert }
+- par:
+    - { messages: [ { from: api, to: search, label: query } ] }
+    - { messages: [ { from: api, to: ads, label: query } ] }
+```
+
+| Fragment | Holds | Meaning (UML 2.5.1, 17.12.15) |
+|---|---|---|
+| `alt` | two operands or more, each with `when` and `messages`; `when: else` only on the last | One of them happens, the first whose guard holds |
+| `opt` | one operand, `when` optional, and `messages` | It happens or nothing does |
+| `loop` | one operand, `when` optional, and `messages` | It is repeated |
+| `par` | two operands or more, each with `messages` | They happen in any interleaving, each in its own order |
+
+An operand may also name the code that makes its choice, such as the
+`if` its guard stands for, in `source` (Sources).
+
+A guard (`when`) is a few words, drawn in square brackets above the
+operand's first message. A fragment is drawn as a frame round the
+messages it holds, its operator at its top left, its operands divided by
+dashed lines.
+
+### Refused messages
+
+`refused: true` marks the message that turns the request away, usually a
+reply such as a 401. A ✕ marks its line at the participant that refuses,
+and, where the diagram moves, the refusal travels back along the calls
+not yet answered to where the request began, as a refused flow does
+(Flows). UML has no refusal; it is archgram's.
+
+### How a sequence plays
+
+The messages play in order, one at a time; a `par`'s operands start
+together; an `alt`'s operands play one after another, each with its
+guard lit; an `opt` and a `loop` play their messages once. Under reduced
+motion the still image shows each message's number, and a screen reader
+hears each message in words, in order, a guard before its messages.
+
+### Sources in a sequence
+
+A participant names the file behind it, and a message the file with a
+few words from the line that sends it, as nodes and edges do (Sources).
+A reply's and a guard's source is optional. `archgram check` holds them
+to the code.
+
 ## Sources
 
 A node or an edge may name what backs it, its code or the document that
@@ -335,7 +483,22 @@ its JSON pointer (or its line and column in YAML), when:
   name, names `.git` or a file that commonly holds secrets (Sources),
   holds `\`, has fewer than 3 characters after its `#` or more than one
   line there, or is an empty list; or the spec names more than 1000
-  sources.
+  sources;
+- `diagram` is not one of those allowed, or a sequence holds a field that
+  is not a sequence's (Sequence, Top level);
+- a sequence has fewer than two participants or no message, or a
+  participant is in no message;
+- a sequence's item is not exactly one of a message (`from` and `to`), a
+  reply (`reply`) and a fragment, or a fragment carries a message's
+  fields;
+- a message, or a reply's `reply` or `to`, names a participant that does
+  not exist;
+- a reply has no call to its participant before it still waiting, or
+  names a `to` other than that call's caller; a send that does not wait,
+  and a refused call, wait for no reply;
+- an `alt` or a `par` has fewer than two operands, an `alt` operand has no
+  `when`, `else` is on an operand other than an `alt`'s last, a `par`
+  operand has a `when`, a guard is empty, or an operand holds no messages.
 
 `archgram check` then holds each source to the code or the document behind it (Sources).
 

@@ -13,7 +13,7 @@ use archgram_core::render::{Mode, Options};
 use archgram_core::sources::Found;
 use archgram_core::spec::Direction;
 use archgram_core::tokens::Role;
-use archgram_core::{Spec, SpecError};
+use archgram_core::{Diagram, Spec, SpecError};
 use archgram_icons::Icons;
 use archgram_yaml::Positions;
 
@@ -274,23 +274,20 @@ fn format_of(path: &str) -> Result<Format, ExitCode> {
     }
 }
 
-/// Reads and checks a spec in its format, each `tech` against the logos
-/// archgram carries; a YAML spec's problems are at its lines and columns,
-/// and its positions are kept for the problems found later.
-fn parse(text: &str, format: Format) -> Result<(Spec, Option<Positions>), Vec<SpecError>> {
-    let (spec, positions) = match format {
-        Format::Json => (archgram_core::parse_spec(text)?, None),
+/// Reads and checks a spec of any kind in its format, each `tech` against
+/// the logos archgram carries; a YAML spec's problems are at its lines and
+/// columns, and its positions are kept for the problems found later.
+fn parse(text: &str, format: Format) -> Result<(Diagram, Option<Positions>), Vec<SpecError>> {
+    let (diagram, positions) = match format {
+        Format::Json => (archgram_core::parse(text)?, None),
         Format::Yaml => {
-            let (spec, positions) = archgram_yaml::parse(text)?;
-            (spec, Some(positions))
+            let (diagram, positions) = archgram_yaml::parse_diagram(text)?;
+            (diagram, Some(positions))
         }
     };
-    let errors = located(
-        archgram_core::check_logos(&spec, &Icons::load()),
-        positions.as_ref(),
-    );
+    let errors = located(diagram.check_logos(&Icons::load()), positions.as_ref());
     if errors.is_empty() {
-        Ok((spec, positions))
+        Ok((diagram, positions))
     } else {
         Err(errors)
     }
@@ -311,8 +308,9 @@ fn located(errors: Vec<SpecError>, positions: Option<&Positions>) -> Vec<SpecErr
 /// looked up from the spec's folder, only under the project's folder
 /// (`files::project`, `files::Lookup`). A file is read only to look for a
 /// source's words, and nothing of it is printed or kept.
-fn missing_sources(path: &str, spec: &Spec, positions: Option<&Positions>) -> Vec<SpecError> {
-    if archgram_core::sources::count(spec) == 0 {
+fn missing_sources(path: &str, diagram: &Diagram, positions: Option<&Positions>) -> Vec<SpecError> {
+    let owned = diagram.owned();
+    if archgram_core::sources::count_owned(&owned) == 0 {
         return Vec::new();
     }
     // Real paths, so they compare alike where the system's own paths go
@@ -335,7 +333,10 @@ fn missing_sources(path: &str, spec: &Spec, positions: Option<&Positions>) -> Ve
         Ok(lookup) => lookup.find(source, words),
         Err(why) => Found::Unreadable(why.clone()),
     };
-    located(archgram_core::sources::check(spec, &find), positions)
+    located(
+        archgram_core::sources::check_owned(&owned, &find),
+        positions,
+    )
 }
 
 fn check(path: &str) -> ExitCode {
@@ -347,24 +348,30 @@ fn check(path: &str) -> ExitCode {
         Ok(t) => t,
         Err(code) => return code,
     };
-    let (spec, positions) = match parse(&text, format) {
+    let (diagram, positions) = match parse(&text, format) {
         Ok(read) => read,
         Err(errors) => return report(path, &errors),
     };
-    let missing = missing_sources(path, &spec, positions.as_ref());
+    let missing = missing_sources(path, &diagram, positions.as_ref());
     if !missing.is_empty() {
         return report(path, &missing);
     }
-    let sources = match archgram_core::sources::count(&spec) {
+    let sources = match archgram_core::sources::count_owned(&diagram.owned()) {
         0 => String::new(),
         1 => ", 1 source found".into(),
         n => format!(", {n} sources found"),
     };
-    println!(
-        "{path}: valid ({} nodes, {} edges{sources})",
-        spec.nodes.len(),
-        spec.edges.len()
-    );
+    let parts = match &diagram {
+        Diagram::Architecture(spec) => {
+            format!("{} nodes, {} edges", spec.nodes.len(), spec.edges.len())
+        }
+        Diagram::Sequence(seq) => format!(
+            "a sequence, {} participants, {} messages",
+            seq.participants.len(),
+            seq.message_count()
+        ),
+    };
+    println!("{path}: valid ({parts}{sources})");
     ExitCode::SUCCESS
 }
 
@@ -392,12 +399,21 @@ fn build(
         Err(code) => return code,
     };
     let spec = match parse(&text, format) {
-        Ok((spec, positions)) => {
+        Ok((diagram, positions)) => {
             // The drawing is still worth having; `check` is what fails.
-            for e in missing_sources(path, &spec, positions.as_ref()) {
+            for e in missing_sources(path, &diagram, positions.as_ref()) {
                 eprintln!("archgram: warning: {path}:{}", printable(&e.to_string()));
             }
-            spec
+            match diagram {
+                Diagram::Architecture(spec) => spec,
+                // Read and checked, not yet laid out (docs/features/sequence.md).
+                Diagram::Sequence(_) => {
+                    eprintln!(
+                        "archgram: {path}: this archgram reads a sequence diagram but does not draw one yet; `archgram check` checks it"
+                    );
+                    return ExitCode::from(1);
+                }
+            }
         }
         Err(errors) => return report(path, &errors),
     };

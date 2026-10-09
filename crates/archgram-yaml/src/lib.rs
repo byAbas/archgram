@@ -18,7 +18,7 @@
 use std::collections::BTreeMap;
 use std::fmt::Write as _;
 
-use archgram_core::{Location, Spec, SpecError};
+use archgram_core::{Diagram, Location, Spec, SpecError};
 use saphyr_parser::{Event, Parser, ScalarStyle, Span, Tag};
 
 /// The deepest nesting a spec may have. A spec needs five levels.
@@ -90,6 +90,25 @@ pub fn parse_spec(yaml: &str) -> Result<Spec, Vec<SpecError>> {
 ///
 /// Every problem, located by its line and column in the YAML.
 pub fn parse(yaml: &str) -> Result<(Spec, Positions), Vec<SpecError>> {
+    read(yaml, archgram_core::parse_spec)
+}
+
+/// Reads and checks a YAML spec of any kind (`archgram_core::parse`), and
+/// keeps where each part was written.
+///
+/// # Errors
+///
+/// Every problem, located by its line and column in the YAML.
+pub fn parse_diagram(yaml: &str) -> Result<(Diagram, Positions), Vec<SpecError>> {
+    read(yaml, archgram_core::parse)
+}
+
+/// The YAML written as JSON, read by `core`, and every problem moved back
+/// to where it was written.
+fn read<T>(
+    yaml: &str,
+    core: impl Fn(&str) -> Result<T, Vec<SpecError>>,
+) -> Result<(T, Positions), Vec<SpecError>> {
     let root = read_tree(yaml).map_err(|e| vec![e])?;
     let mut bare = Vec::new();
     bare_keys(&root, yaml, &mut bare);
@@ -99,8 +118,8 @@ pub fn parse(yaml: &str) -> Result<(Spec, Positions), Vec<SpecError>> {
         lines: json.at,
         pointers: json.pointers,
     };
-    match archgram_core::parse_spec(&json.lines.join("\n")) {
-        Ok(spec) => Ok((spec, positions)),
+    match core(&json.lines.join("\n")) {
+        Ok(read) => Ok((read, positions)),
         Err(errors) => Err(errors
             .into_iter()
             .map(|e| {
