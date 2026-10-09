@@ -406,7 +406,6 @@ fn build(
             }
             match diagram {
                 Diagram::Architecture(spec) => spec,
-                // Read and checked, not yet laid out (docs/features/sequence.md).
                 Diagram::Sequence(seq) => {
                     let out = out.unwrap_or_else(|| default_output(path));
                     return build_sequence(path, &seq, (out, split), options);
@@ -416,24 +415,7 @@ fn build(
         Err(errors) => return report(path, &errors),
     };
     if options.embed_font {
-        let missing = archgram_core::uncovered_characters(&spec, &Icons::load());
-        if !missing.is_empty() {
-            let list = missing
-                .iter()
-                .map(|c| format!("{c} (U+{:04X})", u32::from(*c)))
-                .collect::<Vec<_>>()
-                .join(" ");
-            eprintln!(
-                "archgram: warning: the embedded font lacks {}; the reader's font will draw {}: {}",
-                if missing.len() == 1 {
-                    "a character"
-                } else {
-                    "some characters"
-                },
-                if missing.len() == 1 { "it" } else { "them" },
-                list
-            );
-        }
+        warn_uncovered(&archgram_core::uncovered_characters(&spec, &Icons::load()));
     }
     let out = out.unwrap_or_else(|| default_output(path));
     let drawings = if split {
@@ -468,6 +450,9 @@ fn build_sequence(
     options: Options,
 ) -> ExitCode {
     let icons = Icons::load();
+    if options.embed_font {
+        warn_uncovered(&archgram_core::uncovered_sequence_characters(seq, &icons));
+    }
     let drawings = if split {
         let (light, dark) = archgram_core::draw_sequence_themes(seq, options, &icons);
         vec![(themed(&out, "light"), light), (themed(&out, "dark"), dark)]
@@ -478,12 +463,7 @@ fn build_sequence(
     if let Some((_, drawing)) = drawings.first()
         && drawing.width > limit
     {
-        let place = match seq.shown_width {
-            Some(shown) => {
-                format!("that keep its text readable at the {shown:.0} px it is shown at")
-            }
-            None => "a README on GitHub shows at a readable size".to_owned(),
-        };
+        let place = shown_place(seq.shown_width);
         eprintln!(
             "archgram: warning: {path}: the drawing is {:.0} px wide, wider than the {limit:.0} px {place}; merge or leave out participants, shorten the longest labels, or split it in two",
             drawing.width
@@ -524,16 +504,45 @@ fn write_drawings(drawings: Vec<(PathBuf, archgram_core::Drawing)>) -> ExitCode 
     ExitCode::SUCCESS
 }
 
+/// Where a drawing is shown, as a warning about its width says it: at the
+/// width the spec names, or in a README on GitHub.
+fn shown_place(shown_width: Option<f64>) -> String {
+    match shown_width {
+        Some(shown) => format!("that keep its text readable at the {shown:.0} px it is shown at"),
+        None => "a README on GitHub shows at a readable size".to_owned(),
+    }
+}
+
+/// Warns of the characters the embedded font lacks, which the reader's
+/// font will draw.
+fn warn_uncovered(missing: &[char]) {
+    if missing.is_empty() {
+        return;
+    }
+    let list = missing
+        .iter()
+        .map(|c| format!("{c} (U+{:04X})", u32::from(*c)))
+        .collect::<Vec<_>>()
+        .join(" ");
+    eprintln!(
+        "archgram: warning: the embedded font lacks {}; the reader's font will draw {}: {}",
+        if missing.len() == 1 {
+            "a character"
+        } else {
+            "some characters"
+        },
+        if missing.len() == 1 { "it" } else { "them" },
+        list
+    );
+}
+
 /// What to say of a drawing wider than keeps its text readable where it
 /// is shown (docs/features/shown-width.md), and what would bring it
 /// within: the other direction, written in the spec, when that one fits;
 /// otherwise two diagrams. `auto` has already chosen the narrower.
 fn too_wide(spec: &Spec, options: Options, drawing: &archgram_core::Drawing) -> String {
     let limit = archgram_core::readable_width(spec);
-    let place = match spec.shown_width {
-        Some(shown) => format!("that keep its text readable at the {shown:.0} px it is shown at"),
-        None => "a README on GitHub shows at a readable size".to_owned(),
-    };
+    let place = shown_place(spec.shown_width);
     let other = match drawing.direction {
         Direction::Down => Some((Direction::Right, "right")),
         Direction::Right | Direction::Auto if spec.direction != Direction::Auto => {

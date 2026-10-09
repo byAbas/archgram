@@ -11,20 +11,19 @@ use crate::color::Rgb;
 use crate::font;
 use crate::geometry::{Point, Rect};
 use crate::layout::sequence::{Layout, Message, Sort};
-use crate::sequence::{Item as SeqItem, Operator, Sequence, SequenceStill, What};
+use crate::sequence::{Operator, Sequence, SequenceStill, Step};
 use crate::tokens::{
     ARROWHEAD_LENGTH, FONT_SANS, REFUSAL_MARK, REFUSAL_MARK_GAP, ROUNDED_CANVAS, ROUNDED_CARD,
-    ROUNDED_FRAME, SPACING_MARGIN, TYPOGRAPHY_FRAME_LABEL, TYPOGRAPHY_LEGEND, TYPOGRAPHY_SUBTITLE,
-    TYPOGRAPHY_TITLE,
+    ROUNDED_FRAME, SPACING_FRAGMENT_TAG_PAD, SPACING_MARGIN, TYPOGRAPHY_FRAME_LABEL,
+    TYPOGRAPHY_LEGEND, TYPOGRAPHY_SUBTITLE,
 };
 
 use super::scene::{Anchor, GroupOf, Item, Scene};
 use super::svg::num;
 use super::{EDGE_OFFSET, OFFSET, Options, Sheet, card, credit, edge, legend, styles};
 
-/// The room inside a tag before its operator, and the cut of its corner
-/// (`layout::sequence`'s own).
-const TAG_PAD: f64 = 6.0;
+/// The room inside a tag before its operator, and the cut of its corner.
+const TAG_PAD: f64 = SPACING_FRAGMENT_TAG_PAD;
 
 /// A laid-out sequence as a scene: every shape in drawing order, with its
 /// style sheet. Long, as the architecture's: one drawing's parts in the
@@ -102,15 +101,13 @@ pub fn scene(
                 });
             }
             frames.extend(tag(f.operator, at(f.tag)));
-            for (text, b) in &f.guards {
-                let b = at(*b);
-                frames.push(Item::Text {
-                    class: "sub".into(),
-                    x: b.x,
-                    y: b.y + font::baseline_in_line(&TYPOGRAPHY_SUBTITLE),
-                    anchor: Anchor::Start,
-                    text: text.clone(),
-                });
+            // On a patch of the canvas, as a label is, so a lifeline does
+            // not cross its words.
+            for (lines, b) in &f.guards {
+                let lines: Vec<&str> = lines.iter().map(String::as_str).collect();
+                let (patch, words) = edge::label_lines_at(&lines, at(*b), ("label-patch", "sub"));
+                frames.push(patch);
+                frames.extend(words);
             }
         }
         items.push(Item::Group {
@@ -141,7 +138,8 @@ pub fn scene(
         if let Some((text, r)) = &m.label {
             // On a patch of the canvas, so a lifeline passing behind a
             // label does not cross its words.
-            let (patch, words) = edge::edge_label(&text.join(" "), at(*r), ("label-patch", "sub"));
+            let lines: Vec<&str> = text.iter().map(String::as_str).collect();
+            let (patch, words) = edge::label_lines_at(&lines, at(*r), ("label-patch", "sub"));
             labels.push(patch);
             labels.extend(words);
         }
@@ -185,7 +183,6 @@ pub fn scene(
         .filter(|m| m.refused)
         .map(|m| m.refuser)
         .collect();
-    refusers.dedup();
     refusers.sort_unstable();
     refusers.dedup();
     for p in refusers {
@@ -286,7 +283,8 @@ fn cross(drawn: &edge::Drawn) -> [Item; 2] {
 /// following the frame's and its lower right cut (UML 2.5.1, 17.6.4.3),
 /// the operator in it.
 fn tag(operator: Operator, r: Rect) -> [Item; 2] {
-    let rad = ROUNDED_FRAME.min(r.h / 2.0);
+    // The frame's own corner, as far as the tag's height and width allow.
+    let rad = ROUNDED_FRAME.min(r.h).min(r.w - TAG_PAD);
     let d = format!(
         "M{} {}A{r} {r} 0 0 1 {} {}H{}V{}L{} {}H{}Z",
         num(r.x),
@@ -356,31 +354,7 @@ fn style(
     let mut sheet = Sheet::default();
     // The refusal colour is a signal's role, written only where it is used.
     super::theme_vars(&mut sheet, options.mode, (&light, &dark), refused);
-    let mut runs: Vec<(u16, String)> = crate::measure::text_runs_with(&layout.spec, logos)
-        .into_iter()
-        .map(|(w, t)| (w, t.into_owned()))
-        .collect();
-    for m in &layout.messages {
-        if let Some((lines, _)) = &m.label {
-            runs.extend(
-                lines
-                    .iter()
-                    .map(|l| (TYPOGRAPHY_SUBTITLE.weight, l.clone())),
-            );
-        }
-        if m.pill.is_some() {
-            runs.push((TYPOGRAPHY_LEGEND.weight, m.number.to_string()));
-        }
-    }
-    for f in &layout.fragments {
-        runs.push((TYPOGRAPHY_FRAME_LABEL.weight, f.operator.name().into()));
-        runs.extend(
-            f.guards
-                .iter()
-                .map(|(g, _)| (TYPOGRAPHY_SUBTITLE.weight, g.clone())),
-        );
-    }
-    let _ = TYPOGRAPHY_TITLE;
+    let runs = text_runs(layout, logos);
     if options.embed_font && super::embed_runs(&mut sheet, runs.into_iter()) {
         sheet.line(&format!(
             "text {{ font-family: \"{}\", {FONT_SANS}; font-kerning: none; }}",
@@ -407,84 +381,94 @@ fn style(
     sheet.0
 }
 
+/// Every text the drawing sets, with its weight: the heads', and each
+/// label, number, operator and guard. For the font's subset, and for the
+/// characters it lacks.
+#[must_use]
+pub fn text_runs(layout: &Layout, logos: &dyn crate::logos::Logos) -> Vec<(u16, String)> {
+    let mut runs: Vec<(u16, String)> = crate::measure::text_runs_with(&layout.spec, logos)
+        .into_iter()
+        .map(|(w, t)| (w, t.into_owned()))
+        .collect();
+    for m in &layout.messages {
+        if let Some((lines, _)) = &m.label {
+            runs.extend(
+                lines
+                    .iter()
+                    .map(|l| (TYPOGRAPHY_SUBTITLE.weight, l.clone())),
+            );
+        }
+        if m.pill.is_some() {
+            runs.push((TYPOGRAPHY_LEGEND.weight, m.number.to_string()));
+        }
+    }
+    for f in &layout.fragments {
+        runs.push((TYPOGRAPHY_FRAME_LABEL.weight, f.operator.name().into()));
+        for (lines, _) in &f.guards {
+            runs.extend(
+                lines
+                    .iter()
+                    .map(|l| (TYPOGRAPHY_SUBTITLE.weight, l.clone())),
+            );
+        }
+    }
+    runs
+}
+
 /// The description, then each message in words, in order, for a screen
-/// reader, which sees neither the lines nor their order down the page.
+/// reader, which sees neither the lines nor their order down the page: a
+/// message's number, who sends it to whom and its label, each fragment's
+/// guard before its messages. Read from the same steps the layout draws, so
+/// the words and the drawing never disagree.
 fn description(seq: &Sequence) -> String {
-    let label = |id: &str| -> String {
-        seq.participants
-            .iter()
-            .find(|p| p.id == id)
-            .map_or_else(|| id.to_owned(), |p| p.label.clone())
-    };
+    let label = |p: usize| seq.participants[p].label.trim().to_owned();
     let mut out = seq.description.trim().to_owned();
+    let mut open: Vec<Operator> = Vec::new();
     let mut n = 0u32;
-    words(&seq.messages, &label, &mut Vec::new(), &mut n, &mut out);
+    for step in seq.steps() {
+        match step {
+            Step::Message(m) => {
+                n += 1;
+                let verb = match m.sort {
+                    Sort::Call => "calls",
+                    Sort::Send => "sends to",
+                    Sort::Reply => "replies to",
+                };
+                let _ = write!(out, " {n}. {} {verb} {}", label(m.from), label(m.to));
+                if let Some(l) = m.label {
+                    let _ = write!(out, ": {}", l.trim());
+                }
+                if m.refused {
+                    out.push_str(", refused");
+                }
+                out.push('.');
+            }
+            Step::Open(operator, when) => {
+                open.push(operator);
+                let _ = write!(out, " {}", lead(operator, when, true));
+            }
+            Step::Operand(when) => {
+                let operator = *open.last().expect("an operand inside a fragment");
+                let _ = write!(out, " {}", lead(operator, when, false));
+            }
+            Step::Close => {
+                open.pop();
+            }
+        }
+    }
     out
 }
 
-/// Each item in words, appended to `out`: a message's number, who sends it
-/// to whom and its label; a fragment's guard before its messages.
-fn words(
-    items: &[SeqItem],
-    label: &dyn Fn(&str) -> String,
-    open: &mut Vec<(String, String)>,
-    n: &mut u32,
-    out: &mut String,
-) {
-    for item in items {
-        match item.what() {
-            Ok(What::Message { from, to }) => {
-                *n += 1;
-                let verb = if item.sends { "sends" } else { "calls" };
-                if !item.sends && !item.refused {
-                    open.push((from.to_owned(), to.to_owned()));
-                }
-                let _ = write!(out, " {n}. {} {verb} {}", label(from), label(to));
-                said(item, out);
-            }
-            Ok(What::Reply { by, to }) => {
-                *n += 1;
-                let caller = open
-                    .iter()
-                    .rposition(|(_, callee)| callee == by)
-                    .map(|k| open.remove(k).0);
-                let to = to.map(str::to_owned).or(caller).unwrap_or_default();
-                let _ = write!(out, " {n}. {} replies to {}", label(by), label(&to));
-                said(item, out);
-            }
-            Ok(What::Fragment { operator, operands }) => {
-                let before = open.clone();
-                for (j, operand) in operands.iter().enumerate() {
-                    let when = operand.when.as_deref().map(str::trim);
-                    let lead = match (operator, when) {
-                        (Operator::Alt, Some("else")) => "Otherwise:".to_owned(),
-                        (Operator::Alt, Some(w)) => format!("If {w}:"),
-                        (Operator::Opt, Some(w)) => format!("Only if {w}:"),
-                        (Operator::Opt, None) => "Optionally:".to_owned(),
-                        (Operator::Loop, Some(w)) => format!("Repeated, {w}:"),
-                        (Operator::Loop, None) => "Repeated:".to_owned(),
-                        (Operator::Par, _) if j == 0 => "In parallel:".to_owned(),
-                        (Operator::Par | Operator::Alt, _) => "And:".to_owned(),
-                    };
-                    let _ = write!(out, " {lead}");
-                    if operator != Operator::Par {
-                        open.clone_from(&before);
-                    }
-                    words(&operand.messages, label, open, n, out);
-                }
-            }
-            Err(_) => {}
-        }
+/// What a screen reader hears before an operand's messages.
+fn lead(operator: Operator, when: Option<&str>, first: bool) -> String {
+    match (operator, when.map(str::trim)) {
+        (Operator::Alt, Some("else")) => "Otherwise:".to_owned(),
+        (Operator::Alt, Some(w)) => format!("If {w}:"),
+        (Operator::Opt, Some(w)) => format!("Only if {w}:"),
+        (Operator::Opt, None) => "Optionally:".to_owned(),
+        (Operator::Loop, Some(w)) => format!("Repeated, {w}:"),
+        (Operator::Loop, None) => "Repeated:".to_owned(),
+        (Operator::Par, _) if first => "In parallel:".to_owned(),
+        (Operator::Par | Operator::Alt, _) => "And:".to_owned(),
     }
-}
-
-/// A message's label and its refusal, ending its sentence.
-fn said(item: &SeqItem, out: &mut String) {
-    if let Some(l) = &item.label {
-        let _ = write!(out, ": {}", l.trim());
-    }
-    if item.refused {
-        out.push_str(", refused");
-    }
-    out.push('.');
 }

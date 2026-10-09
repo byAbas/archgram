@@ -219,8 +219,13 @@ each gap as wide as the heads beside it, and then as each message's label,
 number and arrowhead between two lifelines need, shorter spans first so a
 long one never makes room a short one needed; its messages become rows in
 the list's order, each fragment a frame round its rows and the lifelines
-its messages touch. A reply goes to the caller of the call it answers,
-read as validation reads it. The heads are the participants as an
+its messages touch, the gaps widened first for each frame's padding, tag
+and guards (`frame_needs`), so no frame reaches a lifeline outside its
+span. A reply goes to the caller of the call it answers by one rule,
+`sequence::answer`, and the calls still waiting after a fragment by
+another, `sequence::through`; validation, the layout (`Sequence::steps`)
+and the words a screen reader hears all use them, so the three never
+disagree. The heads are the participants as an
 architecture spec's nodes (`Sequence::as_spec`), so they are measured,
 drawn and listed in the legend as cards are, and their text joins the
 same font subset.

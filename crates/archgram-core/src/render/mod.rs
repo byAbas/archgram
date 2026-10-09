@@ -7,7 +7,7 @@ mod edge;
 mod frame;
 mod icons;
 mod legend;
-mod refusal;
+pub(crate) mod refusal;
 pub mod scene;
 pub mod sequence;
 pub mod signal;

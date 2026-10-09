@@ -55,10 +55,12 @@
   <g class="fragments">
     <rect class="fragment" x="94.5" y="231.7" width="252" height="150.2" rx="14"/>
     <path class="operand" d="M94.5 302.1H346.5"/>
-    <path class="fragment-tag" d="M94.5 241.7A10 10 0 0 1 104.5 231.7H128.97V245.7L122.97 251.7H94.5Z"/>
+    <path class="fragment-tag" d="M94.5 245.7A14 14 0 0 1 108.5 231.7H128.97V245.7L122.97 251.7H94.5Z"/>
     <text class="fragment-op" x="100.5" y="245.61">alt</text>
-    <text class="sub" x="140.97" y="245.96">[password matches]</text>
-    <text class="sub" x="100.5" y="317.56">[else]</text>
+    <rect class="label-patch" x="134.97" y="234.5" width="124.29" height="14.4" rx="5"/>
+    <text class="sub" x="197.11" y="245.96" text-anchor="middle">[password matches]</text>
+    <rect class="label-patch" x="100.5" y="306.1" width="41.24" height="14.4" rx="5"/>
+    <text class="sub" x="121.12" y="317.56" text-anchor="middle">[else]</text>
   </g>
   <g class="edges">
     <path class="edge" d="M116 118.4 L321 118.4"/>

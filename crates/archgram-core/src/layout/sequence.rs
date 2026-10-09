@@ -8,25 +8,19 @@ use crate::font::text_width;
 use crate::geometry::{Point, Rect, Size};
 use crate::logos::Logos;
 use crate::measure::{card_sizes_with, label_lines, label_size};
-use crate::sequence::{Item, Operator, Sequence, SequenceStill, What};
+use crate::render::refusal::mark_reach;
+use crate::sequence::{Operator, Sequence, SequenceStill, Step};
 use crate::spec::{Spec, Variant};
 use crate::tokens::{
-    ARROWHEAD_GAP, ARROWHEAD_LENGTH, CARD_MULTI_OFFSET, REFUSAL_MARK, REFUSAL_MARK_GAP,
-    SIGNAL_NUMBER, SPACING_EDGE_EDGE, SPACING_FRAGMENT_PADDING, SPACING_FRAGMENT_TAG,
-    SPACING_LIFELINE_GAP, SPACING_MESSAGE_ROW, SPACING_SELF_WIDTH, STROKE_CONNECTOR,
-    TYPOGRAPHY_FRAME_LABEL, TYPOGRAPHY_LEGEND, TYPOGRAPHY_SUBTITLE,
+    ARROWHEAD_GAP, ARROWHEAD_LENGTH, CARD_MULTI_OFFSET, SIGNAL_NUMBER, SPACING_EDGE_EDGE,
+    SPACING_FRAGMENT_PADDING, SPACING_FRAGMENT_TAG, SPACING_FRAGMENT_TAG_PAD, SPACING_LABEL_GAP,
+    SPACING_LIFELINE_GAP, SPACING_MESSAGE_ROW, SPACING_SELF_WIDTH, TYPOGRAPHY_FRAME_LABEL,
+    TYPOGRAPHY_LEGEND, TYPOGRAPHY_SUBTITLE,
 };
 
 use super::legend;
 
-/// How a message is drawn (UML 2.5.1, 17.4.4.1): a call waits for its
-/// reply, a send does not, a reply answers a call.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum Sort {
-    Call,
-    Send,
-    Reply,
-}
+pub use crate::sequence::Sort;
 
 /// One message as laid out.
 #[derive(Debug, Clone, PartialEq)]
@@ -56,8 +50,9 @@ pub struct Fragment {
     pub frame: Rect,
     /// The pentagon at its top left, the operator in it.
     pub tag: Rect,
-    /// Each guard written, as `[when]`, and its box.
-    pub guards: Vec<(String, Rect)>,
+    /// Each guard written, as `[when]`, its lines (two past
+    /// `label.max-width`) and its box, with the padding of its patch.
+    pub guards: Vec<(Vec<String>, Rect)>,
     /// Where each operand after the first starts: a dashed line across.
     pub separators: Vec<f64>,
 }
@@ -86,16 +81,40 @@ fn line_height() -> f64 {
     TYPOGRAPHY_SUBTITLE.size * TYPOGRAPHY_SUBTITLE.line_height
 }
 
-/// The gap between a label and the pill or line under it.
-const LABEL_GAP: f64 = 4.0;
+/// The room between a label or a guard and what is under it.
+const LABEL_GAP: f64 = SPACING_LABEL_GAP;
 
-/// The room inside a tag round its operator, either side; its lower right
-/// corner is cut by as much again.
-const TAG_PAD: f64 = 6.0;
+/// The room inside a tag before its operator, and its cut corner.
+const TAG_PAD: f64 = SPACING_FRAGMENT_TAG_PAD;
 
-/// A guard's text and the room it needs.
+/// A guard as written, in square brackets (UML 2.5.1, 17.6.4.2).
 fn guard_text(when: &str) -> String {
     format!("[{}]", when.trim())
+}
+
+/// A guard's lines, wrapped as a label is, and the box they fill with the
+/// padding of their patch.
+fn guard_lines(when: &str) -> (Vec<String>, Size) {
+    let text = guard_text(when);
+    let size = label_size(&text);
+    let lines = label_lines(&text).into_iter().map(str::to_owned).collect();
+    (lines, size)
+}
+
+/// A fragment's tag: its operator and the room either side, its corner cut.
+fn tag_width(operator: Operator) -> f64 {
+    text_width(operator.name(), &TYPOGRAPHY_FRAME_LABEL) + 3.0 * TAG_PAD
+}
+
+/// How far a message to itself reaches out from its lifeline: a refused
+/// one further, so its ✕ sits on its way back, clear of the bend, before
+/// its arrowhead (DESIGN.md, Components: Sequence, Refusal).
+fn self_width(refused: bool) -> f64 {
+    if refused {
+        ARROWHEAD_GAP + mark_reach() + SPACING_MESSAGE_ROW / 4.0 + LABEL_GAP
+    } else {
+        SPACING_SELF_WIDTH
+    }
 }
 
 /// The pill a number needs: as wide as its text and the room either side a
@@ -106,111 +125,148 @@ pub fn pill_width(number: u32) -> f64 {
     h.max((text_width(&number.to_string(), &TYPOGRAPHY_LEGEND) + h - TYPOGRAPHY_LEGEND.size).ceil())
 }
 
-/// How far back from a line's tip its ✕ reaches, its patch of canvas
-/// included (DESIGN.md, Components: Refusal).
-fn mark_reach() -> f64 {
-    ARROWHEAD_LENGTH + REFUSAL_MARK_GAP + REFUSAL_MARK + 1.5 * STROKE_CONNECTOR
+/// How far out from its lifelines a fragment's frame reaches: a padding,
+/// and that again for each level of fragments nested inside it.
+fn padding(f: usize, inner: &[Vec<usize>]) -> f64 {
+    fn depth(f: usize, inner: &[Vec<usize>]) -> usize {
+        inner[f]
+            .iter()
+            .map(|&i| 1 + depth(i, inner))
+            .max()
+            .unwrap_or(0)
+    }
+    #[allow(clippy::cast_precision_loss)] // a few levels
+    let levels = (1 + depth(f, inner)) as f64;
+    SPACING_FRAGMENT_PADDING * levels
 }
 
-/// A message read in time's order, its reply's receiver resolved.
-struct Read {
-    from: usize,
-    to: usize,
-    sort: Sort,
-    refused: bool,
-    label: Option<String>,
-}
-
-/// One step of the sequence read in order.
-enum Step {
-    Message(Read),
-    /// A fragment opens, with its first operand's guard.
-    Open(Operator, Option<String>),
-    /// Its next operand starts, with its guard.
-    Operand(Option<String>),
-    Close,
-}
-
-/// The items in time's order, each reply sent to the caller of the call it
-/// answers: within `alt`, `opt` and `loop` each way through starts from the
-/// calls waiting before it, as validation reads them.
-fn read(
-    items: &[Item],
-    index: &dyn Fn(&str) -> usize,
-    open: &mut Vec<(usize, usize)>,
-    out: &mut Vec<Step>,
-) {
-    for item in items {
-        match item.what() {
-            Ok(What::Message { from, to }) => {
-                let (from, to) = (index(from), index(to));
-                let sort = if item.sends { Sort::Send } else { Sort::Call };
-                if sort == Sort::Call && !item.refused {
-                    open.push((from, to));
-                }
-                out.push(Step::Message(Read {
-                    from,
-                    to,
-                    sort,
-                    refused: item.refused,
-                    label: item.label.clone(),
-                }));
+/// The width a frame needs for its tag and guards: the first guard on the
+/// tag's row after it, each other under its operand's line.
+fn frame_width(operator: Operator, guards: &[(Vec<String>, Size, f64, bool)]) -> f64 {
+    let tag = tag_width(operator);
+    guards
+        .iter()
+        .map(|(_, size, _, on_tag)| {
+            if *on_tag {
+                tag + SPACING_EDGE_EDGE / 2.0 + size.w + SPACING_EDGE_EDGE
+            } else {
+                TAG_PAD + size.w + SPACING_EDGE_EDGE
             }
-            Ok(What::Reply { by, to }) => {
-                let by = index(by);
-                let caller = open
-                    .iter()
-                    .rposition(|&(_, callee)| callee == by)
-                    .map(|k| open.remove(k).0);
-                let to = to.map(index).or(caller).unwrap_or(by);
-                out.push(Step::Message(Read {
-                    from: by,
-                    to,
-                    sort: Sort::Reply,
-                    refused: item.refused,
-                    label: item.label.clone(),
-                }));
-            }
-            Ok(What::Fragment { operator, operands }) => {
-                let before = open.clone();
-                let mut after: Vec<(usize, usize)> = match operator {
-                    Operator::Opt | Operator::Loop => before.clone(),
-                    Operator::Alt | Operator::Par => Vec::new(),
-                };
-                for (j, operand) in operands.iter().enumerate() {
-                    let when = operand.when.clone();
-                    out.push(if j == 0 {
-                        Step::Open(operator, when)
+        })
+        .fold(tag + SPACING_EDGE_EDGE, f64::max)
+}
+
+/// A fragment as the gaps between lifelines see it, before they are set.
+struct Span {
+    operator: Operator,
+    lo: usize,
+    hi: usize,
+    guards: Vec<(Vec<String>, Size, f64, bool)>,
+    inner: Vec<usize>,
+    /// How many fragments it is nested in.
+    within: usize,
+    /// How far right of its rightmost lifeline a message to itself there
+    /// reaches, its number and label included.
+    reach: f64,
+}
+
+/// What each fragment needs of the gaps, so its frame covers only its own
+/// lifelines: on its left, its padding; on its right, its padding, or a
+/// message to itself there, and a padding for each frame it sits in; across
+/// its lifelines and the gap after them, its tag and guards. Each with
+/// `spacing.edge-edge` to spare before the next lifeline.
+fn frame_needs(steps: &[Step<'_>], count: usize, numbered: bool) -> Vec<(usize, usize, f64)> {
+    let mut spans: Vec<Span> = Vec::new();
+    let mut open: Vec<usize> = Vec::new();
+    let mut number = 0u32;
+    for step in steps {
+        match step {
+            Step::Message(m) => {
+                number += 1;
+                let reach = (m.from == m.to).then(|| {
+                    let pill = if numbered {
+                        pill_width(number) + SPACING_EDGE_EDGE
                     } else {
-                        Step::Operand(when)
-                    });
-                    if operator == Operator::Par {
-                        read(&operand.messages, index, open, out);
-                        continue;
+                        0.0
+                    };
+                    let label = m.label.map_or(0.0, |l| label_size(l).w);
+                    self_width(m.refused) + SPACING_EDGE_EDGE / 2.0 + pill + label
+                });
+                for &f in &open {
+                    let s = &mut spans[f];
+                    for p in [m.from, m.to] {
+                        if s.lo > s.hi {
+                            s.lo = p;
+                            s.hi = p;
+                        }
+                        s.lo = s.lo.min(p);
+                        s.hi = s.hi.max(p);
                     }
-                    let mut way = before.clone();
-                    read(&operand.messages, index, &mut way, out);
-                    for call in way {
-                        if !after.contains(&call) {
-                            after.push(call);
+                    if let Some(r) = reach {
+                        // Kept per span's rightmost lifeline, checked below.
+                        if m.from >= s.hi {
+                            s.reach = s.reach.max(r);
                         }
                     }
                 }
-                if operator != Operator::Par {
-                    let mut kept: Vec<(usize, usize)> = before
-                        .iter()
-                        .filter(|c| after.contains(c))
-                        .copied()
-                        .collect();
-                    kept.extend(after.into_iter().filter(|c| !before.contains(c)));
-                    *open = kept;
-                }
-                out.push(Step::Close);
             }
-            // Validation has refused the spec.
-            Err(_) => {}
+            Step::Open(operator, when) => {
+                let f = spans.len();
+                for &o in &open {
+                    spans[o].inner.push(f);
+                }
+                spans.push(Span {
+                    operator: *operator,
+                    lo: usize::MAX,
+                    hi: 0,
+                    guards: when
+                        .map(|w| {
+                            let (lines, size) = guard_lines(w);
+                            (lines, size, 0.0, true)
+                        })
+                        .into_iter()
+                        .collect(),
+                    inner: Vec::new(),
+                    within: open.len(),
+                    reach: 0.0,
+                });
+                open.push(f);
+            }
+            Step::Operand(when) => {
+                let f = *open.last().expect("an operand inside a fragment");
+                if let Some(w) = when {
+                    let (lines, size) = guard_lines(w);
+                    spans[f].guards.push((lines, size, 0.0, false));
+                }
+            }
+            Step::Close => {
+                open.pop();
+            }
         }
     }
+    let inner: Vec<Vec<usize>> = spans.iter().map(|s| s.inner.clone()).collect();
+    let mut needs = Vec::new();
+    for (f, s) in spans.iter().enumerate() {
+        if s.lo > s.hi {
+            continue;
+        }
+        let pad = padding(f, &inner);
+        #[allow(clippy::cast_precision_loss)] // a few levels
+        let spare = SPACING_EDGE_EDGE + SPACING_FRAGMENT_PADDING * s.within as f64;
+        if s.lo > 0 {
+            needs.push((s.lo - 1, s.lo, pad + SPACING_EDGE_EDGE));
+        }
+        if s.hi + 1 < count {
+            let right = pad.max(s.reach + SPACING_FRAGMENT_PADDING);
+            needs.push((s.hi, s.hi + 1, right + spare));
+            needs.push((
+                s.lo,
+                s.hi + 1,
+                frame_width(s.operator, &s.guards) - pad + spare,
+            ));
+        }
+    }
+    needs
 }
 
 /// A fragment while it is laid out: its rows, its participants, and the
@@ -218,7 +274,9 @@ fn read(
 struct Open {
     operator: Operator,
     top: f64,
-    guards: Vec<(String, f64)>,
+    /// Each guard's lines, size and top, and whether it sits on the tag's
+    /// row (the first operand's).
+    guards: Vec<(Vec<String>, Size, f64, bool)>,
     separators: Vec<f64>,
     /// The participants its messages name.
     covered: Vec<usize>,
@@ -243,14 +301,7 @@ pub fn place(seq: &Sequence, logos: &dyn Logos) -> Layout {
     let spec = seq.as_spec();
     let sizes = card_sizes_with(&spec, logos);
     let count = sizes.len();
-    let index = |id: &str| {
-        seq.participants
-            .iter()
-            .position(|p| p.id == id)
-            .expect("validated: every message names a participant")
-    };
-    let mut steps = Vec::new();
-    read(&seq.messages, &index, &mut Vec::new(), &mut steps);
+    let steps = seq.steps();
     let numbered = seq.still == SequenceStill::Numbers;
 
     // Each head's front card, and how far its footprint reaches either side
@@ -286,15 +337,18 @@ pub fn place(seq: &Sequence, logos: &dyn Logos) -> Layout {
         let Step::Message(msg) = step else { continue };
         number += 1;
         // A label's box holds its text and the padding of its patch.
-        let label_w = msg.label.as_deref().map_or(0.0, |l| label_size(l).w);
+        let label_w = msg.label.map_or(0.0, |l| label_size(l).w);
         let pill = if numbered {
             pill_width(number) + SPACING_EDGE_EDGE
         } else {
             0.0
         };
         if msg.from == msg.to {
-            let reach =
-                SPACING_SELF_WIDTH + SPACING_EDGE_EDGE / 2.0 + pill + label_w + SPACING_EDGE_EDGE;
+            let reach = self_width(msg.refused)
+                + SPACING_EDGE_EDGE / 2.0
+                + pill
+                + label_w
+                + SPACING_EDGE_EDGE;
             self_reach[msg.from] = self_reach[msg.from].max(reach);
             if msg.from + 1 < count {
                 needs.push((
@@ -316,6 +370,7 @@ pub fn place(seq: &Sequence, logos: &dyn Logos) -> Layout {
         let need = (label_w + 2.0 * SPACING_EDGE_EDGE).max(tail + SPACING_EDGE_EDGE);
         needs.push((msg.from.min(msg.to), msg.from.max(msg.to), need));
     }
+    needs.extend(frame_needs(&steps, count, numbered));
     // Shorter spans first, then from the left: each widens its own gaps
     // evenly, so a span of three never makes room a span of one needed.
     needs.sort_by(|a, b| {
@@ -371,12 +426,11 @@ pub fn place(seq: &Sequence, logos: &dyn Logos) -> Layout {
                 number += 1;
                 let lines: Vec<String> = msg
                     .label
-                    .as_deref()
                     .map(|l| label_lines(l).into_iter().map(str::to_owned).collect())
                     .unwrap_or_default();
                 #[allow(clippy::cast_precision_loss)] // one or two lines
                 let label_h = lines.len() as f64 * line;
-                let label_w = msg.label.as_deref().map_or(0.0, |l| label_size(l).w);
+                let label_w = msg.label.map_or(0.0, |l| label_size(l).w);
                 let to_self = msg.from == msg.to;
                 let above = if to_self {
                     SPACING_EDGE_EDGE / 2.0
@@ -387,7 +441,7 @@ pub fn place(seq: &Sequence, logos: &dyn Logos) -> Layout {
                 let start = lifelines[msg.from];
                 let (path, label, pill) = if to_self {
                     let back = line_y + drop;
-                    let out = start + SPACING_SELF_WIDTH;
+                    let out = start + self_width(msg.refused);
                     let pill = numbered.then(|| {
                         let w = pill_width(number);
                         Rect {
@@ -505,10 +559,17 @@ pub fn place(seq: &Sequence, logos: &dyn Logos) -> Layout {
                     frames[outer].inner.push(f);
                 }
                 let top = cursor;
+                let first = when.map(|w| {
+                    let (lines, size) = guard_lines(w);
+                    (lines, size, top, true)
+                });
+                let row = first
+                    .as_ref()
+                    .map_or(SPACING_FRAGMENT_TAG, |g| g.1.h.max(SPACING_FRAGMENT_TAG));
                 frames.push(Open {
                     operator,
                     top,
-                    guards: when.map(|w| (guard_text(&w), top)).into_iter().collect(),
+                    guards: first.into_iter().collect(),
                     separators: Vec::new(),
                     covered: Vec::new(),
                     reach: f64::MIN,
@@ -516,7 +577,7 @@ pub fn place(seq: &Sequence, logos: &dyn Logos) -> Layout {
                     bottom: top,
                 });
                 opened.push(f);
-                cursor = top + SPACING_FRAGMENT_TAG + LABEL_GAP;
+                cursor = top + row + LABEL_GAP;
             }
             Step::Operand(when) => {
                 let f = *opened.last().expect("an operand inside a fragment");
@@ -524,8 +585,9 @@ pub fn place(seq: &Sequence, logos: &dyn Logos) -> Layout {
                 frames[f].separators.push(at);
                 cursor = at + LABEL_GAP;
                 if let Some(w) = when {
-                    frames[f].guards.push((guard_text(&w), cursor));
-                    cursor += line + LABEL_GAP;
+                    let (lines, size) = guard_lines(w);
+                    frames[f].guards.push((lines, size, cursor, false));
+                    cursor += size.h + LABEL_GAP;
                 }
             }
             Step::Close => {
@@ -541,25 +603,13 @@ pub fn place(seq: &Sequence, logos: &dyn Logos) -> Layout {
     // Across: each frame round its participants' lifelines, wider by a
     // padding for each frame nested inside it, and wide enough for its tag,
     // its guards and any message to itself inside it. Inner frames first,
-    // so an outer one holds them.
-    let tag_w = |op: Operator| text_width(op.name(), &TYPOGRAPHY_FRAME_LABEL) + 3.0 * TAG_PAD;
-    let guard_w = |g: &str| text_width(g, &TYPOGRAPHY_SUBTITLE);
+    // so an outer one holds them. The gaps were widened for all of it
+    // (`frame_needs`), so no frame reaches a lifeline it does not cover.
+    let inner: Vec<Vec<usize>> = frames.iter().map(|fr| fr.inner.clone()).collect();
     let mut boxes: Vec<Rect> = vec![Rect::default(); frames.len()];
-    let depth = |f: usize, frames: &[Open]| -> usize {
-        fn d(f: usize, frames: &[Open]) -> usize {
-            frames[f]
-                .inner
-                .iter()
-                .map(|&i| 1 + d(i, frames))
-                .max()
-                .unwrap_or(0)
-        }
-        d(f, frames)
-    };
     for f in (0..frames.len()).rev() {
         let fr = &frames[f];
-        #[allow(clippy::cast_precision_loss)] // a few levels
-        let pad = SPACING_FRAGMENT_PADDING * (1 + depth(f, &frames)) as f64;
+        let pad = padding(f, &inner);
         let xs: Vec<f64> = fr.covered.iter().map(|&p| lifelines[p]).collect();
         let lo = xs.iter().copied().fold(f64::INFINITY, f64::min);
         let hi = xs.iter().copied().fold(f64::NEG_INFINITY, f64::max);
@@ -569,16 +619,7 @@ pub fn place(seq: &Sequence, logos: &dyn Logos) -> Layout {
             l = l.min(boxes[i].x - SPACING_FRAGMENT_PADDING);
             r = r.max(boxes[i].right() + SPACING_FRAGMENT_PADDING);
         }
-        let first = fr
-            .guards
-            .first()
-            .filter(|(_, y)| (*y - fr.top).abs() < f64::EPSILON);
-        let top_row =
-            l + tag_w(fr.operator) + first.map_or(0.0, |(g, _)| SPACING_EDGE_EDGE + guard_w(g));
-        r = r.max(top_row + SPACING_EDGE_EDGE);
-        for (g, _) in &fr.guards {
-            r = r.max(l + TAG_PAD + guard_w(g) + SPACING_EDGE_EDGE);
-        }
+        r = r.max(l + frame_width(fr.operator, &fr.guards));
         boxes[f] = Rect {
             x: l,
             y: fr.top,
@@ -593,31 +634,28 @@ pub fn place(seq: &Sequence, logos: &dyn Logos) -> Layout {
             let tag = Rect {
                 x: frame.x,
                 y: frame.y,
-                w: tag_w(fr.operator),
+                w: tag_width(fr.operator),
                 h: SPACING_FRAGMENT_TAG,
             };
             let guards = fr
                 .guards
                 .iter()
-                .map(|(g, y)| {
-                    let on_tag = (*y - fr.top).abs() < f64::EPSILON;
-                    let x = if on_tag {
-                        tag.right() + SPACING_EDGE_EDGE
+                .map(|(lines, size, y, on_tag)| {
+                    let (x, y) = if *on_tag {
+                        (
+                            tag.right() + SPACING_EDGE_EDGE / 2.0,
+                            tag.y + (tag.h - size.h).max(0.0) / 2.0,
+                        )
                     } else {
-                        frame.x + TAG_PAD
-                    };
-                    let y = if on_tag {
-                        tag.y + (tag.h - line) / 2.0
-                    } else {
-                        *y
+                        (frame.x + TAG_PAD, *y)
                     };
                     (
-                        g.clone(),
+                        lines.clone(),
                         Rect {
                             x,
                             y,
-                            w: guard_w(g),
-                            h: line,
+                            w: size.w,
+                            h: size.h,
                         },
                     )
                 })

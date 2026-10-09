@@ -1,6 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 885 947.6" width="885" height="947.6" role="img" aria-labelledby="title desc">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 885 956.4" width="885" height="956.4" role="img" aria-labelledby="title desc">
   <title id="title">OAuth sign in</title>
-  <desc id="desc">The web app sends the user to the identity provider, which asks for consent and returns a code; the app checks its state, trades the code for a token while it warms the profile cache, then reads the profile page by page, signing in again when the token has expired. 1. User calls Web app: Sign in. 2. Web app calls Identity provider: redirect to /authorize with the client id and scopes. 3. Identity provider calls User: ask for consent. 4. User replies to Identity provider: consent. 5. Identity provider replies to Web app: code. 6. Web app calls Web app: verify state. In parallel: 7. Web app calls Identity provider: exchange code. 8. Identity provider replies to Web app: token. And: 9. Web app sends Profile API: warm cache. Repeated, for each page of the profile: 10. Web app calls Profile API: GET /me. If token valid: 11. Profile API replies to Web app: profile. Otherwise: 12. Profile API replies to Web app: 401, refused.</desc>
+  <desc id="desc">The web app sends the user to the identity provider, which asks for consent and returns a code; the app checks its state, trades the code for a token while it warms the profile cache, then reads the profile page by page, signing in again when the token has expired. 1. User calls Web app: Sign in. 2. Web app calls Identity provider: redirect to /authorize with the client id and scopes. 3. Identity provider calls User: ask for consent. 4. User replies to Identity provider: consent. 5. Identity provider replies to Web app: code. 6. Web app calls Web app: verify state. In parallel: 7. Web app calls Identity provider: exchange code. 8. Identity provider replies to Web app: token. And: 9. Web app sends to Profile API: warm cache. Repeated, for each page of the profile: 10. Web app calls Profile API: GET /me. If token valid: 11. Profile API replies to Web app: profile. Otherwise: 12. Profile API replies to Web app: 401, refused.</desc>
   <style>
     :root { --badge: #f1f1f1; --canvas: #fbfbfb; --card: #ffffff; --card-edge: #d4d4d4; --connector: #8f8f8f; --frame: #8f8f8f; --icon-ai: #1f1f1f; --icon-build: #1f1f1f; --icon-client: #1f1f1f; --icon-core: #1f1f1f; --signal-core: #ffffff; --signal-pass: #45a378; --signal-refusal: #880d1e; --text: #1f1f1f; --text-muted: #646464; }
     @media (prefers-color-scheme: dark) { :root { --badge: #252525; --canvas: #111111; --card: #191919; --card-edge: #353535; --connector: #707070; --frame: #707070; --icon-ai: #ededed; --icon-build: #ededed; --icon-client: #ededed; --icon-core: #ededed; --signal-core: #ededed; --signal-pass: #34d399; --signal-refusal: #ea7b8a; --text: #ededed; --text-muted: #a8a8a8; } }
@@ -48,28 +48,32 @@
     .credit-glyph { fill: none; stroke: var(--canvas); stroke-width: 5.5; stroke-linecap: round; stroke-linejoin: round; }
     .legend-text { font-size: 12px; font-weight: 400; fill: var(--text-muted); }
   </style>
-  <rect class="canvas" width="885" height="947.6" rx="16"/>
+  <rect class="canvas" width="885" height="956.4" rx="16"/>
   <g class="lifelines">
-    <path class="lifeline" d="M116.5 88.5V837.7"/>
-    <path class="lifeline" d="M324.5 88.5V837.7"/>
-    <path class="lifeline" d="M543 88.5V837.7"/>
-    <path class="lifeline" d="M761.5 88.5V837.7"/>
+    <path class="lifeline" d="M116.5 88.5V846.5"/>
+    <path class="lifeline" d="M324.5 88.5V846.5"/>
+    <path class="lifeline" d="M543 88.5V846.5"/>
+    <path class="lifeline" d="M761.5 88.5V846.5"/>
   </g>
   <g class="fragments">
     <rect class="fragment" x="302.5" y="409.9" width="481" height="178.2" rx="14"/>
     <path class="operand" d="M302.5 526.7H783.5"/>
-    <path class="fragment-tag" d="M302.5 419.9A10 10 0 0 1 312.5 409.9H340.38V423.9L334.38 429.9H302.5Z"/>
+    <path class="fragment-tag" d="M302.5 423.9A14 14 0 0 1 316.5 409.9H340.38V423.9L334.38 429.9H302.5Z"/>
     <text class="fragment-op" x="308.5" y="423.81">par</text>
-    <rect class="fragment" x="280.5" y="592.1" width="525" height="235.6" rx="14"/>
-    <path class="fragment-tag" d="M280.5 602.1A10 10 0 0 1 290.5 592.1H324.75V606.1L318.75 612.1H280.5Z"/>
+    <rect class="fragment" x="280.5" y="592.1" width="525" height="244.4" rx="14"/>
+    <path class="fragment-tag" d="M280.5 606.1A14 14 0 0 1 294.5 592.1H324.75V606.1L318.75 612.1H280.5Z"/>
     <text class="fragment-op" x="286.5" y="606.01">loop</text>
-    <text class="sub" x="336.75" y="606.36">[for each page of the profile]</text>
-    <rect class="fragment" x="302.5" y="662.5" width="481" height="150.2" rx="14"/>
-    <path class="operand" d="M302.5 732.9H783.5"/>
-    <path class="fragment-tag" d="M302.5 672.5A10 10 0 0 1 312.5 662.5H336.97V676.5L330.97 682.5H302.5Z"/>
-    <text class="fragment-op" x="308.5" y="676.41">alt</text>
-    <text class="sub" x="348.97" y="676.76">[token valid]</text>
-    <text class="sub" x="308.5" y="748.36">[else]</text>
+    <rect class="label-patch" x="330.75" y="592.1" width="90.81" height="28.8" rx="5"/>
+    <text class="sub" x="376.15" y="603.56" text-anchor="middle">[for each page</text>
+    <text class="sub" x="376.15" y="617.96" text-anchor="middle">of the profile]</text>
+    <rect class="fragment" x="302.5" y="671.3" width="481" height="150.2" rx="14"/>
+    <path class="operand" d="M302.5 741.7H783.5"/>
+    <path class="fragment-tag" d="M302.5 685.3A14 14 0 0 1 316.5 671.3H336.97V685.3L330.97 691.3H302.5Z"/>
+    <text class="fragment-op" x="308.5" y="685.21">alt</text>
+    <rect class="label-patch" x="342.97" y="674.1" width="80.01" height="14.4" rx="5"/>
+    <text class="sub" x="382.97" y="685.56" text-anchor="middle">[token valid]</text>
+    <rect class="label-patch" x="308.5" y="745.7" width="41.24" height="14.4" rx="5"/>
+    <text class="sub" x="329.12" y="757.16" text-anchor="middle">[else]</text>
   </g>
   <g class="edges">
     <path class="edge" d="M116 126.4 L321 126.4"/>
@@ -90,12 +94,12 @@
     <path class="arrowhead" d="M334 500.2L327 506.2L334 512.2"/>
     <path class="edge" d="M324 556.6 L758 556.6"/>
     <path class="arrowhead" d="M751 562.6L758 556.6L751 550.6"/>
-    <path class="edge" d="M324 642 L758 642"/>
-    <path class="arrowhead filled" d="M751 648L758 642L751 636Z"/>
-    <path class="edge reply" d="M761 712.4 L327 712.4"/>
-    <path class="arrowhead" d="M334 706.4L327 712.4L334 718.4"/>
-    <path class="edge reply" d="M761 781.2 L327 781.2"/>
-    <path class="refused-mark" d="M334 775.2L327 781.2L334 787.2"/>
+    <path class="edge" d="M324 650.8 L758 650.8"/>
+    <path class="arrowhead filled" d="M751 656.8L758 650.8L751 644.8Z"/>
+    <path class="edge reply" d="M761 721.2 L327 721.2"/>
+    <path class="arrowhead" d="M334 715.2L327 721.2L334 727.2"/>
+    <path class="edge reply" d="M761 790 L327 790"/>
+    <path class="refused-mark" d="M334 784L327 790L334 796"/>
     <rect class="label-patch" x="196.7" y="100.5" width="47.61" height="14.4" rx="5"/>
     <text class="sub" x="220.5" y="111.96" text-anchor="middle">Sign in</text>
     <rect class="label-patch" x="355.06" y="146.9" width="157.37" height="28.8" rx="5"/>
@@ -115,16 +119,16 @@
     <text class="sub" x="433.75" y="491.76" text-anchor="middle">token</text>
     <rect class="label-patch" x="504.03" y="530.7" width="77.93" height="14.4" rx="5"/>
     <text class="sub" x="543" y="542.16" text-anchor="middle">warm cache</text>
-    <rect class="label-patch" x="513.86" y="616.1" width="58.28" height="14.4" rx="5"/>
-    <text class="sub" x="543" y="627.56" text-anchor="middle">GET /me</text>
-    <rect class="label-patch" x="519.92" y="686.5" width="46.17" height="14.4" rx="5"/>
-    <text class="sub" x="543" y="697.96" text-anchor="middle">profile</text>
-    <rect class="label-patch" x="528.03" y="755.3" width="29.94" height="14.4" rx="5"/>
-    <text class="sub" x="543" y="766.76" text-anchor="middle">401</text>
+    <rect class="label-patch" x="513.86" y="624.9" width="58.28" height="14.4" rx="5"/>
+    <text class="sub" x="543" y="636.36" text-anchor="middle">GET /me</text>
+    <rect class="label-patch" x="519.92" y="695.3" width="46.17" height="14.4" rx="5"/>
+    <text class="sub" x="543" y="706.76" text-anchor="middle">profile</text>
+    <rect class="label-patch" x="528.03" y="764.1" width="29.94" height="14.4" rx="5"/>
+    <text class="sub" x="543" y="775.56" text-anchor="middle">401</text>
   </g>
   <g class="refusals">
-    <path class="refused-patch" d="M340 776.7L349 785.7M349 776.7L340 785.7"/>
-    <path class="refused-mark" d="M340 776.7L349 785.7M349 776.7L340 785.7"/>
+    <path class="refused-patch" d="M340 785.5L349 794.5M349 785.5L340 794.5"/>
+    <path class="refused-mark" d="M340 785.5L349 794.5M349 785.5L340 794.5"/>
   </g>
   <g data-node="user">
     <rect class="card" x="24.5" y="32.5" width="184" height="56" rx="10"/>
@@ -172,25 +176,25 @@
     <text class="step-text" x="348" y="510.46" text-anchor="middle">8</text>
     <rect class="step" x="729.5" y="549.1" width="15" height="15" rx="7.5"/>
     <text class="step-text" x="737" y="560.86" text-anchor="middle">9</text>
-    <rect class="step" x="728.5" y="634.5" width="16" height="15" rx="7.5"/>
-    <text class="step-text" x="736.5" y="646.26" text-anchor="middle">10</text>
-    <rect class="step" x="340.5" y="704.9" width="15" height="15" rx="7.5"/>
-    <text class="step-text" x="348" y="716.66" text-anchor="middle">11</text>
-    <rect class="step" x="358.5" y="773.7" width="16" height="15" rx="7.5"/>
-    <text class="step-text" x="366.5" y="785.46" text-anchor="middle">12</text>
+    <rect class="step" x="728.5" y="643.3" width="16" height="15" rx="7.5"/>
+    <text class="step-text" x="736.5" y="655.06" text-anchor="middle">10</text>
+    <rect class="step" x="340.5" y="713.7" width="15" height="15" rx="7.5"/>
+    <text class="step-text" x="348" y="725.46" text-anchor="middle">11</text>
+    <rect class="step" x="358.5" y="782.5" width="16" height="15" rx="7.5"/>
+    <text class="step-text" x="366.5" y="794.26" text-anchor="middle">12</text>
   </g>
   <g class="legend">
-    <rect class="card" x="28.5" y="865.5" width="18" height="12" rx="3"/>
-    <rect class="card" x="26.5" y="867.5" width="18" height="12" rx="3"/>
-    <rect class="card" x="24.5" y="869.5" width="18" height="12" rx="3"/>
-    <text class="legend-text" x="54.5" y="877.96">Several instances</text>
-    <rect class="card external" x="173.39" y="867.5" width="18" height="12" rx="3"/>
-    <text class="legend-text" x="199.39" y="877.96">External</text>
+    <rect class="card" x="28.5" y="874.5" width="18" height="12" rx="3"/>
+    <rect class="card" x="26.5" y="876.5" width="18" height="12" rx="3"/>
+    <rect class="card" x="24.5" y="878.5" width="18" height="12" rx="3"/>
+    <text class="legend-text" x="54.5" y="886.76">Several instances</text>
+    <rect class="card external" x="173.39" y="876.5" width="18" height="12" rx="3"/>
+    <text class="legend-text" x="199.39" y="886.76">External</text>
   </g>
   <g class="credit-line">
-    <text class="credit" x="776.42" y="921.16">by</text>
-    <path class="credit-mark" transform="translate(793 910.9) scale(0.19)" d="M15 0H49A15 15 0 0 1 64 15V49A15 15 0 0 1 49 64H15A15 15 0 0 1 0 49V15A15 15 0 0 1 15 0Z"/>
-    <path class="credit-glyph" transform="translate(793 910.9) scale(0.19)" d="M16 19.5H31A9 9 0 0 1 40 28.5V43.5M32 36.5L40 44.5L48 36.5"/>
-    <text class="credit" x="808" y="921.16">archgram</text>
+    <text class="credit" x="776.42" y="929.96">by</text>
+    <path class="credit-mark" transform="translate(793 919.7) scale(0.19)" d="M15 0H49A15 15 0 0 1 64 15V49A15 15 0 0 1 49 64H15A15 15 0 0 1 0 49V15A15 15 0 0 1 15 0Z"/>
+    <path class="credit-glyph" transform="translate(793 919.7) scale(0.19)" d="M16 19.5H31A9 9 0 0 1 40 28.5V43.5M32 36.5L40 44.5L48 36.5"/>
+    <text class="credit" x="808" y="929.96">archgram</text>
   </g>
 </svg>

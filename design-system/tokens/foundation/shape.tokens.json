@@ -358,6 +358,20 @@
     "fragment-tag": {
       "$value": "{spacing.frame-label}",
       "$description": "The height of a fragment's pentagon tag, at its frame's top left, as a frame's name."
+    },
+    "label-gap": {
+      "$value": {
+        "value": 4,
+        "unit": "px"
+      },
+      "$description": "In a sequence, the room between a label or a guard and what is under it: its line, its number or its frame's edge."
+    },
+    "fragment-tag-pad": {
+      "$value": {
+        "value": 6,
+        "unit": "px"
+      },
+      "$description": "The room inside a sequence fragment's tag before its operator, and how much its lower right corner is cut."
     }
   }
 }

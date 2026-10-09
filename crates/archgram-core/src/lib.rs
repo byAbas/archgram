@@ -305,6 +305,11 @@ pub fn draw_themes(
 
 /// Lays out and draws a sequence that has passed validation, top to
 /// bottom, as time runs (docs/features/sequence.md).
+///
+/// # Panics
+///
+/// When `seq` has not passed validation: a message names a participant
+/// that does not exist, or a reply answers no call ([`parse`] checks both).
 #[must_use]
 pub fn draw_sequence(
     seq: &sequence::Sequence,
@@ -323,6 +328,10 @@ pub fn draw_sequence(
 
 /// [`draw_sequence`] once laid out and drawn twice, light then dark, each
 /// file with one theme only, as [`draw_themes`].
+///
+/// # Panics
+///
+/// As [`draw_sequence`].
 #[must_use]
 pub fn draw_sequence_themes(
     seq: &sequence::Sequence,
@@ -350,12 +359,26 @@ pub fn check_logos(spec: &Spec, logos: &dyn logos::Logos) -> Vec<SpecError> {
     validate::logos(spec, logos)
 }
 
-/// The characters in the spec's text that the embedded font does not have,
-/// in order and without repeats. They are drawn in the reader's font.
+/// The characters in a sequence's text that the embedded font does not
+/// have, in order and without repeats, as [`uncovered_characters`].
+///
+/// # Panics
+///
+/// As [`draw_sequence`].
 #[must_use]
-pub fn uncovered_characters(spec: &Spec, logos: &dyn logos::Logos) -> Vec<char> {
+pub fn uncovered_sequence_characters(
+    seq: &sequence::Sequence,
+    logos: &dyn logos::Logos,
+) -> Vec<char> {
+    let layout = layout::sequence::place(seq, logos);
+    uncovered(render::sequence::text_runs(&layout, logos))
+}
+
+/// The characters of `runs` the embedded font does not have, each in the
+/// weight it is set in, in order and without repeats.
+fn uncovered(runs: impl IntoIterator<Item = (u16, String)>) -> Vec<char> {
     let mut out: Vec<char> = Vec::new();
-    for (weight, text) in measure::text_runs_with(spec, logos) {
+    for (weight, text) in runs {
         for c in font::uncovered(&text, weight) {
             if !out.contains(&c) {
                 out.push(c);
@@ -363,4 +386,15 @@ pub fn uncovered_characters(spec: &Spec, logos: &dyn logos::Logos) -> Vec<char> 
         }
     }
     out
+}
+
+/// The characters in the spec's text that the embedded font does not have,
+/// in order and without repeats. They are drawn in the reader's font.
+#[must_use]
+pub fn uncovered_characters(spec: &Spec, logos: &dyn logos::Logos) -> Vec<char> {
+    uncovered(
+        measure::text_runs_with(spec, logos)
+            .into_iter()
+            .map(|(w, t)| (w, t.into_owned())),
+    )
 }

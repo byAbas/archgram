@@ -353,6 +353,166 @@ impl Sequence {
     }
 }
 
+/// How a message is drawn (UML 2.5.1, 17.4.4.1): a call waits for its
+/// reply, a send does not, a reply answers a call.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Sort {
+    Call,
+    Send,
+    Reply,
+}
+
+/// A message in time's order, its participants by their place in the
+/// list, a reply's receiver resolved.
+#[derive(Debug, Clone, PartialEq)]
+pub struct Resolved<'a> {
+    pub from: usize,
+    pub to: usize,
+    pub sort: Sort,
+    pub refused: bool,
+    pub label: Option<&'a str>,
+}
+
+/// One step of a sequence read in time's order.
+#[derive(Debug, Clone, PartialEq)]
+pub enum Step<'a> {
+    Message(Resolved<'a>),
+    /// A fragment opens, with its first operand's guard.
+    Open(Operator, Option<&'a str>),
+    /// Its next operand starts, with its guard.
+    Operand(Option<&'a str>),
+    Close,
+}
+
+/// The caller of the latest call to `by` still waiting, which a reply from
+/// `by` answers; that call stops waiting. The one rule of replies, for
+/// validation, layout and the words a screen reader hears.
+pub(crate) fn answer<T: PartialEq + Copy>(open: &mut Vec<(T, T)>, by: &T) -> Option<T> {
+    open.iter()
+        .rposition(|(_, callee)| callee == by)
+        .map(|k| open.remove(k).0)
+}
+
+/// Reads a fragment's `count` operands with `operand`, each from the calls
+/// waiting before it, and leaves in `open` the calls waiting after it: for
+/// `par` its operands one after another; for `alt`, `opt` and `loop` every
+/// call left waiting by any way through (for `opt` and `loop`, by none
+/// too), those waiting before it first, so a later reply is not refused for
+/// one way.
+pub(crate) fn through<T: PartialEq + Clone>(
+    operator: Operator,
+    count: usize,
+    open: &mut Vec<T>,
+    operand: &mut dyn FnMut(usize, &mut Vec<T>),
+) {
+    if operator == Operator::Par {
+        for j in 0..count {
+            operand(j, open);
+        }
+        return;
+    }
+    let before = open.clone();
+    let mut after: Vec<T> = match operator {
+        Operator::Opt | Operator::Loop => before.clone(),
+        Operator::Alt | Operator::Par => Vec::new(),
+    };
+    for j in 0..count {
+        let mut way = before.clone();
+        operand(j, &mut way);
+        for call in way {
+            if !after.contains(&call) {
+                after.push(call);
+            }
+        }
+    }
+    let mut kept: Vec<T> = before
+        .iter()
+        .filter(|c| after.contains(c))
+        .cloned()
+        .collect();
+    kept.extend(after.into_iter().filter(|c| !before.contains(c)));
+    *open = kept;
+}
+
+impl Sequence {
+    /// The sequence in time's order: each message with its participants by
+    /// place and each reply's receiver resolved, and where each fragment
+    /// and operand opens and closes. What the layout draws and a screen
+    /// reader hears. The sequence must have passed validation.
+    ///
+    /// # Panics
+    ///
+    /// When a message names a participant that does not exist.
+    #[must_use]
+    pub fn steps(&self) -> Vec<Step<'_>> {
+        let mut out = Vec::new();
+        self.read(&self.messages, &mut Vec::new(), &mut out);
+        out
+    }
+
+    fn index(&self, id: &str) -> usize {
+        self.participants
+            .iter()
+            .position(|p| p.id == id)
+            .expect("validated: every message names a participant")
+    }
+
+    fn read<'a>(
+        &'a self,
+        items: &'a [Item],
+        open: &mut Vec<(usize, usize)>,
+        out: &mut Vec<Step<'a>>,
+    ) {
+        for item in items {
+            match item.what() {
+                Ok(What::Message { from, to }) => {
+                    let (from, to) = (self.index(from), self.index(to));
+                    let sort = if item.sends { Sort::Send } else { Sort::Call };
+                    if sort == Sort::Call && !item.refused {
+                        open.push((from, to));
+                    }
+                    out.push(Step::Message(Resolved {
+                        from,
+                        to,
+                        sort,
+                        refused: item.refused,
+                        label: item.label.as_deref(),
+                    }));
+                }
+                Ok(What::Reply { by, to }) => {
+                    let by = self.index(by);
+                    let caller = answer(open, &by);
+                    let to = to
+                        .map(|t| self.index(t))
+                        .or(caller)
+                        .expect("validated: a reply answers a call still waiting");
+                    out.push(Step::Message(Resolved {
+                        from: by,
+                        to,
+                        sort: Sort::Reply,
+                        refused: item.refused,
+                        label: item.label.as_deref(),
+                    }));
+                }
+                Ok(What::Fragment { operator, operands }) => {
+                    through(operator, operands.len(), open, &mut |j, way| {
+                        let when = operands[j].when.as_deref();
+                        out.push(if j == 0 {
+                            Step::Open(operator, when)
+                        } else {
+                            Step::Operand(when)
+                        });
+                        self.read(&operands[j].messages, way, out);
+                    });
+                    out.push(Step::Close);
+                }
+                // Validation has refused the spec.
+                Err(_) => {}
+            }
+        }
+    }
+}
+
 /// Visits every item, fragments' operands included, in the spec's order,
 /// with its JSON pointer.
 fn walk<'a>(items: &'a [Item], at: &str, visit: &mut dyn FnMut(&str, &'a Item)) {
@@ -426,11 +586,7 @@ pub fn check_logos(seq: &Sequence, logos: &dyn crate::logos::Logos) -> Vec<SpecE
 }
 
 /// A call waiting for its reply: who called whom.
-#[derive(Debug, Clone, PartialEq, Eq)]
-struct Call<'a> {
-    from: &'a str,
-    to: &'a str,
-}
+type Call<'a> = (&'a str, &'a str);
 
 struct Validator<'a> {
     seq: &'a Sequence,
@@ -552,7 +708,7 @@ impl<'a> Validator<'a> {
                     // A call waits for its reply, unless it is refused at
                     // once; a send waits for nothing.
                     if known && !item.sends && !item.refused {
-                        open.push(Call { from, to });
+                        open.push((from, to));
                     }
                 }
                 Ok(What::Reply { by, to }) => self.reply(&pointer, ids, open, by, to),
@@ -583,22 +739,20 @@ impl<'a> Validator<'a> {
             self.error(&format!("{pointer}/to"), message);
             return;
         }
-        let Some(k) = open.iter().rposition(|call| call.to == by) else {
+        let Some(caller) = answer(open, &by) else {
             self.error(
                 &format!("{pointer}/reply"),
                 format!("`{by}` replies, but no call to `{by}` is waiting for a reply before it"),
             );
             return;
         };
-        let call = open.remove(k);
         if let Some(to) = to
-            && to != call.from
+            && to != caller
         {
             self.error(
                 &format!("{pointer}/to"),
                 format!(
-                    "the reply from `{by}` answers `{}`'s call, so it goes to `{}`, not `{to}`; leave `to` out or name `{}`",
-                    call.from, call.from, call.from
+                    "the reply from `{by}` answers `{caller}`'s call, so it goes to `{caller}`, not `{to}`; leave `to` out or name `{caller}`"
                 ),
             );
         }
@@ -624,11 +778,6 @@ impl<'a> Validator<'a> {
             );
         }
         let last = operands.len().saturating_sub(1);
-        let before = open.clone();
-        let mut after: Vec<Call<'a>> = Vec::new();
-        if matches!(operator, Operator::Opt | Operator::Loop) {
-            after.clone_from(&before);
-        }
         for (j, operand) in operands.iter().enumerate() {
             let here = operand_at(pointer, operator, j);
             self.guard(&here, operator, operand, j == last);
@@ -638,33 +787,11 @@ impl<'a> Validator<'a> {
                     format!("an operand of `{name}` holds no messages"),
                 );
             }
-            if operator == Operator::Par {
-                self.items(&operand.messages, &format!("{here}/messages"), ids, open);
-                continue;
-            }
-            let mut way = before.clone();
-            self.items(
-                &operand.messages,
-                &format!("{here}/messages"),
-                ids,
-                &mut way,
-            );
-            for call in way {
-                if !after.contains(&call) {
-                    after.push(call);
-                }
-            }
         }
-        if operator != Operator::Par {
-            // In time's order: the calls open before the fragment first.
-            let mut kept: Vec<Call<'a>> = before
-                .iter()
-                .filter(|c| after.contains(c))
-                .cloned()
-                .collect();
-            kept.extend(after.into_iter().filter(|c| !before.contains(c)));
-            *open = kept;
-        }
+        through(operator, operands.len(), open, &mut |j, way| {
+            let here = operand_at(pointer, operator, j);
+            self.items(&operands[j].messages, &format!("{here}/messages"), ids, way);
+        });
     }
 
     /// An `alt` operand's guard is required, and `else` only on its last;

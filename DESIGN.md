@@ -607,8 +607,10 @@ shape, not a colour, tells whether the sender waits:
 - a reply: `dash.reply`, ending in the open arrowhead.
 
 A message to its own lifeline leaves to the right, `spacing.self-width`
-out, turns down with `rounded.connector` bends and comes back half a row
-lower, its arrowhead on the lifeline.
+out, turns down and comes back half a row lower, its arrowhead on the
+lifeline, its bends rounded as far as the loop's size allows
+(`rounded.connector` at most). A refused one reaches further, so its ✕
+sits on its way back, clear of the bend.
 
 **Message label** (`message-label`). Above its line, centred between the
 two lifelines, on a patch of the canvas, so a lifeline it passes over
@@ -631,8 +633,14 @@ stretch of time.
 - Its operands: divided by `dash.operand` lines across the frame
   (17.6.4.1).
 - Each guard: its words in square brackets (17.6.4.2), `[else]` for
-  `else`, in `fragment-guard`: the first operand's on the tag's row, after
-  the tag; each other's at its operand's top left, under its line.
+  `else`, in `fragment-guard`, on a patch of the canvas as a label is, and
+  wrapped onto two lines past `label.max-width`: the first operand's on the
+  tag's row, after the tag; each other's at its operand's top left,
+  `spacing.label-gap` under its line. The tag's operator sits
+  `spacing.fragment-tag-pad` in, and its lower right corner is cut by as
+  much.
+- The lifelines are set far enough apart that a frame, its tag and its
+  guards reach no lifeline outside the span its messages take.
 - A fragment nested in another sits inside it, `spacing.fragment-padding`
   in from its sides; frames never cross.
 
