@@ -1,0 +1,37 @@
+{
+  "archgram": 1,
+  "diagram": "sequence",
+  "title": "OAuth sign in",
+  "description": "The web app sends the user to the identity provider, which asks for consent and returns a code; the app checks its state, trades the code for a token while it warms the profile cache, then reads the profile page by page, signing in again when the token has expired.",
+  "participants": [
+    { "id": "user", "kind": "users", "label": "User" },
+    { "id": "app", "kind": "service", "label": "Web app", "tech": "nextdotjs" },
+    { "id": "idp", "kind": "service", "label": "Identity provider", "variant": "external", "tech": "auth0" },
+    { "id": "api", "kind": "service", "label": "Profile API", "variant": "multi" }
+  ],
+  "messages": [
+    { "from": "user", "to": "app", "label": "Sign in" },
+    { "from": "app", "to": "idp", "label": "redirect to /authorize with the client id and scopes" },
+    { "from": "idp", "to": "user", "label": "ask for consent" },
+    { "reply": "user", "label": "consent" },
+    { "reply": "idp", "to": "app", "label": "code" },
+    { "from": "app", "to": "app", "label": "verify state" },
+    { "par": [
+      { "messages": [
+        { "from": "app", "to": "idp", "label": "exchange code" },
+        { "reply": "idp", "label": "token" }
+      ] },
+      { "messages": [ { "from": "app", "to": "api", "label": "warm cache", "async": true } ] }
+    ] },
+    { "loop": {
+      "when": "for each page of the profile",
+      "messages": [
+        { "from": "app", "to": "api", "label": "GET /me" },
+        { "alt": [
+          { "when": "token valid", "messages": [ { "reply": "api", "label": "profile" } ] },
+          { "when": "else", "messages": [ { "reply": "api", "label": "401", "refused": true } ] }
+        ] }
+      ]
+    } }
+  ]
+}

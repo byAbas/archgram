@@ -143,7 +143,7 @@ message does.
   them needs, measured as archgram measures every label, a long label on
   two lines (DESIGN.md, Components: Edge label).
 - A message to the same participant is a short loop out to the right of
-  its lifeline and back, one row high.
+  its lifeline and back half a row lower, so it takes a row and a half.
 - A fragment's frame covers the columns of the lifelines its messages
   touch and the rows they take, with its operator in a pentagon at its
   top left, its operands divided by dashed lines and each guard in square
@@ -186,8 +186,8 @@ message does.
 - The still image numbers each message by its order, on by default: in a
   sequence the order is the meaning. `still: none` turns the numbers off.
 - A screen reader hears each message in words, in order, after the
-  description, a fragment's guard before its messages ("if password
-  matches: API replies session to Browser"), a refused message ending
+  description, a fragment's guard before its messages ("If password
+  matches: 4. API replies to Browser: session."), a refused message ending
   "refused".
 
 ### The skill

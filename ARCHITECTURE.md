@@ -87,8 +87,8 @@ are one type with every field optional, which validation sorts into one
 of the three; an untagged enum would report only that none matched. The
 checks every kind shares, the top-level fields, XML-safe text, a logo's
 slug and a source's form, are `validate`'s, and `sources::check_owned`
-takes any kind's parts with their sources. A sequence is read and checked
-but not yet laid out: `build` says so (docs/features/sequence.md).
+takes any kind's parts with their sources. A sequence is laid out and
+drawn by its own modules (Layout, Render).
 
 A node's or an edge's `source` (docs/SPEC.md, Sources) is checked here
 for its form only. Whether the code is there is `sources::check`, which
@@ -213,6 +213,23 @@ the units would find the same errors. The steps:
    which `archgram build` prints, with a warning when the drawing is
    wider than that width.
 
+A sequence (`layout::sequence`) is laid out without layers: the order
+is the spec's, so nothing is searched. Its participants become columns,
+each gap as wide as the heads beside it, and then as each message's label,
+number and arrowhead between two lifelines need, shorter spans first so a
+long one never makes room a short one needed; its messages become rows in
+the list's order, each fragment a frame round its rows and the lifelines
+its messages touch, the gaps widened first for each frame's padding, tag
+and guards (`frame_needs`), so no frame reaches a lifeline outside its
+span. A reply goes to the caller of the call it answers by one rule,
+`sequence::answer`, and the calls still waiting after a fragment by
+another, `sequence::through`; validation, the layout (`Sequence::steps`)
+and the words a screen reader hears all use them, so the three never
+disagree. The heads are the participants as an
+architecture spec's nodes (`Sequence::as_spec`), so they are measured,
+drawn and listed in the legend as cards are, and their text joins the
+same font subset.
+
 ### Route
 
 Edges are routed after the layout has placed the cards and the bends of
@@ -317,6 +334,15 @@ parts) and embeds the result as a data URI in an `@font-face` rule, so
 the text looks the same on every machine. The subsetter handles static
 TrueType outlines only; variable fonts are out of scope. `--system-font`
 skips the embedding and falls back to the system font stack.
+
+A sequence is drawn by `render::sequence` into the same scene: the
+lifelines, the fragments with their tags and guards, each message's line
+with its arrowhead drawn on its own (a call's filled, a send's and a
+reply's open, a refused one's in the refusal colour) and its label on a
+patch of the canvas, the ✕ of a refusal, the heads as `card` draws them,
+the numbers' pills, the legend and the credit; the theme, fonts and
+styles are the architecture's (`styles::sequence` adds its own). It is
+still in this version: its motion is a later change.
 
 ### Animate
 

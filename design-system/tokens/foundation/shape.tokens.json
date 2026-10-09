@@ -107,6 +107,30 @@
         ],
         "lineCap": "butt"
       }
+    },
+    "lifeline": {
+      "$value": {
+        "dashArray": [
+          {
+            "value": 2,
+            "unit": "px"
+          },
+          {
+            "value": 5,
+            "unit": "px"
+          }
+        ],
+        "lineCap": "butt"
+      },
+      "$description": "A sequence's lifeline: fainter than any other dash, a guide the messages hang from."
+    },
+    "reply": {
+      "$value": "{dash.edge}",
+      "$description": "A reply in a sequence (UML 2.5.1, 17.4.4.1); a sequence has no edge taken only sometimes, so the two never meet."
+    },
+    "operand": {
+      "$value": "{dash.frame}",
+      "$description": "The line between two operands of a fragment (UML 2.5.1, 17.6.4.1)."
     }
   },
   "arrowhead": {
@@ -311,6 +335,43 @@
         "unit": "px"
       },
       "$description": "Between two rows of the legend."
+    },
+    "message-row": {
+      "$value": {
+        "value": 42,
+        "unit": "px"
+      },
+      "$description": "The step from one message of a sequence to the next, down the page: a label of two lines above its line (typography.subtitle, 2 × 12 × 1.2 = 28.8) and spacing.edge-edge, rounded up."
+    },
+    "lifeline-gap": {
+      "$value": "{spacing.node-node}",
+      "$description": "The least room between two participants' heads in a sequence, as between two cards."
+    },
+    "self-width": {
+      "$value": "{rounded.connector}",
+      "$description": "How far a message to its own lifeline reaches out, one rounded bend each way."
+    },
+    "fragment-padding": {
+      "$value": "{spacing.frame-padding}",
+      "$description": "Room inside a sequence fragment's frame round what it holds, as a frame's."
+    },
+    "fragment-tag": {
+      "$value": "{spacing.frame-label}",
+      "$description": "The height of a fragment's pentagon tag, at its frame's top left, as a frame's name."
+    },
+    "label-gap": {
+      "$value": {
+        "value": 4,
+        "unit": "px"
+      },
+      "$description": "In a sequence, the room between a label or a guard and what is under it: its line, its number or its frame's edge."
+    },
+    "fragment-tag-pad": {
+      "$value": {
+        "value": 6,
+        "unit": "px"
+      },
+      "$description": "The room inside a sequence fragment's tag before its operator, and how much its lower right corner is cut."
     }
   }
 }

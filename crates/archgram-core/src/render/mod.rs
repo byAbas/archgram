@@ -7,8 +7,9 @@ mod edge;
 mod frame;
 mod icons;
 mod legend;
-mod refusal;
+pub(crate) mod refusal;
 pub mod scene;
+pub mod sequence;
 pub mod signal;
 pub mod styles;
 pub mod svg;
@@ -430,19 +431,8 @@ fn style(
     logos: &dyn crate::logos::Logos,
     (timeline, brands): (Option<&Timeline>, &BTreeMap<String, Rgb>),
 ) -> Vec<StyleLine> {
-    let (palette, mode) = (spec.palette.as_str(), options.mode);
-    // Validation admits only known palettes; should one slip through, the
-    // first palette stands in, in the same theme.
-    let pick = |t: &str| {
-        theme(palette, t)
-            .or_else(|| theme(crate::tokens::PALETTES[0], t))
-            .expect("every palette has a light and a dark theme (tests/tokens.rs)")
-            .colors
-    };
-    let (light, dark) = match options.colors {
-        Some(c) => (c.light, c.dark),
-        None => (pick("light"), pick("dark")),
-    };
+    let mode = options.mode;
+    let (light, dark) = colors(&spec.palette, options);
     let animated = timeline.is_some();
     let mut sheet = Sheet::default();
     theme_vars(&mut sheet, mode, (&light, &dark), animated);
@@ -470,6 +460,22 @@ fn style(
         sheet.rules(styles::legend());
     }
     sheet.0
+}
+
+/// The light and dark colours: a project's own, else the palette's.
+/// Validation admits only known palettes; should one slip through, the
+/// first palette stands in, in the same theme.
+fn colors(palette: &str, options: Options) -> (Colors, Colors) {
+    let pick = |t: &str| {
+        theme(palette, t)
+            .or_else(|| theme(crate::tokens::PALETTES[0], t))
+            .expect("every palette has a light and a dark theme (tests/tokens.rs)")
+            .colors
+    };
+    match options.colors {
+        Some(c) => (c.light, c.dark),
+        None => (pick("light"), pick("dark")),
+    }
 }
 
 /// The theme's roles for `mode`: light, dark, or light switching to dark
@@ -513,9 +519,20 @@ fn dash(d: &[f64]) -> String {
 /// the characters set in that weight. False when a subset cannot be made, in
 /// which case the text falls back to the system font.
 fn embed_fonts(svg: &mut Sheet, spec: &Spec, logos: &dyn crate::logos::Logos) -> bool {
+    embed_runs(
+        svg,
+        crate::measure::text_runs_with(spec, logos)
+            .into_iter()
+            .map(|(w, t)| (w, t.into_owned())),
+    )
+}
+
+/// [`embed_fonts`], for the texts of any kind of diagram, each with its
+/// weight.
+fn embed_runs(svg: &mut Sheet, runs: impl Iterator<Item = (u16, String)>) -> bool {
     let mut by_weight: std::collections::BTreeMap<u16, BTreeSet<char>> =
         std::collections::BTreeMap::new();
-    for (weight, text) in crate::measure::text_runs_with(spec, logos) {
+    for (weight, text) in runs {
         by_weight.entry(weight).or_default().extend(text.chars());
     }
     let mut faces = Vec::new();

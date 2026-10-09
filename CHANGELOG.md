@@ -15,13 +15,16 @@ follow [Semantic Versioning](https://semver.org/).
   so `archgram check` holds the drawing to the text. Labels use the
   document's own words; what it does not state is reported as a gap. A
   tenth evaluation case draws Azure's Backends for Frontends example.
-- A spec may name its kind of diagram, `diagram: sequence`; a spec that
-  does not is an architecture diagram, as before, and draws the same
-  bytes. `archgram check` reads and checks a sequence diagram, after UML's
-  (docs/SPEC.md, Sequence): participants, calls, sends that do not wait,
-  replies, `alt`, `opt`, `loop` and `par` fragments with their guards, and
-  a refused message, with their sources held to the code. `archgram build`
-  does not draw one yet, and says so.
+- Sequence diagrams, after UML's (docs/SPEC.md, Sequence). A spec names
+  its kind, `diagram: sequence`; a spec that does not is an architecture
+  diagram, as before, and draws the same bytes. A sequence holds
+  participants, calls, sends that do not wait, replies, `alt`, `opt`,
+  `loop` and `par` fragments with their guards, and refused messages, each
+  with its sources, which `archgram check` holds to the code.
+  `archgram build` draws it top to bottom, still, each message numbered:
+  heads as cards, dashed lifelines, a call's filled arrowhead, a send's and
+  a reply's open one, a reply's dashed line, framed fragments with UML's
+  tag and guards, a refusal's ✕. `examples/` holds two.
 
 ### Changed
 

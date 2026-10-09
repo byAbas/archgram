@@ -24,8 +24,9 @@ fn every_example_reads_the_same_as_json() {
     for entry in std::fs::read_dir(format!("{}/examples", root())).unwrap() {
         let path = entry.unwrap().path();
         let text = std::fs::read_to_string(&path).unwrap();
-        let from_json = archgram_core::parse_spec(&text).unwrap();
-        let from_yaml = parse_spec(&text).unwrap_or_else(|e| panic!("{}: {e:?}", path.display()));
+        let from_json = archgram_core::parse(&text).unwrap();
+        let (from_yaml, _) = archgram_yaml::parse_diagram(&text)
+            .unwrap_or_else(|e| panic!("{}: {e:?}", path.display()));
         assert_eq!(from_yaml, from_json, "{}", path.display());
     }
 }

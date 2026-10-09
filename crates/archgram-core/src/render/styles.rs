@@ -4,8 +4,9 @@
 
 use crate::render::scene::{Decl, Paint, Rule};
 use crate::tokens::{
-    DASH_EDGE, DASH_EXTERNAL, DASH_FRAME, Role, STROKE_CARD, STROKE_CONNECTOR, STROKE_FRAME,
-    TYPOGRAPHY_FRAME_LABEL, TYPOGRAPHY_LEGEND, TYPOGRAPHY_SUBTITLE, TYPOGRAPHY_TITLE,
+    DASH_EDGE, DASH_EXTERNAL, DASH_FRAME, DASH_LIFELINE, DASH_OPERAND, DASH_REPLY, Role,
+    STROKE_CARD, STROKE_CONNECTOR, STROKE_FRAME, TYPOGRAPHY_FRAME_LABEL, TYPOGRAPHY_LEGEND,
+    TYPOGRAPHY_SUBTITLE, TYPOGRAPHY_TITLE,
 };
 
 /// The four category hues, by class name, with their roles.
@@ -170,4 +171,89 @@ pub fn legend() -> Vec<Rule> {
         ".legend-text",
         &[Font(TYPOGRAPHY_LEGEND), Fill(R(Role::TextMuted))],
     )]
+}
+
+/// A sequence's own parts (DESIGN.md, Components: Sequence): its lifelines,
+/// a call's filled arrowhead, a reply's dashed line, a fragment's frame,
+/// tag and operand lines, and a refused message's ✕ and head.
+#[must_use]
+pub fn sequence() -> Vec<Rule> {
+    vec![
+        rule(
+            ".lifeline",
+            &[
+                Fill(NoPaint),
+                Stroke(R(Role::Frame)),
+                StrokeWidth(STROKE_CARD),
+                Dash(DASH_LIFELINE),
+            ],
+        ),
+        rule(".edge.reply", &[Dash(DASH_REPLY)]),
+        rule(".arrowhead.filled", &[Fill(R(Role::Connector))]),
+        rule(
+            ".fragment",
+            &[
+                Fill(NoPaint),
+                Stroke(R(Role::Frame)),
+                StrokeWidth(STROKE_FRAME),
+            ],
+        ),
+        rule(
+            ".fragment-tag",
+            &[
+                Fill(R(Role::Canvas)),
+                Stroke(R(Role::Frame)),
+                StrokeWidth(STROKE_FRAME),
+                RoundJoins,
+            ],
+        ),
+        rule(
+            ".fragment-op",
+            &[Font(TYPOGRAPHY_FRAME_LABEL), Fill(R(Role::TextMuted))],
+        ),
+        rule(
+            ".operand",
+            &[
+                Fill(NoPaint),
+                Stroke(R(Role::Frame)),
+                StrokeWidth(STROKE_FRAME),
+                Dash(DASH_OPERAND),
+            ],
+        ),
+    ]
+}
+
+/// A refused message in a sequence's still image: its ✕ on a patch of the
+/// canvas, its arrowhead and the refusing head's border in the refusal
+/// colour (DESIGN.md, Components: Refusal).
+#[must_use]
+pub fn sequence_refusal() -> Vec<Rule> {
+    vec![
+        rule(
+            ".refused-mark",
+            &[
+                Fill(NoPaint),
+                Stroke(R(Role::SignalRefusal)),
+                StrokeWidth(STROKE_CONNECTOR),
+                RoundCaps,
+                RoundJoins,
+            ],
+        ),
+        rule(
+            ".refused-patch",
+            &[
+                Fill(NoPaint),
+                Stroke(R(Role::Canvas)),
+                StrokeWidth(3.0 * STROKE_CONNECTOR),
+            ],
+        ),
+        rule(
+            ".refused-head",
+            &[
+                Fill(NoPaint),
+                Stroke(R(Role::SignalRefusal)),
+                StrokeWidth(STROKE_CARD),
+            ],
+        ),
+    ]
 }
