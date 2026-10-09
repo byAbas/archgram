@@ -1,0 +1,196 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 885 947.6" width="885" height="947.6" role="img" aria-labelledby="title desc">
+  <title id="title">OAuth sign in</title>
+  <desc id="desc">The web app sends the user to the identity provider, which asks for consent and returns a code; the app checks its state, trades the code for a token while it warms the profile cache, then reads the profile page by page, signing in again when the token has expired. 1. User calls Web app: Sign in. 2. Web app calls Identity provider: redirect to /authorize with the client id and scopes. 3. Identity provider calls User: ask for consent. 4. User replies to Identity provider: consent. 5. Identity provider replies to Web app: code. 6. Web app calls Web app: verify state. In parallel: 7. Web app calls Identity provider: exchange code. 8. Identity provider replies to Web app: token. And: 9. Web app sends Profile API: warm cache. Repeated, for each page of the profile: 10. Web app calls Profile API: GET /me. If token valid: 11. Profile API replies to Web app: profile. Otherwise: 12. Profile API replies to Web app: 401, refused.</desc>
+  <style>
+    :root { --badge: #f1f1f1; --canvas: #fbfbfb; --card: #ffffff; --card-edge: #d4d4d4; --connector: #8f8f8f; --frame: #8f8f8f; --icon-ai: #1f1f1f; --icon-build: #1f1f1f; --icon-client: #1f1f1f; --icon-core: #1f1f1f; --signal-core: #ffffff; --signal-pass: #45a378; --signal-refusal: #880d1e; --text: #1f1f1f; --text-muted: #646464; }
+    @media (prefers-color-scheme: dark) { :root { --badge: #252525; --canvas: #111111; --card: #191919; --card-edge: #353535; --connector: #707070; --frame: #707070; --icon-ai: #ededed; --icon-build: #ededed; --icon-client: #ededed; --icon-core: #ededed; --signal-core: #ededed; --signal-pass: #34d399; --signal-refusal: #ea7b8a; --text: #ededed; --text-muted: #a8a8a8; } }
+    @font-face { font-family: "archgram-geist"; font-weight: 400; src: url(data:font/ttf;base64,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AAEECQAAAJ4AAAADAAEECQABAAoAngADAAEECQACAA4AqAADAAEECQADADAAtgADAAEECQAEABoA5gADAAEECQAFAFYBAAADAAEECQAGABoBVgADAAEECQANASIBcAADAAEECQAOADYCkgBDAG8AcAB5AHIAaQBnAGgAdAAgADIAMAAyADQAIABUAGgAZQAgAEcAZQBpAHMAdAAgAFAAcgBvAGoAZQBjAHQAIABBAHUAdABoAG8AcgBzACAAKABoAHQAdABwAHMAOgAvAC8AZwBpAHQAaAB1AGIALgBjAG8AbQAvAHYAZQByAGMAZQBsAC8AZwBlAGkAcwB0AC0AZgBvAG4AdAApAEcAZQBpAHMAdABSAGUAZwB1AGwAYQByADEALgA4ADAAMAA7AFYAUgBDAEwAOwBHAGUAaQBzAHQALQBSAGUAZwB1AGwAYQByAEcAZQBpAHMAdAAgAFIAZQBnAHUAbABhAHIAVgBlAHIAcwBpAG8AbgAgADEALgA4ADAAMAA7ACAAdAB0AGYAYQB1AHQAbwBoAGkAbgB0ACAAKAB2ADEALgA4AC4ANAAuADEANgAtAGUAYgA2ADQAKQBHAGUAaQBzAHQALQBSAGUAZwB1AGwAYQByAFQAaABpAHMAIABGAG8AbgB0ACAAUwBvAGYAdAB3AGEAcgBlACAAaQBzACAAbABpAGMAZQBuAHMAZQBkACAAdQBuAGQAZQByACAAdABoAGUAIABTAEkATAAgAE8AcABlAG4AIABGAG8AbgB0ACAATABpAGMAZQBuAHMAZQAsACAAVgBlAHIAcwBpAG8AbgAgADEALgAxAC4AIABUAGgAaQBzACAAbABpAGMAZQBuAHMAZQAgAGkAcwAgAGEAdgBhAGkAbABhAGIAbABlACAAdwBpAHQAaAAgAGEAIABGAEEAUQAgAGEAdAA6ACAAaAB0AHQAcABzADoALwAvAG8AcABlAG4AZgBvAG4AdABsAGkAYwBlAG4AcwBlAC4AbwByAGcAaAB0AHQAcABzADoALwAvAG8AcABlAG4AZgBvAG4AdABsAGkAYwBlAG4AcwBlAC4AbwByAGcAAAADAAAAAAAA/5wAMgAAAAAAAAAAAAAAAAAAAAAAAAAA) format("truetype"); }
+    @font-face { font-family: "archgram-geist"; font-weight: 500; src: url(data:font/ttf;base64,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AE0AZQBkAGkAdQBtAEcAZQBpAHMAdAAgAE0AZQBkAGkAdQBtAFYAZQByAHMAaQBvAG4AIAAxAC4AOAAwADAAOwAgAHQAdABmAGEAdQB0AG8AaABpAG4AdAAgACgAdgAxAC4AOAAuADQALgAxADYALQBlAGIANgA0ACkARwBlAGkAcwB0AC0ATQBlAGQAaQB1AG0AVABoAGkAcwAgAEYAbwBuAHQAIABTAG8AZgB0AHcAYQByAGUAIABpAHMAIABsAGkAYwBlAG4AcwBlAGQAIAB1AG4AZABlAHIAIAB0AGgAZQAgAFMASQBMACAATwBwAGUAbgAgAEYAbwBuAHQAIABMAGkAYwBlAG4AcwBlACwAIABWAGUAcgBzAGkAbwBuACAAMQAuADEALgAgAFQAaABpAHMAIABsAGkAYwBlAG4AcwBlACAAaQBzACAAYQB2AGEAaQBsAGEAYgBsAGUAIAB3AGkAdABoACAAYQAgAEYAQQBRACAAYQB0ADoAIABoAHQAdABwAHMAOgAvAC8AbwBwAGUAbgBmAG8AbgB0AGwAaQBjAGUAbgBzAGUALgBvAHIAZwBoAHQAdABwAHMAOgAvAC8AbwBwAGUAbgBmAG8AbgB0AGwAaQBjAGUAbgBzAGUALgBvAHIAZwAAAAMAAAAAAAD/nAAyAAAAAAAAAAAAAAAAAAAAAAAAAAA=) format("truetype"); }
+    text { font-family: "archgram-geist", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-kerning: none; }
+    .title { font-size: 14px; font-weight: 500; fill: var(--text); }
+    .sub { font-size: 12px; font-weight: 400; fill: var(--text-muted); }
+    .canvas { fill: var(--canvas); }
+    .card { fill: var(--card); stroke: var(--card-edge); stroke-width: 1; }
+    .card.external { fill: var(--canvas); stroke: var(--connector); stroke-dasharray: 5 4; }
+    .badge { fill: var(--badge); }
+    .logo { fill: var(--text-muted); }
+    .logo-icon.core { fill: var(--icon-core); }
+    .logo-icon.ai { fill: var(--icon-ai); }
+    .logo-icon.build { fill: var(--icon-build); }
+    .logo-icon.client { fill: var(--icon-client); }
+    .logo-chip { fill: var(--card); stroke: var(--card-edge); stroke-width: 1; }
+    .frame { fill: none; stroke: var(--frame); stroke-width: 1.1; stroke-dasharray: 6 5; }
+    .frame-label { font-size: 11px; font-weight: 500; letter-spacing: 0.88px; fill: var(--text-muted); }
+    .label-patch { fill: var(--canvas); }
+    .edge { fill: none; stroke: var(--connector); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .edge.dashed { stroke-dasharray: 4 4; }
+    .arrowhead { fill: none; stroke: var(--connector); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .icon { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+    .icon.core { stroke: var(--icon-core); }
+    .icon.ai { stroke: var(--icon-ai); }
+    .icon.build { stroke: var(--icon-build); }
+    .icon.client { stroke: var(--icon-client); }
+    .lifeline { fill: none; stroke: var(--frame); stroke-width: 1; stroke-dasharray: 2 5; }
+    .edge.reply { stroke-dasharray: 4 4; }
+    .arrowhead.filled { fill: var(--connector); }
+    .fragment { fill: none; stroke: var(--frame); stroke-width: 1.1; }
+    .fragment-tag { fill: var(--canvas); stroke: var(--frame); stroke-width: 1.1; stroke-linejoin: round; }
+    .fragment-op { font-size: 11px; font-weight: 500; letter-spacing: 0.88px; fill: var(--text-muted); }
+    .operand { fill: none; stroke: var(--frame); stroke-width: 1.1; stroke-dasharray: 6 5; }
+    .step { fill: var(--card); stroke: var(--connector); stroke-width: 1; }
+    .step-text { font-size: 12px; font-weight: 400; fill: var(--text); }
+    .refused-mark { fill: none; stroke: var(--signal-refusal); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .refused-patch { fill: none; stroke: var(--canvas); stroke-width: 6; }
+    .refused-head { fill: none; stroke: var(--signal-refusal); stroke-width: 1; }
+    .credit-line { opacity: 0.6; }
+    .credit { font-size: 12px; font-weight: 400; fill: var(--connector); }
+    .credit-mark { fill: var(--connector); }
+    .credit-glyph { fill: none; stroke: var(--canvas); stroke-width: 5.5; stroke-linecap: round; stroke-linejoin: round; }
+    .legend-text { font-size: 12px; font-weight: 400; fill: var(--text-muted); }
+  </style>
+  <rect class="canvas" width="885" height="947.6" rx="16"/>
+  <g class="lifelines">
+    <path class="lifeline" d="M116.5 88.5V837.7"/>
+    <path class="lifeline" d="M324.5 88.5V837.7"/>
+    <path class="lifeline" d="M543 88.5V837.7"/>
+    <path class="lifeline" d="M761.5 88.5V837.7"/>
+  </g>
+  <g class="fragments">
+    <rect class="fragment" x="302.5" y="409.9" width="481" height="178.2" rx="14"/>
+    <path class="operand" d="M302.5 526.7H783.5"/>
+    <path class="fragment-tag" d="M302.5 419.9A10 10 0 0 1 312.5 409.9H340.38V423.9L334.38 429.9H302.5Z"/>
+    <text class="fragment-op" x="308.5" y="423.81">par</text>
+    <rect class="fragment" x="280.5" y="592.1" width="525" height="235.6" rx="14"/>
+    <path class="fragment-tag" d="M280.5 602.1A10 10 0 0 1 290.5 592.1H324.75V606.1L318.75 612.1H280.5Z"/>
+    <text class="fragment-op" x="286.5" y="606.01">loop</text>
+    <text class="sub" x="336.75" y="606.36">[for each page of the profile]</text>
+    <rect class="fragment" x="302.5" y="662.5" width="481" height="150.2" rx="14"/>
+    <path class="operand" d="M302.5 732.9H783.5"/>
+    <path class="fragment-tag" d="M302.5 672.5A10 10 0 0 1 312.5 662.5H336.97V676.5L330.97 682.5H302.5Z"/>
+    <text class="fragment-op" x="308.5" y="676.41">alt</text>
+    <text class="sub" x="348.97" y="676.76">[token valid]</text>
+    <text class="sub" x="308.5" y="748.36">[else]</text>
+  </g>
+  <g class="edges">
+    <path class="edge" d="M116 126.4 L321 126.4"/>
+    <path class="arrowhead filled" d="M314 132.4L321 126.4L314 120.4Z"/>
+    <path class="edge" d="M324 187.2 L539.5 187.2"/>
+    <path class="arrowhead filled" d="M532.5 193.2L539.5 187.2L532.5 181.2Z"/>
+    <path class="edge" d="M542.5 233.6 L119 233.6"/>
+    <path class="arrowhead filled" d="M126 227.6L119 233.6L126 239.6Z"/>
+    <path class="edge reply" d="M116 280 L539.5 280"/>
+    <path class="arrowhead" d="M532.5 286L539.5 280L532.5 274"/>
+    <path class="edge reply" d="M542.5 326.4 L327 326.4"/>
+    <path class="arrowhead" d="M334 320.4L327 326.4L334 332.4"/>
+    <path class="edge" d="M324 352.4 L332 352.4 A8 8 0 0 1 340 360.4 L340 366.9 A6.5 6.5 0 0 1 333.5 373.4 L327 373.4"/>
+    <path class="arrowhead filled" d="M334 367.4L327 373.4L334 379.4Z"/>
+    <path class="edge" d="M324 459.8 L539.5 459.8"/>
+    <path class="arrowhead filled" d="M532.5 465.8L539.5 459.8L532.5 453.8Z"/>
+    <path class="edge reply" d="M542.5 506.2 L327 506.2"/>
+    <path class="arrowhead" d="M334 500.2L327 506.2L334 512.2"/>
+    <path class="edge" d="M324 556.6 L758 556.6"/>
+    <path class="arrowhead" d="M751 562.6L758 556.6L751 550.6"/>
+    <path class="edge" d="M324 642 L758 642"/>
+    <path class="arrowhead filled" d="M751 648L758 642L751 636Z"/>
+    <path class="edge reply" d="M761 712.4 L327 712.4"/>
+    <path class="arrowhead" d="M334 706.4L327 712.4L334 718.4"/>
+    <path class="edge reply" d="M761 781.2 L327 781.2"/>
+    <path class="refused-mark" d="M334 775.2L327 781.2L334 787.2"/>
+    <rect class="label-patch" x="196.7" y="100.5" width="47.61" height="14.4" rx="5"/>
+    <text class="sub" x="220.5" y="111.96" text-anchor="middle">Sign in</text>
+    <rect class="label-patch" x="355.06" y="146.9" width="157.37" height="28.8" rx="5"/>
+    <text class="sub" x="433.75" y="158.36" text-anchor="middle">redirect to /authorize with</text>
+    <text class="sub" x="433.75" y="172.76" text-anchor="middle">the client id and scopes</text>
+    <rect class="label-patch" x="281.18" y="207.7" width="97.14" height="14.4" rx="5"/>
+    <text class="sub" x="329.75" y="219.16" text-anchor="middle">ask for consent</text>
+    <rect class="label-patch" x="302.23" y="254.1" width="55.05" height="14.4" rx="5"/>
+    <text class="sub" x="329.75" y="265.56" text-anchor="middle">consent</text>
+    <rect class="label-patch" x="415.1" y="300.5" width="37.3" height="14.4" rx="5"/>
+    <text class="sub" x="433.75" y="311.96" text-anchor="middle">code</text>
+    <rect class="label-patch" x="368.5" y="356.2" width="73.82" height="14.4" rx="5"/>
+    <text class="sub" x="405.41" y="367.66" text-anchor="middle">verify state</text>
+    <rect class="label-patch" x="386.24" y="433.9" width="95.02" height="14.4" rx="5"/>
+    <text class="sub" x="433.75" y="445.36" text-anchor="middle">exchange code</text>
+    <rect class="label-patch" x="412.57" y="480.3" width="42.36" height="14.4" rx="5"/>
+    <text class="sub" x="433.75" y="491.76" text-anchor="middle">token</text>
+    <rect class="label-patch" x="504.03" y="530.7" width="77.93" height="14.4" rx="5"/>
+    <text class="sub" x="543" y="542.16" text-anchor="middle">warm cache</text>
+    <rect class="label-patch" x="513.86" y="616.1" width="58.28" height="14.4" rx="5"/>
+    <text class="sub" x="543" y="627.56" text-anchor="middle">GET /me</text>
+    <rect class="label-patch" x="519.92" y="686.5" width="46.17" height="14.4" rx="5"/>
+    <text class="sub" x="543" y="697.96" text-anchor="middle">profile</text>
+    <rect class="label-patch" x="528.03" y="755.3" width="29.94" height="14.4" rx="5"/>
+    <text class="sub" x="543" y="766.76" text-anchor="middle">401</text>
+  </g>
+  <g class="refusals">
+    <path class="refused-patch" d="M340 776.7L349 785.7M349 776.7L340 785.7"/>
+    <path class="refused-mark" d="M340 776.7L349 785.7M349 776.7L340 785.7"/>
+  </g>
+  <g data-node="user">
+    <rect class="card" x="24.5" y="32.5" width="184" height="56" rx="10"/>
+    <rect class="badge" x="34.5" y="42.5" width="36" height="36" rx="8"/>
+    <g class="icon core" transform="translate(40.5 48.5)" stroke-width="1.7"><path d="M20 21c-.29-3.73-3.27-6.68-7-6.93L12 14c-.36.01-.69.02-1 .04-3.7.18-6.72 3.27-7 6.96"/><circle cx="12" cy="7" r="4"/></g>
+    <text class="title" x="80.5" y="65.47">User</text>
+  </g>
+  <g data-node="app">
+    <rect class="card" x="232.5" y="32.5" width="184" height="56" rx="10"/>
+    <rect class="badge" x="242.5" y="42.5" width="36" height="36" rx="8"/>
+    <g class="icon core" transform="translate(248.5 48.5)" stroke-width="1.7"><path d="M2.5 12c0-4.48 0-6.72 1.39-8.11C5.28 2.5 7.52 2.5 12 2.5c4.48 0 6.72 0 8.11 1.39C21.5 5.28 21.5 7.52 21.5 12c0 4.48 0 6.72-1.39 8.11C18.72 21.5 16.48 21.5 12 21.5c-4.48 0-6.72 0-8.11-1.39C2.5 18.72 2.5 16.48 2.5 12z"/><path d="M9.5 9.5L7.97 10.82C7.32 11.38 7 11.65 7 12c0 .35.32.62.97 1.18L9.5 14.5"/><path d="M14.5 9.5l1.53 1.32c.65.56.97.83.97 1.18 0 .35-.32.62-.97 1.18L14.5 14.5"/></g>
+    <text class="title" x="288.5" y="65.47">Web app</text>
+  </g>
+  <g data-node="idp">
+    <rect class="card external" x="440.5" y="32.5" width="205" height="56" rx="10"/>
+    <rect class="badge" x="450.5" y="42.5" width="36" height="36" rx="8"/>
+    <g class="icon core" transform="translate(456.5 48.5)" stroke-width="1.7"><path d="M2.5 12c0-4.48 0-6.72 1.39-8.11C5.28 2.5 7.52 2.5 12 2.5c4.48 0 6.72 0 8.11 1.39C21.5 5.28 21.5 7.52 21.5 12c0 4.48 0 6.72-1.39 8.11C18.72 21.5 16.48 21.5 12 21.5c-4.48 0-6.72 0-8.11-1.39C2.5 18.72 2.5 16.48 2.5 12z"/><path d="M9.5 9.5L7.97 10.82C7.32 11.38 7 11.65 7 12c0 .35.32.62.97 1.18L9.5 14.5"/><path d="M14.5 9.5l1.53 1.32c.65.56.97.83.97 1.18 0 .35-.32.62-.97 1.18L14.5 14.5"/></g>
+    <text class="title" x="496.5" y="65.47">Identity provider</text>
+  </g>
+  <g data-node="api">
+    <rect class="card" x="677.5" y="24.5" width="184" height="56" rx="10"/>
+    <rect class="card" x="673.5" y="28.5" width="184" height="56" rx="10"/>
+    <rect class="card" x="669.5" y="32.5" width="184" height="56" rx="10"/>
+    <rect class="badge" x="679.5" y="42.5" width="36" height="36" rx="8"/>
+    <g class="icon core" transform="translate(685.5 48.5)" stroke-width="1.7"><path d="M2.5 12c0-4.48 0-6.72 1.39-8.11C5.28 2.5 7.52 2.5 12 2.5c4.48 0 6.72 0 8.11 1.39C21.5 5.28 21.5 7.52 21.5 12c0 4.48 0 6.72-1.39 8.11C18.72 21.5 16.48 21.5 12 21.5c-4.48 0-6.72 0-8.11-1.39C2.5 18.72 2.5 16.48 2.5 12z"/><path d="M9.5 9.5L7.97 10.82C7.32 11.38 7 11.65 7 12c0 .35.32.62.97 1.18L9.5 14.5"/><path d="M14.5 9.5l1.53 1.32c.65.56.97.83.97 1.18 0 .35-.32.62-.97 1.18L14.5 14.5"/></g>
+    <text class="title" x="725.5" y="65.47">Profile API</text>
+  </g>
+  <rect class="refused-head" x="669.5" y="32.5" width="184" height="56" rx="10"/>
+  <g class="steps">
+    <rect class="step" x="292.5" y="118.9" width="15" height="15" rx="7.5"/>
+    <text class="step-text" x="300" y="130.66" text-anchor="middle">1</text>
+    <rect class="step" x="511" y="179.7" width="15" height="15" rx="7.5"/>
+    <text class="step-text" x="518.5" y="191.46" text-anchor="middle">2</text>
+    <rect class="step" x="132.5" y="226.1" width="15" height="15" rx="7.5"/>
+    <text class="step-text" x="140" y="237.86" text-anchor="middle">3</text>
+    <rect class="step" x="511" y="272.5" width="15" height="15" rx="7.5"/>
+    <text class="step-text" x="518.5" y="284.26" text-anchor="middle">4</text>
+    <rect class="step" x="340.5" y="318.9" width="15" height="15" rx="7.5"/>
+    <text class="step-text" x="348" y="330.66" text-anchor="middle">5</text>
+    <rect class="step" x="346.5" y="355.4" width="15" height="15" rx="7.5"/>
+    <text class="step-text" x="354" y="367.16" text-anchor="middle">6</text>
+    <rect class="step" x="511" y="452.3" width="15" height="15" rx="7.5"/>
+    <text class="step-text" x="518.5" y="464.06" text-anchor="middle">7</text>
+    <rect class="step" x="340.5" y="498.7" width="15" height="15" rx="7.5"/>
+    <text class="step-text" x="348" y="510.46" text-anchor="middle">8</text>
+    <rect class="step" x="729.5" y="549.1" width="15" height="15" rx="7.5"/>
+    <text class="step-text" x="737" y="560.86" text-anchor="middle">9</text>
+    <rect class="step" x="728.5" y="634.5" width="16" height="15" rx="7.5"/>
+    <text class="step-text" x="736.5" y="646.26" text-anchor="middle">10</text>
+    <rect class="step" x="340.5" y="704.9" width="15" height="15" rx="7.5"/>
+    <text class="step-text" x="348" y="716.66" text-anchor="middle">11</text>
+    <rect class="step" x="358.5" y="773.7" width="16" height="15" rx="7.5"/>
+    <text class="step-text" x="366.5" y="785.46" text-anchor="middle">12</text>
+  </g>
+  <g class="legend">
+    <rect class="card" x="28.5" y="865.5" width="18" height="12" rx="3"/>
+    <rect class="card" x="26.5" y="867.5" width="18" height="12" rx="3"/>
+    <rect class="card" x="24.5" y="869.5" width="18" height="12" rx="3"/>
+    <text class="legend-text" x="54.5" y="877.96">Several instances</text>
+    <rect class="card external" x="173.39" y="867.5" width="18" height="12" rx="3"/>
+    <text class="legend-text" x="199.39" y="877.96">External</text>
+  </g>
+  <g class="credit-line">
+    <text class="credit" x="776.42" y="921.16">by</text>
+    <path class="credit-mark" transform="translate(793 910.9) scale(0.19)" d="M15 0H49A15 15 0 0 1 64 15V49A15 15 0 0 1 49 64H15A15 15 0 0 1 0 49V15A15 15 0 0 1 15 0Z"/>
+    <path class="credit-glyph" transform="translate(793 910.9) scale(0.19)" d="M16 19.5H31A9 9 0 0 1 40 28.5V43.5M32 36.5L40 44.5L48 36.5"/>
+    <text class="credit" x="808" y="921.16">archgram</text>
+  </g>
+</svg>

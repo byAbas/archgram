@@ -50,11 +50,15 @@ fn examples_match_their_golden_files() {
         "kinds-vertical",
         "cv-screener-architecture",
         "commit-gates",
+        "sequence-sign-in",
+        "sequence-oauth",
     ] {
         golden(name, Mode::Auto);
     }
     golden("kinds", Mode::Light);
     golden("kinds", Mode::Dark);
+    golden("sequence-sign-in", Mode::Light);
+    golden("sequence-sign-in", Mode::Dark);
 }
 
 #[test]

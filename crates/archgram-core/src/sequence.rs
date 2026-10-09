@@ -253,6 +253,49 @@ impl Item {
 }
 
 impl Sequence {
+    /// The participants as an architecture spec's nodes, with the
+    /// sequence's look: so a head is measured, drawn and listed in the
+    /// legend as a card is, and its text set in the same font.
+    #[must_use]
+    pub fn as_spec(&self) -> crate::Spec {
+        crate::Spec {
+            archgram: self.archgram,
+            diagram: DiagramKind::Architecture,
+            title: self.title.clone(),
+            description: self.description.clone(),
+            direction: crate::spec::Direction::Right,
+            shown_width: self.shown_width,
+            card: self.card,
+            logo: self.logo,
+            palette: self.palette.clone(),
+            legend: true,
+            signal: self.signal,
+            still: crate::spec::Still::None,
+            border: self.border,
+            wait: self.wait,
+            glow: self.glow,
+            credit: self.credit,
+            nodes: self
+                .participants
+                .iter()
+                .map(|p| crate::spec::Node {
+                    id: p.id.clone(),
+                    kind: p.kind,
+                    label: p.label.clone(),
+                    note: p.note.clone(),
+                    tech: p.tech.clone(),
+                    variant: p.variant,
+                    frame: None,
+                    source: None,
+                })
+                .collect(),
+            frames: Vec::new(),
+            edges: Vec::new(),
+            flows: Vec::new(),
+            hints: crate::spec::Hints::default(),
+        }
+    }
+
     /// Every participant and message with its sources, for `check`.
     #[must_use]
     pub fn owned(&self) -> Vec<Owned<'_>> {

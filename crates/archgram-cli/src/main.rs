@@ -407,11 +407,9 @@ fn build(
             match diagram {
                 Diagram::Architecture(spec) => spec,
                 // Read and checked, not yet laid out (docs/features/sequence.md).
-                Diagram::Sequence(_) => {
-                    eprintln!(
-                        "archgram: {path}: this archgram reads a sequence diagram but does not draw one yet; `archgram check` checks it"
-                    );
-                    return ExitCode::from(1);
+                Diagram::Sequence(seq) => {
+                    let out = out.unwrap_or_else(|| default_output(path));
+                    return build_sequence(path, &seq, (out, split), options);
                 }
             }
         }
@@ -457,6 +455,46 @@ fn build(
             too_wide(&spec, options, drawing)
         );
     }
+    write_drawings(drawings)
+}
+
+/// Draws a sequence (docs/features/sequence.md) into `out`, or one file
+/// for each theme, and warns, still drawing, when it is wider than keeps
+/// its text readable where it is shown.
+fn build_sequence(
+    path: &str,
+    seq: &archgram_core::sequence::Sequence,
+    (out, split): (PathBuf, bool),
+    options: Options,
+) -> ExitCode {
+    let icons = Icons::load();
+    let drawings = if split {
+        let (light, dark) = archgram_core::draw_sequence_themes(seq, options, &icons);
+        vec![(themed(&out, "light"), light), (themed(&out, "dark"), dark)]
+    } else {
+        vec![(out, archgram_core::draw_sequence(seq, options, &icons))]
+    };
+    let limit = archgram_core::readable_width(&seq.as_spec());
+    if let Some((_, drawing)) = drawings.first()
+        && drawing.width > limit
+    {
+        let place = match seq.shown_width {
+            Some(shown) => {
+                format!("that keep its text readable at the {shown:.0} px it is shown at")
+            }
+            None => "a README on GitHub shows at a readable size".to_owned(),
+        };
+        eprintln!(
+            "archgram: warning: {path}: the drawing is {:.0} px wide, wider than the {limit:.0} px {place}; merge or leave out participants, shorten the longest labels, or split it in two",
+            drawing.width
+        );
+    }
+    write_drawings(drawings)
+}
+
+/// Writes each drawing to its file, its folder created when missing, and
+/// says what it wrote.
+fn write_drawings(drawings: Vec<(PathBuf, archgram_core::Drawing)>) -> ExitCode {
     for (file, drawing) in drawings {
         let svg = drawing.svg;
         if let Some(folder) = file.parent().filter(|f| !f.as_os_str().is_empty())

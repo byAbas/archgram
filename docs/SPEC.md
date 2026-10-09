@@ -371,13 +371,15 @@ and, where the diagram moves, the refusal travels back along the calls
 not yet answered to where the request began, as a refused flow does
 (Flows). UML has no refusal; it is archgram's.
 
-### How a sequence plays
+### How a sequence is drawn
 
-The messages play in order, one at a time; a `par`'s operands start
-together; an `alt`'s operands play one after another, each with its
-guard lit; an `opt` and a `loop` play their messages once. Under reduced
-motion the still image shows each message's number, and a screen reader
-hears each message in words, in order, a guard before its messages.
+`archgram build` draws a sequence top to bottom, as time runs: the heads
+in a row, a lifeline down from each, one row for each message in the
+list's order, and each fragment framed round its messages. This version
+draws it still, each message numbered by its order (`still: numbers`); a
+screen reader hears each message in words, in order, a guard before its
+messages. Moving the messages in turn, as flows move, comes in a later
+version.
 
 ### Sources in a sequence
 

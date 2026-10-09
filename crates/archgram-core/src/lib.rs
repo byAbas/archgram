@@ -173,7 +173,7 @@ fn without_quoted_text(message: &str) -> String {
     message.to_owned()
 }
 
-/// Reads, checks and draws a JSON spec: the whole pipeline.
+/// Reads, checks and draws a JSON spec of any kind: the whole pipeline.
 ///
 /// # Errors
 ///
@@ -194,12 +194,15 @@ pub fn build_with(
     options: render::Options,
     logos: &dyn logos::Logos,
 ) -> Result<String, Vec<SpecError>> {
-    let spec = parse_spec(json)?;
-    let errors = validate::logos(&spec, logos);
+    let diagram = parse(json)?;
+    let errors = diagram.check_logos(logos);
     if !errors.is_empty() {
         return Err(errors);
     }
-    draw_with(&spec, options, logos).map(|drawing| drawing.svg)
+    match diagram {
+        Diagram::Architecture(spec) => draw_with(&spec, options, logos).map(|drawing| drawing.svg),
+        Diagram::Sequence(seq) => Ok(draw_sequence(&seq, options, logos).svg),
+    }
 }
 
 /// Measures, lays out and draws a spec that has passed validation.
@@ -298,6 +301,46 @@ pub fn draw_themes(
         }
     };
     Ok((theme(render::Mode::Light), theme(render::Mode::Dark)))
+}
+
+/// Lays out and draws a sequence that has passed validation, top to
+/// bottom, as time runs (docs/features/sequence.md).
+#[must_use]
+pub fn draw_sequence(
+    seq: &sequence::Sequence,
+    options: render::Options,
+    logos: &dyn logos::Logos,
+) -> Drawing {
+    let layout = layout::sequence::place(seq, logos);
+    let scene = render::sequence::scene(seq, &layout, options, logos);
+    Drawing {
+        svg: render::svg::write(&scene),
+        width: scene.width,
+        height: scene.height,
+        direction: Direction::Down,
+    }
+}
+
+/// [`draw_sequence`] once laid out and drawn twice, light then dark, each
+/// file with one theme only, as [`draw_themes`].
+#[must_use]
+pub fn draw_sequence_themes(
+    seq: &sequence::Sequence,
+    options: render::Options,
+    logos: &dyn logos::Logos,
+) -> (Drawing, Drawing) {
+    let layout = layout::sequence::place(seq, logos);
+    let theme = |mode| {
+        let scene =
+            render::sequence::scene(seq, &layout, render::Options { mode, ..options }, logos);
+        Drawing {
+            svg: render::svg::write(&scene),
+            width: scene.width,
+            height: scene.height,
+            direction: Direction::Down,
+        }
+    };
+    (theme(render::Mode::Light), theme(render::Mode::Dark))
 }
 
 /// Each `tech` that `logos` does not have, located in the spec, with the

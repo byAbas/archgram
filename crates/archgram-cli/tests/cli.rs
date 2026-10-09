@@ -913,10 +913,9 @@ fn a_missing_logo_names_each_suggestion_s_brand() {
 }
 
 /// A sequence diagram (docs/SPEC.md, Sequence) in YAML: `check` reads it
-/// and says what it holds; `build` refuses it plainly until archgram draws
-/// one, rather than drawing it as an architecture diagram.
+/// and says what it holds; `build` draws it top to bottom, as time runs.
 #[test]
-fn check_reads_a_sequence_and_build_says_it_does_not_draw_one_yet() {
+fn check_reads_a_sequence_and_build_draws_it() {
     let dir = scratch("sequence");
     let spec = dir.join("sign-in.archgram.yaml");
     std::fs::write(
@@ -946,13 +945,11 @@ messages:
         format!("{path}: valid (a sequence, 2 participants, 3 messages)\n")
     );
     let run = archgram(&["build", path]);
-    assert_eq!(run.status.code(), Some(1));
-    assert!(
-        stderr(&run).contains("does not draw one yet"),
-        "{}",
-        stderr(&run)
-    );
-    assert!(!dir.join("sign-in.svg").exists());
+    assert!(run.status.success(), "{}", stderr(&run));
+    assert!(stdout(&run).contains("top to bottom"), "{}", stdout(&run));
+    let svg = read(&dir.join("sign-in.svg"));
+    assert!(svg.starts_with("<svg"));
+    assert!(svg.contains(r#"class="lifeline""#));
 }
 
 /// `spec --section sequence` prints the sequence's part of the format.

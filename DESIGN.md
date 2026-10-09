@@ -102,6 +102,31 @@ components:
   lit-step-number:
     textColor: "{color.signal-pass}"
     size: "{stroke.card}"
+  lifeline:
+    textColor: "{color.frame}"
+    size: "{stroke.card}"
+  message:
+    textColor: "{color.connector}"
+    size: "{arrowhead.length}"
+  message-reply:
+    textColor: "{color.connector}"
+  message-label:
+    backgroundColor: "{color.canvas}"
+    textColor: "{color.text-muted}"
+    typography: "{typography.subtitle}"
+    width: "{label.max-width}"
+  fragment:
+    textColor: "{color.frame}"
+    rounded: "{rounded.frame}"
+    padding: "{spacing.fragment-padding}"
+  fragment-tag:
+    backgroundColor: "{color.canvas}"
+    textColor: "{color.text-muted}"
+    typography: "{typography.frame-label}"
+    height: "{spacing.fragment-tag}"
+  fragment-guard:
+    textColor: "{color.text-muted}"
+    typography: "{typography.subtitle}"
 ---
 
 # archgram: Design System
@@ -252,6 +277,24 @@ lists a fallback stack.
   wider than the diagram.
 - `spacing.margin` surrounds everything.
 
+A sequence lays out by its own rules (docs/features/sequence.md). Its
+participants' heads stand in one row at the top, left to right in the
+spec's order, each a node card in the spec's card style, their front
+cards' feet on one line. Each head's lifeline runs down from the middle of
+its front card to below the last message. Messages take one row each, in
+the spec's order, time running down the page: a row is at least
+`spacing.message-row` high, and taller for a label of two lines. Two
+neighbouring lifelines are as far apart as their heads need, with
+`spacing.lifeline-gap` between them, and as the widest label between them
+needs, a label never wider than `label.max-width` and wrapped onto two
+lines past it, with its number and arrowhead beside it. A message to its
+own lifeline reaches `spacing.self-width` to the right, with its number
+and label beyond. A fragment's frame takes the rows of what it holds and
+the lifelines its messages touch, `spacing.fragment-padding` out from
+them and that again for each fragment nested inside it, with a row at its
+top for its tag and first guard. `spacing.margin` surrounds everything,
+as in every diagram.
+
 Motion:
 
 - A diagram is still by default. Motion appears only along the flows the
@@ -292,10 +335,14 @@ say "several instances" rather than "raised".
   one S curve.
 - Strokes: `stroke.card` for card edges, `stroke.icon` for icon lines,
   `stroke.connector` for edges, `stroke.frame` for frames.
-- Three dash patterns, never mixed up: `dash.external` marks a node we do
-  not own; `dash.frame` marks a boundary; `dash.edge` marks an edge taken
-  only sometimes. The frame's dash is longer, so a dashed card inside a
-  dashed frame stays distinguishable.
+- Three dash patterns in an architecture diagram, never mixed up:
+  `dash.external` marks a node we do not own; `dash.frame` marks a
+  boundary; `dash.edge` marks an edge taken only sometimes. The frame's
+  dash is longer, so a dashed card inside a dashed frame stays
+  distinguishable. A sequence has three of its own: `dash.lifeline`, the
+  faintest, for a lifeline; `dash.reply` for a reply; `dash.operand`
+  between a fragment's operands. Each has one meaning in the diagram that
+  uses it.
 
 ## Components
 
@@ -530,6 +577,76 @@ its meaning, so like every text inside the drawing a screen reader skips
 it: the SVG is one image, named by its title and description. The spec
 turns it off (`credit: false`), and the drawing is then a line shorter.
 
+### Sequence
+
+A sequence diagram's own parts (docs/features/sequence.md; UML 2.5.1,
+clause 17). They follow the standard where readers know its symbol, in
+archgram's stroke and colours.
+
+**Participant head.** A node card (Node card, Variants, Technology logo),
+unchanged, at the top of its lifeline, drawn once and never again at the
+lifeline's foot. A participant that turns a request away is edged in the
+refusal colour (`refused-card`), as a refusing card is.
+
+**Lifeline** (`lifeline`). A straight vertical line from the middle of
+the head's front card to below the last message, `stroke.card` wide,
+`dash.lifeline`, in `color.frame`: the quietest line in the drawing, a
+guide the messages hang from.
+
+**Message** (`message`, `message-reply`). A horizontal line between two
+lifelines, `stroke.connector` wide, in `color.connector`, its tip
+`arrowhead.gap` short of the receiving lifeline. Its arrowhead, drawn with
+the line, says what kind of message it is (UML 2.5.1, 17.4.4.1); the
+shape, not a colour, tells whether the sender waits:
+
+- a call: solid, ending in a filled arrowhead, `arrowhead.length` back
+  along the line and `arrowhead.width` across, filled in the line's
+  colour;
+- a send that does not wait: solid, ending in the connector's open
+  arrowhead;
+- a reply: `dash.reply`, ending in the open arrowhead.
+
+A message to its own lifeline leaves to the right, `spacing.self-width`
+out, turns down with `rounded.connector` bends and comes back half a row
+lower, its arrowhead on the lifeline.
+
+**Message label** (`message-label`). Above its line, centred between the
+two lifelines, on a patch of the canvas, so a lifeline it passes over
+goes behind its words; a label wider than `label.max-width` wraps onto two
+lines, as an edge's (Connector). A message to itself has its label to the
+right of its loop, after its number.
+
+**Fragment** (`fragment`, `fragment-tag`, `fragment-guard`). A rectangle
+with `rounded.frame` corners, a solid `stroke.frame` line in
+`color.frame`, no fill, round the rows and lifelines its messages take. It
+is solid where a frame is dashed: a frame is a boundary, a fragment a
+stretch of time.
+
+- Its tag: the operator as the spec writes it (`alt`, `opt`, `loop`,
+  `par`), in `typography.frame-label` and `color.text-muted`, in a
+  pentagon at the frame's top left (UML 2.5.1, 17.6.4.3),
+  `spacing.fragment-tag` high, filled with `color.canvas` and edged as
+  the frame, its top left corner following the frame's and its lower
+  right cut.
+- Its operands: divided by `dash.operand` lines across the frame
+  (17.6.4.1).
+- Each guard: its words in square brackets (17.6.4.2), `[else]` for
+  `else`, in `fragment-guard`: the first operand's on the tag's row, after
+  the tag; each other's at its operand's top left, under its line.
+- A fragment nested in another sits inside it, `spacing.fragment-padding`
+  in from its sides; frames never cross.
+
+**Refusal.** A refused message ends in the refusal ✕ (`refusal-mark`),
+`refusal.mark-gap` before its arrowhead, on a patch of the canvas, its
+arrowhead in the refusal colour, and the participant that refuses is
+edged in it (Refusal).
+
+**Numbers.** Where nothing moves, each message's number, counted in time's
+order through every fragment, in a `step-number` pill on its line just
+before its arrowhead (before the ✕ of a refused one), or for a message to
+itself beside its loop. On by default in a sequence (`still: numbers`):
+its order is its meaning.
+
 ## Do's and Don'ts
 
 - Do let the icon say what a thing is and the title say which one.
@@ -545,3 +662,5 @@ turns it off (`credit: false`), and the drawing is then a line shorter.
 - Don't animate for decoration; if the flow does not need it, the diagram
   is still.
 - Don't write a value in this file. A new value is a token first.
+- Do keep a sequence's meaning in its shapes: a filled or open arrowhead,
+  a solid or dashed line, a fragment's tag and guards; never a colour.

@@ -1,0 +1,126 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 648 457.8" width="648" height="457.8" role="img" aria-labelledby="title desc">
+  <title id="title">Sign in</title>
+  <desc id="desc">The browser posts the login to the API, which finds the user in Postgres; with the right password the API returns a session, and otherwise refuses with a 401. 1. Browser calls API: POST /login. 2. API calls Users: find user. 3. Users replies to API: user. If password matches: 4. API replies to Browser: session. Otherwise: 5. API replies to Browser: 401, refused.</desc>
+  <style>
+    :root { --badge: #f1f1f1; --canvas: #fbfbfb; --card: #ffffff; --card-edge: #d4d4d4; --connector: #8f8f8f; --frame: #8f8f8f; --icon-ai: #1f1f1f; --icon-build: #1f1f1f; --icon-client: #1f1f1f; --icon-core: #1f1f1f; --signal-core: #ffffff; --signal-pass: #45a378; --signal-refusal: #880d1e; --text: #1f1f1f; --text-muted: #646464; }
+    @font-face { font-family: "archgram-geist"; font-weight: 400; src: url(data:font/ttf;base64,AAEAAAAKAIAAAwAgT1MvMjyEb9oAAACsAAAAYGNtYXAHrQhzAAABDAAAATRnbHlmPnvV0gAAAkAAAAqMaGVhZDNqgZwAAAzMAAAANmhoZWEMSgmKAAANBAAAACRobXR4SsoHxgAADSgAAACUbG9jYQAAzJAAAA28AAAAmG1heHABgw8zAAAOVAAAACBuYW1lSJhlIQAADnQAAAM6cG9zdP+fADIAABGwAAAAIAAEAkUBkAAFAAACigJYAAAASwKKAlgAAAFeADIBPgAAAAAAAAAAAAAAAKEAAv9QAeR7AAAAAAAAAABWUkNMAMAAIPsCA+3+2QAABEABBiAAAJcAAAAAAhICxgAAACAACgAAAAEAAwABAAAADAAEASgAAABGAEAABQAGACAALwAwADEAMgAzADQANQBPAFAAUwBUAFsAXQBhAGIAYwBkAGUAZgBnAGgAaQBsAG0AbgBvAHAAcgBzAHQAdQB3AHn//wAAACAALwAwADEAMgAzADQANQBPAFAAUwBUAFsAXQBhAGIAYwBkAGUAZgBnAGgAaQBsAG0AbgBvAHAAcgBzAHQAdQB3AHn////h/9P/0//T/9P/0//T/9P/uv+6/7j/uP+y/7H/rv+u/67/rv+u/67/rv+u/67/rP+s/6z/rP+s/6v/q/+r/6v/qv+pAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAUAKAAAAjUCxgADAAYACQAMAA8AADMRIREBExMFERMzExEBIQMoAg3+KtDP/kvRKdH+SwGfzwLG/ToCov7eASIc/boBI/7dAkb9ngEiAAAAAAAAAAEAKP+SAZ8C7gADAAAXATMBKAEnUP7ZbgNc/KQAAAAAAgAy//ACZQLWAA8AGwAABSImJjU0NjYzMhYWFRQGBicyNjU0JiMiBhUUFgFLVn5FRX5WV35FRX5XXGRkXFtkZBBapnJyp1tbpnNyplpUlYmKlpaKiZUAAAAAAAABACgAAAESAsYACQAAMxEjNTMyNjUzEbyUPDsvRAIOSi8//ToAAAAAAQA8AAACLwLWAB4AADM0NjY3PgI1NCYjIgYHJzY2MzIWFRQGBgcGBgchFTwvd2oxPBxHR0tXC1oMiHNueiRVSmBjAwGJS3luOBosMiQ3RU5IBmh8clw2T0QnM2gpVAAAAAAAAAEAMv/wAjMC1gAoAAAFIiYnNxYWMzI2NjU0JiMjNTMyNjU0IyIGByc2NjMyFhUUBxYWFRQGBgEtdoAFWQZZQy5OMF5NODg/U45GRwdaCnpqbHx7RU9DdhBvWAZBOBk5MEdCVDI9cDYvBlBjZ1lyJhNhRERgMgAAAAAAAAACAB4AAAI1AsYACgANAAAhNSE1ATMRMxUjFSUhEQGH/pcBY1xYWP6pAQGaTgHe/ihUmu4BVAAAAAEAPP/wAjUCxgAgAAAFIiYnNxYWMzI2NTQmIyIGByMTIRUhBzY2MzIWFhUUBgYBOHCECFoIV0NLWFdOMVARXC8Bjv7BGhtRLkdsPEByEG9YBjw9VUtLWComAY9U1h4fP29HR28+AAAAAgAt//ACtgLWAA8AGwAABSImJjU0NjYzMhYWFRQGBicyNjU0JiMiBhUUFgFxZZFOTpFlZpFOTpFmbn19bm19fRBZpnNzp1pap3NzpllUl4eHmZmHh5cAAAAAAAACAFwAAAJWAsYACgARAAAzETMyFhUUBiMjEREzMjU0IyNc/3eEhHepqaGhqQLGcmVndP7sAWiHgwAAAAABADf/8AJJAtYALQAABSImJic3FhYzMjY1NCYmJy4CNTQ2NjMyFhYXByYmIyIGFRQWFhceAhUUBgYBUFJ6RwZaC2FVSlMfV1VSYSs5aklOcEIIWglXUEJOH1BLWWktQHAQPm1IBk9WOTchMysVFTJINTxbMztmQQZBUz8zISshExY9UDM+WzEAAAAAAAEADAAAAhwCxgAHAAAzESM1IRUjEendAhDdAnJUVP2OAAAAAAEAXP+SAUwC7gAHAAAFIxEzFSMRMwFM8PCgoG4DXEb9MAAAAAEAD/+SAP8C7gAHAAAXNTMRIzUzEQ+goPBuRgLQRvykAAAAAAIALP/0AhQCHgAgACsAABciJjU0Njc3NCMiBgcnNjYzMhYVFRQzMxUGIyImJycGBicyNjU1BwYGFRQW31JhUFe8fjdADFkPc1pmbBwVDBQuLwYBFGIzUFisNik1DExERE4QI4UxLgdLXXNl2yFKAiUqBSk1SlpCJiAKKSElKQAAAgBQ//QCJwLGABIAHgAABSImJwcjETMVNjYzMhYWFRQGBicyNjU0JiMiBhUUFgFDN1YXA0xUFFQ3RmY4OGZLQ05OQUlTUgwxK1ACxv4hNUR8VVV8RFBqW1xpaVxbagAAAQAs//QCAAIeABsAAAUiJiY1NDY2MzIWFwcmJiMiBhUUFjMyNjcXBgYBH0ptPDxtSlx4DVgJSjZJUlJJNkoJWA14DER9VFR8RV9ZBjU5aVxcaTw8BlhqAAAAAAACACz/9AIDAsYAEgAeAAAFIiYmNTQ2NjMyFhc1MxEjJwYGJzI2NTQmIyIGFRQWAQxFZTY2ZUU1WBZUTAMWWidHS0tHRlNTDER8VVV8RC0p/v06UCsxUGpbXGlpXFtqAAACACz/9AIFAh4AFwAeAAAFIiYmNTQ2NjMyFhYVFSEWFjMyNjcXBgYDISYmIyIGAR9LbTs7a0lFajv+fwVRRTRDDVoVde8BJQZNOz1PDER9VFR8RUF8WRlVVjEoB0dbAUVNSEsAAAAAAAEAPAAAAWQCxgATAAAzESM1MzU0NjMzFSMiBhUVMxUjEYRISERIVE4fH4WFAchKMDtJSiIeKkr+OAAAAAAAAAACACz/XgICAh4AHgAqAAAFIiYnNxYWMzI2NTUGBiMiJiY1NDY2MzIWFzUzERQGAzI2NzYmIyIGFRQWARlVeBFYDD09SE0TVDRDaTs6Z0I4WRJQe3BEUgECVEVGTU+iVEYGJSs6OlYqMkJ0S0xzQjQsVP4SXWkBDl9SUl9fUlJfAAAAAAABAFAAAAH1AsYAEgAAMxEzETY2MzIWFREjETQjIgYVEVBUFVQ3VltUb0BOAsb++TEucFn+qwE9l05K/sQAAAD//wBOAAAApgLHAiYAIwAAAAYAJCIAAAAAAQBQAAAA8wLGAAoAADMiJjURMxEUMzMVuC46VCEuMDQCYv2lIUoAAAEAUAAAAx0CHgAhAAAzETMXNjYzMhYXNjYzMhYVESMRNCMiBhURIxE0JiMiBhURUE0CFE4zPFIREVA6VVpUbzdDVDI7N0QCEl0xODo1NTppYP6rAUORUEf+wwE9R1BQR/7DAAABAFAAAAH1Ah4AFAAAMxEzFzY2MzIWFhURIxE0JiMiBhURUE0CFVc3PU8nVDU8PU8CEl83NDZbOP6rAT1KTU1K/sMAAAIALP/0AhECHgAPABsAAAUiJiY1NDY2MzIWFhUUBgYnMjY1NCYjIgYVFBYBH0luPDxuSUltPDxtSUlRUUlJUlIMRH1UVXxERHxVVH1EUGlcXGlpXFxpAAACAFD/agInAh4AEgAeAAAXETMXNjYzMhYWFRQGBiMiJicVNzI2NTQmIyIGFRQWUE4BGFU2T2UxMWVPNFUVlkVQUEVFUVCWAqhRLi9OfklJfk4sJtzaaF1daGNiYWQAAAABAFAAAAFPAhIACwAAMxEzFzYzMxUjIhURUEoDG2M0M3gCEmJiUIL+wAAAAAEALP/0AdwCHgApAAAFIiYnNxYWMzI2NTQmJicuAjU0NjMyFhYXByYmIyIGFRQWFx4CFRQGARFtcgZYCD9GNjsTODZKVCJpYEZZLgVYBDdBOTYyRk5YI3EMZU4GMDkjJxUcFQoOKjwqR1sxTisGJjosIiclDA0oOypJUQAAAAAAAQA3AAABZgKOABMAACEiJjURIzUzNTMVMxUjERQWMzMVARJIRU5OVI2NICFMQkYBQEp8fEr+wiQcSgAAAQBQ//QB7wISABIAABciJjURMxEUFjMyNjURMxEjNQb+T19UNzk/SFRQLAxrXgFV/sJNSVFHATz97lZiAAAAAAEAFgAAAx0CEgAMAAAzAzMTEzMTEzMDIwMDuqRcfH5afn1cpGp2dgIS/kYBuv5GAbr97gGT/m0AAAAAAAEAFv9qAgMCEgAQAAAXNTMyNjc3IwMzExMzAwYGI2c9HBsHEx3CXJ6XXNcPPDWWShETMgII/kYBuv2rKygAAAAAAAAAAQBQAAAApAISAAMAADMRMxFQVAIS/e4AAQAsAmUAhALHAAMAABM1MxUsWAJlYmIAAAAAAAEAAAABzM33yfClXw889QAPA+gAAAAA5almUwAAAADmQwpm/zj/EAkiBCIAAAAGAAIAAQAAAAAAAQAAA+3+2QAACWD/OP1ECSID6AAAAAAAAAAAAAAAAAAAACUCWAAoAPoAAAHgACgClwAyAYAAKAJrADwCZQAyAmcAHgJyADwC4wAtAooAXAKAADcCKAAMAVsAXAFbAA8CJwAsAlMAUAIiACwCUwAsAjEALAGLADwCUgAsAkUAUAD0AE4BCwBQA20AUAJFAFACPQAsAlMAUAF7AFACCAAsAYgANwI/AFADMwAWAhkAFgD0AFAAAAAsAAAAAAAAAFQAAABUAAAAdAAAANAAAAD4AAABXAAAAdgAAAIQAAACeAAAAtQAAAMQAAADnAAAA8AAAAPkAAAECAAABIgAAAToAAAFRAAABaQAAAYMAAAGTAAABtAAAAcQAAAHKAAAB1AAAAe0AAAH+AAACFAAAAiwAAAI3AAACVwAAAmYAAAJ2AAAChQAAApYAAAKcAAACowAAQAAACUAcgAQAFsABQACACoAVwCNAAAAjQ4MAAQAAQAAAAkAcgADAAEECQAAAJ4AAAADAAEECQABAAoAngADAAEECQACAA4AqAADAAEECQADADAAtgADAAEECQAEABoA5gADAAEECQAFAFYBAAADAAEECQAGABoBVgADAAEECQANASIBcAADAAEECQAOADYCkgBDAG8AcAB5AHIAaQBnAGgAdAAgADIAMAAyADQAIABUAGgAZQAgAEcAZQBpAHMAdAAgAFAAcgBvAGoAZQBjAHQAIABBAHUAdABoAG8AcgBzACAAKABoAHQAdABwAHMAOgAvAC8AZwBpAHQAaAB1AGIALgBjAG8AbQAvAHYAZQByAGMAZQBsAC8AZwBlAGkAcwB0AC0AZgBvAG4AdAApAEcAZQBpAHMAdABSAGUAZwB1AGwAYQByADEALgA4ADAAMAA7AFYAUgBDAEwAOwBHAGUAaQBzAHQALQBSAGUAZwB1AGwAYQByAEcAZQBpAHMAdAAgAFIAZQBnAHUAbABhAHIAVgBlAHIAcwBpAG8AbgAgADEALgA4ADAAMAA7ACAAdAB0AGYAYQB1AHQAbwBoAGkAbgB0ACAAKAB2ADEALgA4AC4ANAAuADEANgAtAGUAYgA2ADQAKQBHAGUAaQBzAHQALQBSAGUAZwB1AGwAYQByAFQAaABpAHMAIABGAG8AbgB0ACAAUwBvAGYAdAB3AGEAcgBlACAAaQBzACAAbABpAGMAZQBuAHMAZQBkACAAdQBuAGQAZQByACAAdABoAGUAIABTAEkATAAgAE8AcABlAG4AIABGAG8AbgB0ACAATABpAGMAZQBuAHMAZQAsACAAVgBlAHIAcwBpAG8AbgAgADEALgAxAC4AIABUAGgAaQBzACAAbABpAGMAZQBuAHMAZQAgAGkAcwAgAGEAdgBhAGkAbABhAGIAbABlACAAdwBpAHQAaAAgAGEAIABGAEEAUQAgAGEAdAA6ACAAaAB0AHQAcABzADoALwAvAG8AcABlAG4AZgBvAG4AdABsAGkAYwBlAG4AcwBlAC4AbwByAGcAaAB0AHQAcABzADoALwAvAG8AcABlAG4AZgBvAG4AdABsAGkAYwBlAG4AcwBlAC4AbwByAGcAAAADAAAAAAAA/5wAMgAAAAAAAAAAAAAAAAAAAAAAAAAA) format("truetype"); }
+    @font-face { font-family: "archgram-geist"; font-weight: 500; src: url(data:font/ttf;base64,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AA0BIgF4AAMAAQQJAA4ANgKaAEMAbwBwAHkAcgBpAGcAaAB0ACAAMgAwADIANAAgAFQAaABlACAARwBlAGkAcwB0ACAAUAByAG8AagBlAGMAdAAgAEEAdQB0AGgAbwByAHMAIAAoAGgAdAB0AHAAcwA6AC8ALwBnAGkAdABoAHUAYgAuAGMAbwBtAC8AdgBlAHIAYwBlAGwALwBnAGUAaQBzAHQALQBmAG8AbgB0ACkARwBlAGkAcwB0ACAATQBlAGQAaQB1AG0AUgBlAGcAdQBsAGEAcgAxAC4AOAAwADAAOwBWAFIAQwBMADsARwBlAGkAcwB0AC0ATQBlAGQAaQB1AG0ARwBlAGkAcwB0ACAATQBlAGQAaQB1AG0AVgBlAHIAcwBpAG8AbgAgADEALgA4ADAAMAA7ACAAdAB0AGYAYQB1AHQAbwBoAGkAbgB0ACAAKAB2ADEALgA4AC4ANAAuADEANgAtAGUAYgA2ADQAKQBHAGUAaQBzAHQALQBNAGUAZABpAHUAbQBUAGgAaQBzACAARgBvAG4AdAAgAFMAbwBmAHQAdwBhAHIAZQAgAGkAcwAgAGwAaQBjAGUAbgBzAGUAZAAgAHUAbgBkAGUAcgAgAHQAaABlACAAUwBJAEwAIABPAHAAZQBuACAARgBvAG4AdAAgAEwAaQBjAGUAbgBzAGUALAAgAFYAZQByAHMAaQBvAG4AIAAxAC4AMQAuACAAVABoAGkAcwAgAGwAaQBjAGUAbgBzAGUAIABpAHMAIABhAHYAYQBpAGwAYQBiAGwAZQAgAHcAaQB0AGgAIABhACAARgBBAFEAIABhAHQAOgAgAGgAdAB0AHAAcwA6AC8ALwBvAHAAZQBuAGYAbwBuAHQAbABpAGMAZQBuAHMAZQAuAG8AcgBnAGgAdAB0AHAAcwA6AC8ALwBvAHAAZQBuAGYAbwBuAHQAbABpAGMAZQBuAHMAZQAuAG8AcgBnAAAAAwAAAAAAAP+cADIAAAAAAAAAAAAAAAAAAAAAAAAAAA==) format("truetype"); }
+    text { font-family: "archgram-geist", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-kerning: none; }
+    .title { font-size: 14px; font-weight: 500; fill: var(--text); }
+    .sub { font-size: 12px; font-weight: 400; fill: var(--text-muted); }
+    .canvas { fill: var(--canvas); }
+    .card { fill: var(--card); stroke: var(--card-edge); stroke-width: 1; }
+    .card.external { fill: var(--canvas); stroke: var(--connector); stroke-dasharray: 5 4; }
+    .badge { fill: var(--badge); }
+    .logo { fill: var(--text-muted); }
+    .logo-icon.core { fill: var(--icon-core); }
+    .logo-icon.ai { fill: var(--icon-ai); }
+    .logo-icon.build { fill: var(--icon-build); }
+    .logo-icon.client { fill: var(--icon-client); }
+    .logo-chip { fill: var(--card); stroke: var(--card-edge); stroke-width: 1; }
+    .frame { fill: none; stroke: var(--frame); stroke-width: 1.1; stroke-dasharray: 6 5; }
+    .frame-label { font-size: 11px; font-weight: 500; letter-spacing: 0.88px; fill: var(--text-muted); }
+    .label-patch { fill: var(--canvas); }
+    .edge { fill: none; stroke: var(--connector); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .edge.dashed { stroke-dasharray: 4 4; }
+    .arrowhead { fill: none; stroke: var(--connector); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .icon { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+    .icon.core { stroke: var(--icon-core); }
+    .icon.ai { stroke: var(--icon-ai); }
+    .icon.build { stroke: var(--icon-build); }
+    .icon.client { stroke: var(--icon-client); }
+    .lifeline { fill: none; stroke: var(--frame); stroke-width: 1; stroke-dasharray: 2 5; }
+    .edge.reply { stroke-dasharray: 4 4; }
+    .arrowhead.filled { fill: var(--connector); }
+    .fragment { fill: none; stroke: var(--frame); stroke-width: 1.1; }
+    .fragment-tag { fill: var(--canvas); stroke: var(--frame); stroke-width: 1.1; stroke-linejoin: round; }
+    .fragment-op { font-size: 11px; font-weight: 500; letter-spacing: 0.88px; fill: var(--text-muted); }
+    .operand { fill: none; stroke: var(--frame); stroke-width: 1.1; stroke-dasharray: 6 5; }
+    .step { fill: var(--card); stroke: var(--connector); stroke-width: 1; }
+    .step-text { font-size: 12px; font-weight: 400; fill: var(--text); }
+    .refused-mark { fill: none; stroke: var(--signal-refusal); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .refused-patch { fill: none; stroke: var(--canvas); stroke-width: 6; }
+    .refused-head { fill: none; stroke: var(--signal-refusal); stroke-width: 1; }
+    .credit-line { opacity: 0.6; }
+    .credit { font-size: 12px; font-weight: 400; fill: var(--connector); }
+    .credit-mark { fill: var(--connector); }
+    .credit-glyph { fill: none; stroke: var(--canvas); stroke-width: 5.5; stroke-linecap: round; stroke-linejoin: round; }
+  </style>
+  <rect class="canvas" width="648" height="457.8" rx="16"/>
+  <g class="lifelines">
+    <path class="lifeline" d="M116.5 80.5V391.9"/>
+    <path class="lifeline" d="M324.5 80.5V391.9"/>
+    <path class="lifeline" d="M532.5 80.5V391.9"/>
+  </g>
+  <g class="fragments">
+    <rect class="fragment" x="94.5" y="231.7" width="252" height="150.2" rx="14"/>
+    <path class="operand" d="M94.5 302.1H346.5"/>
+    <path class="fragment-tag" d="M94.5 241.7A10 10 0 0 1 104.5 231.7H128.97V245.7L122.97 251.7H94.5Z"/>
+    <text class="fragment-op" x="100.5" y="245.61">alt</text>
+    <text class="sub" x="140.97" y="245.96">[password matches]</text>
+    <text class="sub" x="100.5" y="317.56">[else]</text>
+  </g>
+  <g class="edges">
+    <path class="edge" d="M116 118.4 L321 118.4"/>
+    <path class="arrowhead filled" d="M314 124.4L321 118.4L314 112.4Z"/>
+    <path class="edge" d="M324 164.8 L529 164.8"/>
+    <path class="arrowhead filled" d="M522 170.8L529 164.8L522 158.8Z"/>
+    <path class="edge reply" d="M532 211.2 L327 211.2"/>
+    <path class="arrowhead" d="M334 205.2L327 211.2L334 217.2"/>
+    <path class="edge reply" d="M324 281.6 L119 281.6"/>
+    <path class="arrowhead" d="M126 275.6L119 281.6L126 287.6"/>
+    <path class="edge reply" d="M324 350.4 L119 350.4"/>
+    <path class="refused-mark" d="M126 344.4L119 350.4L126 356.4"/>
+    <rect class="label-patch" x="182.08" y="92.5" width="76.84" height="14.4" rx="5"/>
+    <text class="sub" x="220.5" y="103.96" text-anchor="middle">POST /login</text>
+    <rect class="label-patch" x="398.9" y="138.9" width="59.2" height="14.4" rx="5"/>
+    <text class="sub" x="428.5" y="150.36" text-anchor="middle">find user</text>
+    <rect class="label-patch" x="411.29" y="185.3" width="34.42" height="14.4" rx="5"/>
+    <text class="sub" x="428.5" y="196.76" text-anchor="middle">user</text>
+    <rect class="label-patch" x="194.39" y="255.7" width="52.23" height="14.4" rx="5"/>
+    <text class="sub" x="220.5" y="267.16" text-anchor="middle">session</text>
+    <rect class="label-patch" x="205.53" y="324.5" width="29.94" height="14.4" rx="5"/>
+    <text class="sub" x="220.5" y="335.96" text-anchor="middle">401</text>
+  </g>
+  <g class="refusals">
+    <path class="refused-patch" d="M132 345.9L141 354.9M141 345.9L132 354.9"/>
+    <path class="refused-mark" d="M132 345.9L141 354.9M141 345.9L132 354.9"/>
+  </g>
+  <g data-node="browser">
+    <rect class="card" x="24.5" y="24.5" width="184" height="56" rx="10"/>
+    <rect class="badge" x="34.5" y="34.5" width="36" height="36" rx="8"/>
+    <g class="icon client" transform="translate(40.5 40.5)" stroke-width="1.7"><path d="M3.5 9l17 0"/><path d="M11.75 5.81V6M12 6c0 .14-.11.25-.25.25-.14 0-.25-.11-.25-.25 0-.14.11-.25.25-.25.14 0 .25.11.25.25z"/><path d="M8.75 5.81V6M9 6c0 .14-.11.25-.25.25-.14 0-.25-.11-.25-.25 0-.14.11-.25.25-.25.14 0 .25.11.25.25z"/><path d="M5.75 5.81V6M6 6c0 .14-.11.25-.25.25-.14 0-.25-.11-.25-.25 0-.14.11-.25.25-.25.14 0 .25.11.25.25z"/><path d="M3 12C3 7.76 3 5.64 4.32 4.32 5.64 3 7.76 3 12 3c4.24 0 6.36 0 7.68 1.32C21 5.64 21 7.76 21 12c0 4.24 0 6.36-1.32 7.68C18.36 21 16.24 21 12 21c-4.24 0-6.36 0-7.68-1.32C3 18.36 3 16.24 3 12z"/></g>
+    <text class="title" x="80.5" y="57.47">Browser</text>
+  </g>
+  <g data-node="api">
+    <rect class="card" x="232.5" y="24.5" width="184" height="56" rx="10"/>
+    <rect class="badge" x="242.5" y="34.5" width="36" height="36" rx="8"/>
+    <g class="icon core" transform="translate(248.5 40.5)" stroke-width="1.7"><path d="M2.5 12c0-4.48 0-6.72 1.39-8.11C5.28 2.5 7.52 2.5 12 2.5c4.48 0 6.72 0 8.11 1.39C21.5 5.28 21.5 7.52 21.5 12c0 4.48 0 6.72-1.39 8.11C18.72 21.5 16.48 21.5 12 21.5c-4.48 0-6.72 0-8.11-1.39C2.5 18.72 2.5 16.48 2.5 12z"/><path d="M9.5 9.5L7.97 10.82C7.32 11.38 7 11.65 7 12c0 .35.32.62.97 1.18L9.5 14.5"/><path d="M14.5 9.5l1.53 1.32c.65.56.97.83.97 1.18 0 .35-.32.62-.97 1.18L14.5 14.5"/></g>
+    <text class="title" x="288.5" y="57.47">API</text>
+  </g>
+  <g data-node="db">
+    <rect class="card" x="440.5" y="24.5" width="184" height="56" rx="10"/>
+    <rect class="badge" x="450.5" y="34.5" width="36" height="36" rx="8"/>
+    <g class="icon core" transform="translate(456.5 40.5)" stroke-width="1.7"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M7 10.84c.6.18 1.27.33 2 .44"/><path d="M20 12c0 1.66-3.58 3-8 3-4.42 0-8-1.34-8-3"/><path d="M7 17.84c.6.18 1.27.33 2 .44"/><path d="M20 5V19c0 1.66-3.58 3-8 3-4.42 0-8-1.34-8-3V5"/></g>
+    <text class="title" x="496.5" y="57.47">Users</text>
+  </g>
+  <rect class="refused-head" x="232.5" y="24.5" width="184" height="56" rx="10"/>
+  <g class="steps">
+    <rect class="step" x="292.5" y="110.9" width="15" height="15" rx="7.5"/>
+    <text class="step-text" x="300" y="122.66" text-anchor="middle">1</text>
+    <rect class="step" x="500.5" y="157.3" width="15" height="15" rx="7.5"/>
+    <text class="step-text" x="508" y="169.06" text-anchor="middle">2</text>
+    <rect class="step" x="340.5" y="203.7" width="15" height="15" rx="7.5"/>
+    <text class="step-text" x="348" y="215.46" text-anchor="middle">3</text>
+    <rect class="step" x="132.5" y="274.1" width="15" height="15" rx="7.5"/>
+    <text class="step-text" x="140" y="285.86" text-anchor="middle">4</text>
+    <rect class="step" x="150.5" y="342.9" width="15" height="15" rx="7.5"/>
+    <text class="step-text" x="158" y="354.66" text-anchor="middle">5</text>
+  </g>
+  <g class="credit-line">
+    <text class="credit" x="539.42" y="431.36">by</text>
+    <path class="credit-mark" transform="translate(556 421.1) scale(0.19)" d="M15 0H49A15 15 0 0 1 64 15V49A15 15 0 0 1 49 64H15A15 15 0 0 1 0 49V15A15 15 0 0 1 15 0Z"/>
+    <path class="credit-glyph" transform="translate(556 421.1) scale(0.19)" d="M16 19.5H31A9 9 0 0 1 40 28.5V43.5M32 36.5L40 44.5L48 36.5"/>
+    <text class="credit" x="571" y="431.36">archgram</text>
+  </g>
+</svg>

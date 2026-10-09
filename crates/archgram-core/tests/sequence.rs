@@ -347,3 +347,171 @@ fn a_source_in_a_sequence_keeps_its_form() {
         "{e}"
     );
 }
+
+// Drawing: the layout keeps a sequence readable, and the SVG says what
+// the drawing shows.
+
+use archgram_core::geometry::Rect;
+use archgram_core::layout::sequence::{Sort, place};
+use archgram_core::logos::NoLogos;
+use archgram_core::render::Options;
+
+fn example(name: &str) -> String {
+    let path = format!("{}/../../examples/{name}.json", env!("CARGO_MANIFEST_DIR"));
+    std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("{path}: {e}"))
+}
+
+fn read(name: &str) -> archgram_core::sequence::Sequence {
+    match parse(&example(name)) {
+        Ok(Diagram::Sequence(seq)) => seq,
+        other => panic!("{name}: {other:?}"),
+    }
+}
+
+/// Whether `inner` lies within `outer`.
+fn within(inner: Rect, outer: Rect) -> bool {
+    inner.x >= outer.x
+        && inner.y >= outer.y
+        && inner.right() <= outer.right()
+        && inner.bottom() <= outer.bottom()
+}
+
+#[test]
+fn messages_run_down_the_page_one_row_each() {
+    for name in ["sequence-sign-in", "sequence-oauth"] {
+        let layout = place(&read(name), &NoLogos);
+        let ys: Vec<f64> = layout.messages.iter().map(|m| m.path[0].y).collect();
+        assert!(ys.windows(2).all(|w| w[0] < w[1]), "{name}: {ys:?}");
+        let numbers: Vec<u32> = layout.messages.iter().map(|m| m.number).collect();
+        let last = u32::try_from(numbers.len()).expect("a few messages");
+        assert_eq!(numbers, (1..=last).collect::<Vec<_>>());
+        let (top, bottom) = layout.lifeline_span;
+        assert!(ys.iter().all(|&y| y > top && y < bottom), "{name}");
+    }
+}
+
+#[test]
+fn labels_pills_and_heads_never_overlap() {
+    for name in ["sequence-sign-in", "sequence-oauth"] {
+        let layout = place(&read(name), &NoLogos);
+        let mut boxes: Vec<(String, Rect)> = layout
+            .heads
+            .iter()
+            .enumerate()
+            .map(|(i, &r)| (format!("head {i}"), r))
+            .collect();
+        for m in &layout.messages {
+            if let Some((_, r)) = &m.label {
+                boxes.push((format!("label {}", m.number), *r));
+            }
+            if let Some(p) = m.pill {
+                boxes.push((format!("pill {}", m.number), p));
+            }
+        }
+        for (i, (a, ra)) in boxes.iter().enumerate() {
+            for (b, rb) in &boxes[i + 1..] {
+                assert!(!ra.overlaps(rb), "{name}: {a} {ra:?} overlaps {b} {rb:?}");
+            }
+        }
+    }
+}
+
+/// A fragment's frame holds its tag, its guards, every message in it and
+/// every fragment nested in it.
+#[test]
+fn a_fragment_holds_what_it_frames() {
+    let layout = place(&read("sequence-oauth"), &NoLogos);
+    assert_eq!(layout.fragments.len(), 3, "par, loop and the alt inside it");
+    for f in &layout.fragments {
+        assert!(within(f.tag, f.frame), "{f:?}");
+        for (_, g) in &f.guards {
+            assert!(within(*g, f.frame), "{f:?}");
+        }
+        for m in &layout.messages {
+            let inside = m
+                .path
+                .iter()
+                .all(|p| p.y > f.frame.y && p.y < f.frame.bottom());
+            if inside {
+                for p in &m.path {
+                    assert!(
+                        p.x >= f.frame.x && p.x <= f.frame.right(),
+                        "message {} leaves {f:?}",
+                        m.number
+                    );
+                }
+            }
+        }
+    }
+    let (looped, alt) = (&layout.fragments[1], &layout.fragments[2]);
+    assert!(
+        within(alt.frame, looped.frame),
+        "the alt sits inside the loop"
+    );
+}
+
+#[test]
+fn a_call_a_send_and_a_reply_are_drawn_as_uml_draws_them() {
+    let svg = archgram_core::build(&example("sequence-oauth"), Options::default()).expect("draws");
+    let layout = place(&read("sequence-oauth"), &NoLogos);
+    let calls = layout
+        .messages
+        .iter()
+        .filter(|m| m.sort == Sort::Call && !m.refused)
+        .count();
+    let replies = layout
+        .messages
+        .iter()
+        .filter(|m| m.sort == Sort::Reply)
+        .count();
+    assert_eq!(svg.matches(r#"class="arrowhead filled""#).count(), calls);
+    assert_eq!(svg.matches(r#"class="edge reply""#).count(), replies);
+    assert_eq!(
+        svg.matches(r#"class="refused-mark""#).count(),
+        2,
+        "the ✕ and its arrowhead"
+    );
+    assert!(svg.contains(r#"class="refused-head""#));
+    for op in ["alt", "loop", "par"] {
+        assert!(svg.contains(&format!(">{op}</text>")), "{op}");
+    }
+    assert!(svg.contains("[for each page of the profile]"));
+}
+
+#[test]
+fn a_screen_reader_hears_each_message_in_order() {
+    let svg =
+        archgram_core::build(&example("sequence-sign-in"), Options::default()).expect("draws");
+    let desc = svg
+        .split("<desc id=\"desc\">")
+        .nth(1)
+        .and_then(|d| d.split("</desc>").next())
+        .expect("a description");
+    assert!(
+        desc.ends_with(
+            "1. Browser calls API: POST /login. 2. API calls Users: find user. 3. Users replies to API: user. If password matches: 4. API replies to Browser: session. Otherwise: 5. API replies to Browser: 401, refused."
+        ),
+        "{desc}"
+    );
+}
+
+#[test]
+fn a_sequence_draws_the_same_bytes_every_time() {
+    let spec = example("sequence-oauth");
+    let first = archgram_core::build(&spec, Options::default()).unwrap();
+    for _ in 0..3 {
+        assert_eq!(
+            archgram_core::build(&spec, Options::default()).unwrap(),
+            first
+        );
+    }
+}
+
+/// `still: none` leaves the numbers out.
+#[test]
+fn still_none_draws_no_numbers() {
+    let spec =
+        example("sequence-sign-in").replacen("\"title\"", "\"still\": \"none\", \"title\"", 1);
+    let svg = archgram_core::build(&spec, Options::default()).unwrap();
+    assert!(!svg.contains("class=\"step\""));
+}

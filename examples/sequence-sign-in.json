@@ -1,0 +1,20 @@
+{
+  "archgram": 1,
+  "diagram": "sequence",
+  "title": "Sign in",
+  "description": "The browser posts the login to the API, which finds the user in Postgres; with the right password the API returns a session, and otherwise refuses with a 401.",
+  "participants": [
+    { "id": "browser", "kind": "browser", "label": "Browser" },
+    { "id": "api", "kind": "service", "label": "API", "tech": "nodedotjs" },
+    { "id": "db", "kind": "database", "label": "Users", "tech": "postgresql" }
+  ],
+  "messages": [
+    { "from": "browser", "to": "api", "label": "POST /login" },
+    { "from": "api", "to": "db", "label": "find user" },
+    { "reply": "db", "label": "user" },
+    { "alt": [
+      { "when": "password matches", "messages": [ { "reply": "api", "label": "session" } ] },
+      { "when": "else", "messages": [ { "reply": "api", "label": "401", "refused": true } ] }
+    ] }
+  ]
+}

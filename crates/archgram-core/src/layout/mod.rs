@@ -35,6 +35,7 @@ mod pack;
 mod position;
 mod rank;
 mod route;
+pub mod sequence;
 
 use crate::error::SpecError;
 use crate::geometry::{Point, Rect, Size};
