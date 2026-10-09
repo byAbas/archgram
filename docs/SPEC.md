@@ -282,6 +282,7 @@ messages:
 | `participants` | yes | list | | At least two |
 | `messages` | yes | list | | At least one; their order is time's |
 | `still` | no | `numbers`, `none` | `numbers` | Where nothing moves, each message's number by its line, or nothing more: in a sequence the order is the meaning |
+| `look` | no | `cards`, `avatars` | `cards` | How it is drawn: `cards`, each head a card and a bar on a lifeline while its participant answers a call; `avatars`, each head a circle and no bars (How a sequence is drawn) |
 | `shownWidth`, `card`, `logo`, `palette`, `signal`, `border`, `wait`, `glow`, `credit` | no | | | As in Top level |
 
 `nodes`, `frames`, `edges`, `flows`, `hints`, `direction` and `legend`
@@ -296,7 +297,8 @@ order is the list's.
 
 A participant has a node's fields, `id`, `kind`, `label`, `note`, `tech`,
 `variant` and `source`, with the same values (Nodes). Participants are
-drawn left to right in the order listed, each a card over its lifeline.
+drawn left to right in the order listed, each at the head of its own
+column.
 
 ### Messages
 
@@ -324,7 +326,8 @@ A reply has `reply` in place of `from`:
 | `label`, `refused`, `source` | no | As a message's |
 
 A call is drawn as a solid line with a filled arrowhead, a send that does
-not wait with an open one, and a reply as a dashed line.
+not wait with an open one, and a reply as a dashed line, each with its
+label in a pill on the line.
 
 ### Fragments
 
@@ -358,10 +361,10 @@ own, so fragments nest.
 An operand may also name the code that makes its choice, such as the
 `if` its guard stands for, in `source` (Sources).
 
-A guard (`when`) is a few words, drawn in square brackets above the
-operand's first message. A fragment is drawn as a frame round the
-messages it holds, its operator at its top left, its operands divided by
-dashed lines.
+A guard (`when`) is a few words. A fragment is drawn as a frame round
+the messages it holds, its operator and its first guard in a pill on its
+top edge, `alt · cached`; its operands are divided by dashed lines, each
+later guard in a pill on its line, `else`.
 
 ### Refused messages
 
@@ -374,8 +377,24 @@ not yet answered to where the request began, as a refused flow does
 ### How a sequence is drawn
 
 `archgram build` draws a sequence top to bottom, as time runs: the heads
-in a row, a lifeline down from each, one row for each message in the
-list's order, and each fragment framed round its messages. This version
+in a row, each participant's column a band down from its head, which is
+its lifeline, one row for each message in the list's order, and each
+fragment framed round its messages.
+
+`look` picks one of two drawings of the same columns and rows:
+
+| `look` | Heads | While a participant answers a call | Fragments |
+|---|---|---|---|
+| `cards` | archgram's cards | A bar on its lifeline, from the call to its reply (UML's execution specification) | A solid frame, its pill at the left |
+| `avatars` | Circles, the logo in a badge on the edge | Nothing | A dashed frame, its pill in the middle |
+
+A call never answered keeps its bar to the last message its receiver
+sends before its caller calls it again, or half a row for a call to
+itself; a send, and a refused call, start none; a call to a participant whose
+bar is already drawn, a call to itself among them, draws a second bar
+over the first, moved to its right.
+
+This version
 draws it still, each message numbered by its order (`still: numbers`); a
 screen reader hears each message in words, in order, a guard before its
 messages. Moving the messages in turn, as flows move, comes in a later

@@ -2,7 +2,7 @@
 
 | Field   | Value      |
 |---------|------------|
-| Version | 0.2        |
+| Version | 0.3        |
 | Date    | 2026-10-09 |
 | Status  | Draft      |
 | Release | Planned, the first of the new kinds |
@@ -52,9 +52,11 @@ OMG Unified Modeling Language 2.5.1, clause 17, Interactions
 - **Guards.** "Shown in square brackets covering the lifeline where the
   first event occurrence will occur", `[else]` among them; omitted, true
   is assumed (17.6.4.2).
+- **Activations.** "ExecutionSpecifications are represented as thin
+  rectangles (gray or white) on the lifeline", and overlapping ones "by
+  overlapping rectangles" (17.2.4.4, Figure 17.2).
 
-Left out: activation bars (ExecutionSpecification, 17.2.4.4; later),
-creating and deleting lifelines, the other eight operators, interaction
+Left out: creating and deleting lifelines, the other eight operators, interaction
 uses, gates, lost and found messages, timing constraints, and the
 communication, interaction overview and timing diagrams.
 
@@ -101,6 +103,8 @@ messages:
   more operands.
 - `refused: true` marks a message that turns the request away, archgram's
   addition to UML (diagram-kinds.md, Decided 4).
+- `look` picks how it is drawn: `cards`, the default, or `avatars`
+  (Looks, below).
 - The fields of an architecture spec that do not apply are errors here:
   `nodes`, `edges`, `frames`, `flows`, `hints`, `direction`. `shownWidth`,
   `palette`, `logo`, `signal`, `glow`, `still`, `credit` apply as there.
@@ -134,20 +138,36 @@ message does.
 ### Layout
 
 - Participants are columns, left to right in the order the spec lists
-  them; their heads in one row at the top, their lifelines down from them.
+  them; their heads in one row at the top. Each column is a band from its
+  head to the foot of the diagram, every other band tinted: the band is
+  the lifeline (Looks).
 - Each message is a row of its own, in the list's order, so nothing
   happens at the same height except inside a `par`, whose operands still
   take rows of their own. Time runs down the page; there is no
   `direction`.
 - The space between two columns is as wide as the widest label between
-  them needs, measured as archgram measures every label, a long label on
-  two lines (DESIGN.md, Components: Edge label).
+  them needs, with the pill around it, measured as archgram measures
+  every label, a long label on two lines (DESIGN.md, Components: Edge
+  label).
 - A message to the same participant is a short loop out to the right of
   its lifeline and back half a row lower, so it takes a row and a half.
 - A fragment's frame covers the columns of the lifelines its messages
-  touch and the rows they take, with its operator in a pentagon at its
-  top left, its operands divided by dashed lines and each guard in square
-  brackets under that line; nested frames sit inside with a margin.
+  touch and the rows they take. Its operator and its first guard are one
+  pill on its top edge, `alt · password matches`; its operands are
+  divided by dashed lines, each later guard a pill on its line, `else`.
+  The pill leaves a row's room between it and the messages above and
+  below. Nested frames sit inside with a margin.
+- In `cards`, a call's receiver is active from the call to the reply that
+  answers it, a thin bar on its lifeline (17.2.4.4):
+  - when an `alt` answers a call in each of its operands, the bar runs
+    to the last of those replies;
+  - a call never answered keeps its bar to the last message its receiver
+    sends before its caller calls it again, and at least half a row; a
+    call to itself never answered, half a row;
+  - a send and a refused call start no bar, since nothing waits on them;
+  - a call to a participant already active, a call to itself among them,
+    draws a second bar over the first, moved to its right, as UML's
+    overlapping rectangles (Figure 17.2).
 - Width is held to where the diagram is shown, as in architecture
   ([shown-width.md](shown-width.md)): `build` warns when the participants
   need more width than keeps the text readable, and says to drop or merge
@@ -155,16 +175,44 @@ message does.
 
 ### Rendering
 
-- A participant's head is archgram's card, with its icon and logo, at the
-  top of its lifeline, which is dashed.
+- A participant's head is drawn at the top of its band, as its look
+  draws it (Looks).
 - A call is a solid line with a filled arrowhead; a send that does not
   wait, an open arrowhead; a reply, a dashed line with an open arrowhead
   (UML 17.4.4.1; Decided 8). The
-  label sits above its line, centred between the two lifelines.
+  label sits in a pill on its line, centred between the two lifelines; a
+  reply's pill is quieter than a call's. A message to itself keeps its
+  label beside its loop.
 - A refused message ends in a ✕ at the participant that refuses, in the
-  refusal colour, as a refused flow does (PRD §6.4).
+  refusal colour, as a refused flow does (PRD §6.4); its pill is drawn in
+  that colour too.
 - Monochrome, both themes, the embedded font, one self-contained SVG, as
   every kind.
+
+### Looks
+
+`look` picks one of two. Both draw the same spec into the same columns,
+rows, frames and order; only these differ. Samples of both, in both
+themes, are in [docs/samples/sequence/](../samples/sequence/).
+
+| | `cards`, the default | `avatars` |
+|---|---|---|
+| Head | archgram's card: the icon in its badge, the label beside it, the logo in the corner | A circle with the icon, the logo in a small badge on its edge, the label under it |
+| Activation | A thin bar on the lifeline, from a call to its reply | None |
+| Fragment frame | Solid, rounded | Dashed, rounded |
+| Operator and guard | A pill on the frame's top edge, at the left | A pill at the middle of the frame's top edge |
+
+An external participant's head has a dashed edge in both, as an external
+node's card does.
+
+Where both looks part from UML's notation, as archgram's own drawing of
+its symbols (diagram-kinds.md, Decided 5):
+
+- The lifeline is a band, not a line (17.3.4.1 allows a dashed one).
+- The operator's pentagon (17.6.4.3) is a pill, and the guard's square
+  brackets (17.6.4.2) are left out: the pill bounds the guard. The
+  operator's name stays, so `alt`, `opt`, `loop` and `par` read as UML's.
+- A message's label sits in a pill on its line.
 
 ### Animation
 
@@ -174,7 +222,7 @@ message does.
 - A `par`'s operands start together and each keeps its own order.
 - An `alt`'s operands play one after another, each its guard lit, as
   flows play in turn in architecture; an `opt` plays its operand.
-- A `loop` plays its operand once, its pentagon and guard lit; archgram
+- A `loop` plays its operand once, its pill lit; archgram
   does not know how many times it repeats and does not pretend to.
 - A refused message: the ✕ lands, and the refusal travels back along the
   calls not yet answered to where the request began; what follows plays
@@ -213,7 +261,7 @@ message does.
 
 ## Not in this
 
-- Activation bars, to be added later (Decided 1).
+- Other looks, or a look for one participant only.
 - Lifelines created or destroyed during the conversation.
 - The other UML operators, interaction uses and gates.
 - Reading an architecture spec's nodes as participants.
@@ -222,6 +270,8 @@ message does.
 
 - A spec without `diagram` draws the same bytes as before; the goldens do
   not change.
+- Each look has its goldens, and the same spec draws the same columns and
+  rows in both.
 - The OAuth request draws each of its 8 messages on its own line, in
   order, numbered in the still image.
 - On a test set: no two labels overlap, no label crosses a lifeline's
@@ -237,7 +287,8 @@ message does.
 
 ## Decided (2026-10-09)
 
-1. No activation bars in the first version; they may come later.
+1. Activation bars in the `cards` look, from a call to its reply, none in
+   `avatars` (Decided 9). Until 0.3: none in the first version.
 2. All four fragments, `alt`, `opt`, `loop` and `par`.
 3. The spec's shape above: `participants`, and `messages` in time's
    order, fragments as items holding operands; `reply: <sender>`;
@@ -261,6 +312,11 @@ message does.
    send's and a reply's open, a reply's line dashed. The shape, not a
    colour, says whether a message waits.
 
+9. Two looks, chosen from samples ([docs/samples/sequence/](../samples/sequence/)):
+   `look: cards | avatars`, `cards` by default, its activation bars
+   UML's (17.2.4.4). The field is `look`, not `style`, which an edge
+   already uses for its line (docs/SPEC.md, Edges).
+
 ## Open questions
 
 None.
@@ -271,3 +327,4 @@ None.
 |---------|------------|--------|
 | 0.1     | 2026-10-09 | First draft, from #126 and UML 2.5.1 clause 17: lifelines, calls, sends and replies, `alt`, `opt`, `loop`, `par`; `diagram: sequence` with `participants` and `messages`; a refused message; no activation bars yet; split past about 15 messages, to be measured; sources as in architecture. |
 | 0.2     | 2026-10-09 | The heads drawn once, at the top; no rule of its own for an `alt` that refuses throughout; UML's arrowheads; the validation as `check` holds it: two participants and a message at least, one form per item, a refused call waiting for no reply, the calls waiting through a fragment; an operand may name its source. |
+| 0.3     | 2026-10-09 | Two looks, `cards` and `avatars`, from samples; each column a band; labels and guards in pills, the operator named; activation bars in `cards`, from a call to its reply. |

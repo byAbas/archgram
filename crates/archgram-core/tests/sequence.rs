@@ -385,15 +385,16 @@ fn messages_run_down_the_page_one_row_each() {
         let numbers: Vec<u32> = layout.messages.iter().map(|m| m.number).collect();
         let last = u32::try_from(numbers.len()).expect("a few messages");
         assert_eq!(numbers, (1..=last).collect::<Vec<_>>());
-        let (top, bottom) = layout.lifeline_span;
+        let top = layout.heads.iter().map(Rect::bottom).fold(0.0, f64::max);
+        let bottom = layout.bands[0].bottom();
         assert!(ys.iter().all(|&y| y > top && y < bottom), "{name}");
     }
 }
 
 #[test]
-fn labels_pills_and_heads_never_overlap() {
-    for name in ["sequence-sign-in", "sequence-oauth"] {
-        let layout = place(&read(name), &NoLogos);
+fn pills_and_heads_never_overlap() {
+    for (name, json) in cases_in_both_looks() {
+        let layout = laid(&json);
         let mut boxes: Vec<(String, Rect)> = layout
             .heads
             .iter()
@@ -401,11 +402,8 @@ fn labels_pills_and_heads_never_overlap() {
             .map(|(i, &r)| (format!("head {i}"), r))
             .collect();
         for m in &layout.messages {
-            if let Some((_, r)) = &m.label {
-                boxes.push((format!("label {}", m.number), *r));
-            }
-            if let Some(p) = m.pill {
-                boxes.push((format!("pill {}", m.number), p));
+            if let Some(p) = &m.pill {
+                boxes.push((format!("pill {}", m.number), p.rect));
             }
         }
         for (i, (a, ra)) in boxes.iter().enumerate() {
@@ -416,16 +414,23 @@ fn labels_pills_and_heads_never_overlap() {
     }
 }
 
-/// A fragment's frame holds its tag, its guards, every message in it and
-/// every fragment nested in it.
+/// A fragment's frame holds every message in it and every fragment
+/// nested in it; its first pill sits on its top edge and each other on its
+/// operand's line, within its sides.
 #[test]
 fn a_fragment_holds_what_it_frames() {
     let layout = place(&read("sequence-oauth"), &NoLogos);
     assert_eq!(layout.fragments.len(), 3, "par, loop and the alt inside it");
     for f in &layout.fragments {
-        assert!(within(f.tag, f.frame), "{f:?}");
-        for (_, g) in &f.guards {
-            assert!(within(*g, f.frame), "{f:?}");
+        let lines: Vec<f64> = std::iter::once(f.frame.y)
+            .chain(f.separators.iter().copied())
+            .collect();
+        for (_, p) in &f.pills {
+            assert!(p.x >= f.frame.x && p.right() <= f.frame.right(), "{f:?}");
+            assert!(
+                lines.iter().any(|y| (p.centre_y() - y).abs() < 1e-9),
+                "a pill off its line: {f:?}"
+            );
         }
         for m in &layout.messages {
             let inside = m
@@ -472,12 +477,14 @@ fn a_call_a_send_and_a_reply_are_drawn_as_uml_draws_them() {
         "the ✕ and its arrowhead"
     );
     assert!(svg.contains(r#"class="refused-head""#));
-    for op in ["alt", "loop", "par"] {
-        assert!(svg.contains(&format!(">{op}</text>")), "{op}");
+    // Each operator in its pill, before its first guard.
+    for pill in ["par", "alt · token valid", "else"] {
+        assert!(svg.contains(&format!(">{pill}</text>")), "{pill}");
     }
-    // A long guard wraps onto two lines, as a label does.
-    assert!(svg.contains(">[for each page</text>"), "{svg}");
-    assert!(svg.contains(">of the profile]</text>"));
+    // A long guard wraps onto two lines, as a label does, the operator
+    // leading the first.
+    assert!(svg.contains(">loop · for each page</text>"), "{svg}");
+    assert!(svg.contains(">of the profile</text>"));
 }
 
 #[test]
@@ -515,7 +522,8 @@ fn still_none_draws_no_numbers() {
     let spec =
         example("sequence-sign-in").replacen("\"title\"", "\"still\": \"none\", \"title\"", 1);
     let svg = archgram_core::build(&spec, Options::default()).unwrap();
-    assert!(!svg.contains("class=\"step\""));
+    assert!(!svg.contains("class=\"message-number"));
+    assert!(svg.contains(">POST /login</text>"));
 }
 
 // The cases a review found (PR #130): each spec below drew wrongly once.
@@ -531,6 +539,31 @@ fn with(participants: &[&str], messages: &str) -> String {
         .map(|p| format!(r#"{{ "id": "{p}", "kind": "service", "label": "{p}" }}"#))
         .collect();
     sequence(&ps.join(", "), messages)
+}
+
+/// `json` drawn in `look`, whatever look it names.
+fn in_look(json: &str, look: &str) -> String {
+    json.replace("\"look\": \"avatars\",", "")
+        .replace("\"look\": \"cards\",", "")
+        .replacen("\"title\"", &format!("\"look\": \"{look}\", \"title\""), 1)
+}
+
+/// `json` drawn in the `avatars` look.
+fn avatars(json: &str) -> String {
+    in_look(json, "avatars")
+}
+
+/// The cases in both looks.
+fn cases_in_both_looks() -> Vec<(String, String)> {
+    cases()
+        .into_iter()
+        .flat_map(|(name, json)| {
+            [
+                (format!("{name}, cards"), in_look(&json, "cards")),
+                (format!("{name}, avatars"), avatars(&json)),
+            ]
+        })
+        .collect()
 }
 
 fn laid(json: &str) -> archgram_core::layout::sequence::Layout {
@@ -594,11 +627,11 @@ fn cross(msg: &archgram_core::layout::sequence::Message) -> (Point, Rect) {
     )
 }
 
-/// A frame reaches across only the lifelines its own messages touch, and
+/// A frame reaches across only the bands its own messages touch, and
 /// those between them (UML draws a fragment across a span of lifelines).
 #[test]
-fn a_frame_covers_only_its_own_lifelines() {
-    for (name, json) in cases() {
+fn a_frame_covers_only_its_own_bands() {
+    for (name, json) in cases_in_both_looks() {
         let layout = laid(&json);
         for f in &layout.fragments {
             let touched: Vec<usize> = layout
@@ -621,11 +654,11 @@ fn a_frame_covers_only_its_own_lifelines() {
                 .copied()
                 .max()
                 .expect("a fragment holds messages");
-            for (i, &x) in layout.lifelines.iter().enumerate() {
-                if x > f.frame.x && x < f.frame.right() {
+            for (i, b) in layout.bands.iter().enumerate() {
+                if b.x < f.frame.right() && b.right() > f.frame.x {
                     assert!(
                         (lo..=hi).contains(&i),
-                        "{name}: {:?} crosses lifeline {i} at {x}",
+                        "{name}: {:?} crosses band {i} {b:?}",
                         f.frame
                     );
                 }
@@ -634,28 +667,33 @@ fn a_frame_covers_only_its_own_lifelines() {
     }
 }
 
+/// Every head's, message's and fragment's box, by name.
+fn boxes(layout: &archgram_core::layout::sequence::Layout) -> Vec<(String, Rect)> {
+    let mut out: Vec<(String, Rect)> = layout
+        .heads
+        .iter()
+        .map(|&r| ("a head".to_owned(), r))
+        .collect();
+    for m in &layout.messages {
+        out.extend(
+            m.pill
+                .iter()
+                .map(|p| (format!("pill {}", m.number), p.rect)),
+        );
+    }
+    for f in &layout.fragments {
+        out.extend(f.pills.iter().map(|(g, r)| (g.join(" "), *r)));
+    }
+    out
+}
+
 /// A refused message's ✕ sits on its line's last stretch, clear of every
-/// label, guard, number and head.
+/// pill and head.
 #[test]
 fn a_refusal_sits_on_its_line_clear_of_the_rest() {
-    for (name, json) in cases() {
+    for (name, json) in cases_in_both_looks() {
         let layout = laid(&json);
-        let mut others: Vec<(String, Rect)> = layout
-            .heads
-            .iter()
-            .map(|&r| ("a head".to_owned(), r))
-            .collect();
-        for m in &layout.messages {
-            others.extend(
-                m.label
-                    .iter()
-                    .map(|(_, r)| (format!("label {}", m.number), *r)),
-            );
-            others.extend(m.pill.map(|p| (format!("number {}", m.number), p)));
-        }
-        for f in &layout.fragments {
-            others.extend(f.guards.iter().map(|(_, r)| ("a guard".to_owned(), *r)));
-        }
+        let others = boxes(&layout);
         for m in layout.messages.iter().filter(|m| m.refused) {
             let (c, mark) = cross(m);
             let (a, b) = (m.path[m.path.len() - 2], m.path[m.path.len() - 1]);
@@ -676,28 +714,13 @@ fn a_refusal_sits_on_its_line_clear_of_the_rest() {
     }
 }
 
-/// Guards keep clear of each other, of labels, numbers and heads.
+/// A fragment's pills keep clear of each other, of message pills and of
+/// heads.
 #[test]
-fn guards_keep_clear_of_everything_else() {
-    for (name, json) in cases() {
+fn fragment_pills_keep_clear_of_everything_else() {
+    for (name, json) in cases_in_both_looks() {
         let layout = laid(&json);
-        let mut boxes: Vec<(String, Rect)> = layout
-            .heads
-            .iter()
-            .map(|&r| ("a head".to_owned(), r))
-            .collect();
-        for m in &layout.messages {
-            boxes.extend(
-                m.label
-                    .iter()
-                    .map(|(_, r)| (format!("label {}", m.number), *r)),
-            );
-            boxes.extend(m.pill.map(|p| (format!("number {}", m.number), p)));
-        }
-        for f in &layout.fragments {
-            boxes.extend(f.guards.iter().map(|(g, r)| (g.join(" "), *r)));
-            boxes.push((format!("{} tag", f.operator.name()), f.tag));
-        }
+        let boxes = boxes(&layout);
         for (i, (a, ra)) in boxes.iter().enumerate() {
             for (b, rb) in &boxes[i + 1..] {
                 assert!(!ra.overlaps(rb), "{name}: {a} {ra:?} overlaps {b} {rb:?}");
@@ -739,7 +762,7 @@ fn a_label_keeps_its_measured_lines() {
         r#"{ "from": "a", "to": "b", "label": "mmmmm      mmmmm", "async": true }"#,
     );
     let layout = laid(&json);
-    let (lines, _) = layout.messages[0].label.clone().expect("a label");
+    let lines = layout.messages[0].pill.clone().expect("a label").lines;
     let svg = archgram_core::build(&json, Options::default()).expect("draws");
     for line in &lines {
         assert!(
@@ -747,4 +770,92 @@ fn a_label_keeps_its_measured_lines() {
             "{line:?} is not drawn as measured"
         );
     }
+}
+
+// The two looks (docs/features/sequence.md, Looks).
+
+/// Both looks set the same columns and the same rows under their heads.
+#[test]
+fn both_looks_set_the_same_columns_and_rows() {
+    for (name, json) in cases() {
+        let cards = laid(&in_look(&json, "cards"));
+        let round = laid(&avatars(&json));
+        assert_eq!(cards.lifelines, round.lifelines, "{name}");
+        let rows = |l: &archgram_core::layout::sequence::Layout| -> Vec<f64> {
+            let top = l.messages[0].path[0].y;
+            l.messages.iter().map(|m| m.path[0].y - top).collect()
+        };
+        let (a, b) = (rows(&cards), rows(&round));
+        assert!(
+            a.len() == b.len() && a.iter().zip(&b).all(|(x, y)| (x - y).abs() < 1e-9),
+            "{name}: {a:?} {b:?}"
+        );
+    }
+}
+
+/// In `cards`, a bar runs on a call's receiver from the call to the last
+/// reply that answers it; `avatars` draws none.
+#[test]
+fn a_bar_runs_from_a_call_to_its_last_reply() {
+    let layout = place(&read("sequence-sign-in"), &NoLogos);
+    let y = |n: usize| layout.messages[n - 1].path[0].y;
+    let on = |p: usize| {
+        let x = layout.lifelines[p];
+        layout
+            .activations
+            .iter()
+            .filter(move |b| b.x < x && b.right() > x)
+            .map(|b| (b.y, b.bottom()))
+            .collect::<Vec<_>>()
+    };
+    // POST /login is answered in both ways through the alt: the 401 last.
+    assert_eq!(on(1), vec![(y(1), y(5))], "the API's bar");
+    assert_eq!(on(2), vec![(y(2), y(3))], "the users' bar");
+    assert!(on(0).is_empty(), "nobody calls the browser");
+    let round = laid(&avatars(&example("sequence-sign-in")));
+    assert!(round.activations.is_empty());
+}
+
+/// A call to a participant already answering one draws its bar over the
+/// first, moved to its right, and its messages meet that bar; a call to
+/// itself never answered keeps its bar half a row.
+#[test]
+fn a_bar_over_another_is_moved_right() {
+    let json = with(
+        &["a", "b"],
+        r#"{ "from": "a", "to": "b", "label": "call" },
+           { "from": "b", "to": "b", "label": "think" },
+           { "from": "b", "to": "a", "label": "done", "async": true }"#,
+    );
+    let layout = laid(&json);
+    let bars = &layout.activations;
+    assert_eq!(bars.len(), 2, "{bars:?}");
+    let offset = archgram_core::tokens::ACTIVATION_OFFSET;
+    assert!((bars[1].x - bars[0].x - offset).abs() < 1e-9, "{bars:?}");
+    let half_row = archgram_core::tokens::SPACING_MESSAGE_ROW / 2.0;
+    assert!((bars[1].h - half_row).abs() < 1e-9, "{bars:?}");
+    // The loop comes back to the moved bar.
+    let back = layout.messages[1].path.last().expect("a path");
+    assert!((back.x - bars[1].centre_x()).abs() < 1e-9, "{back:?}");
+}
+
+/// `avatars` draws each head as a circle and no bars; `cards`, cards.
+#[test]
+fn avatars_draw_round_heads() {
+    let spec = example("sequence-sign-in");
+    let round = archgram_core::build(&avatars(&spec), Options::default()).expect("draws");
+    assert_eq!(round.matches("<circle class=\"card\"").count(), 3);
+    assert!(!round.contains("class=\"activation\""));
+    assert!(round.contains("class=\"fragment dashed\""));
+    let cards = archgram_core::build(&spec, Options::default()).expect("draws");
+    assert!(!cards.contains("<circle class=\"card\""));
+    assert!(cards.contains("class=\"activation\""));
+}
+
+/// `look` takes only its two values.
+#[test]
+fn look_takes_cards_or_avatars() {
+    let spec =
+        example("sequence-sign-in").replacen("\"title\"", "\"look\": \"boxes\", \"title\"", 1);
+    assert!(parse(&spec).is_err());
 }
