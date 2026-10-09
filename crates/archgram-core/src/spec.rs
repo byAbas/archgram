@@ -13,6 +13,10 @@ use serde::de::{self, Deserializer, SeqAccess, Visitor};
 pub struct Spec {
     /// The spec format's version. Only `1` exists.
     pub archgram: u32,
+    /// The kind of diagram: an architecture diagram, this type, unless the
+    /// spec says otherwise (docs/features/diagram-kinds.md).
+    #[serde(default)]
+    pub diagram: DiagramKind,
     /// The diagram's name, written as the SVG's `<title>`.
     pub title: String,
     /// The whole diagram in prose, written as the SVG's `<desc>`.
@@ -95,12 +99,23 @@ impl Spec {
     }
 }
 
-fn default_palette() -> String {
+pub(crate) fn default_palette() -> String {
     "mono".to_owned()
 }
 
-fn default_true() -> bool {
+pub(crate) fn default_true() -> bool {
     true
+}
+
+/// The kind of diagram a spec is (docs/SPEC.md, Top level): what it is
+/// made of and what calls what, or the order of the messages between its
+/// participants ([`crate::sequence`]).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum DiagramKind {
+    #[default]
+    Architecture,
+    Sequence,
 }
 
 /// The direction the flow runs.

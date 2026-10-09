@@ -911,3 +911,56 @@ fn a_missing_logo_names_each_suggestion_s_brand() {
     assert!(message.contains("`storyblok` (Storyblok)"), "{message}");
     assert!(message.contains("leave `tech` out"), "{message}");
 }
+
+/// A sequence diagram (docs/SPEC.md, Sequence) in YAML: `check` reads it
+/// and says what it holds; `build` refuses it plainly until archgram draws
+/// one, rather than drawing it as an architecture diagram.
+#[test]
+fn check_reads_a_sequence_and_build_says_it_does_not_draw_one_yet() {
+    let dir = scratch("sequence");
+    let spec = dir.join("sign-in.archgram.yaml");
+    std::fs::write(
+        &spec,
+        "archgram: 1
+diagram: sequence
+title: sign in
+description: The browser signs in through the API.
+participants:
+  - { id: browser, kind: browser, label: Browser }
+  - { id: api, kind: service, label: API }
+messages:
+  - { from: browser, to: api, label: POST /login }
+  - alt:
+      - when: password matches
+        messages: [ { reply: api, label: session } ]
+      - when: else
+        messages: [ { reply: api, label: '401', refused: true } ]
+",
+    )
+    .unwrap();
+    let path = spec.to_str().unwrap();
+    let run = archgram(&["check", path]);
+    assert!(run.status.success(), "{}", stderr(&run));
+    assert_eq!(
+        stdout(&run),
+        format!("{path}: valid (a sequence, 2 participants, 3 messages)\n")
+    );
+    let run = archgram(&["build", path]);
+    assert_eq!(run.status.code(), Some(1));
+    assert!(
+        stderr(&run).contains("does not draw one yet"),
+        "{}",
+        stderr(&run)
+    );
+    assert!(!dir.join("sign-in.svg").exists());
+}
+
+/// `spec --section sequence` prints the sequence's part of the format.
+#[test]
+fn spec_has_a_sequence_section() {
+    let run = archgram(&["spec", "--section", "sequence"]);
+    assert!(run.status.success(), "{}", stderr(&run));
+    let section = stdout(&run);
+    assert!(section.starts_with("## Sequence\n"), "{section}");
+    assert!(section.contains("diagram: sequence"));
+}

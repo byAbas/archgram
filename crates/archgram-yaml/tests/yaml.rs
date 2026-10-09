@@ -156,3 +156,41 @@ fn the_spec_gives_the_crate_s_limits() {
         assert!(doc.contains(&limit), "docs/SPEC.md should say \"{limit}\"");
     }
 }
+
+/// The sequence in docs/SPEC.md (Sequence) reads as one, and a problem in
+/// an operand points at its YAML line and column.
+#[test]
+fn a_sequence_reads_from_yaml_with_its_problems_at_their_lines() {
+    let doc = std::fs::read_to_string(format!("{}/docs/SPEC.md", root())).unwrap();
+    let block = doc
+        .split("\n## Sequence\n")
+        .nth(1)
+        .and_then(|rest| rest.split("```yaml\n").nth(1))
+        .and_then(|rest| rest.split("\n```").next())
+        .expect("the section's first YAML block");
+    let (diagram, _) = archgram_yaml::parse_diagram(block).unwrap_or_else(|e| panic!("{e:?}"));
+    assert!(matches!(diagram, archgram_core::Diagram::Sequence(_)));
+    let typo = block.replacen(
+        "reply: api, label: session",
+        "reply: apo, label: session",
+        1,
+    );
+    let line = typo
+        .lines()
+        .position(|l| l.contains("reply: apo"))
+        .expect("the typo")
+        + 1;
+    let e = archgram_yaml::parse_diagram(&typo).expect_err("refused");
+    assert_eq!(e.len(), 1, "{e:?}");
+    let place = e[0].location.to_string();
+    assert!(
+        place.starts_with(&format!("{line}:")),
+        "{place}: {}",
+        e[0].message
+    );
+    assert!(
+        e[0].message.contains("did you mean `api`?"),
+        "{}",
+        e[0].message
+    );
+}

@@ -153,6 +153,15 @@ pub(crate) fn form(source: &str) -> Option<String> {
 /// read. The spec must have passed validation.
 #[must_use]
 pub fn check(spec: &Spec, find: &dyn Fn(&str, &[&str]) -> Found) -> Vec<SpecError> {
+    check_owned(&owned_spec(spec), find)
+}
+
+/// A part of a diagram that may name sources: its pointer in the spec, how
+/// a problem names it (`node api`, `edge api → db`), and its sources.
+pub type Owned<'a> = (String, String, &'a Option<Sources>);
+
+/// Every node and edge of an architecture spec, with its sources.
+pub(crate) fn owned_spec(spec: &Spec) -> Vec<Owned<'_>> {
     let nodes = spec.nodes.iter().enumerate().map(|(i, n)| {
         (
             format!("/nodes/{i}/source"),
@@ -167,11 +176,16 @@ pub fn check(spec: &Spec, find: &dyn Fn(&str, &[&str]) -> Found) -> Vec<SpecErro
             &e.source,
         )
     });
-    let owned: Vec<_> = nodes.chain(edges).collect();
+    nodes.chain(edges).collect()
+}
+
+/// [`check`], for any kind of diagram's parts and their sources.
+#[must_use]
+pub fn check_owned(owned: &[Owned<'_>], find: &dyn Fn(&str, &[&str]) -> Found) -> Vec<SpecError> {
     // Each file in one spelling, with the words wanted from it, before any
     // is looked up.
     let mut wants: BTreeMap<String, Vec<&str>> = BTreeMap::new();
-    for (_, _, sources) in &owned {
+    for (_, _, sources) in owned {
         for source in sources.iter().flat_map(Sources::all) {
             let (path, text) = split(source);
             let words = wants.entry(plain(path).unwrap_or_default()).or_default();
@@ -187,7 +201,7 @@ pub fn check(spec: &Spec, find: &dyn Fn(&str, &[&str]) -> Found) -> Vec<SpecErro
         .map(|(path, words)| (path.as_str(), find(path, words)))
         .collect();
     let mut errors = Vec::new();
-    for (pointer, owner, sources) in &owned {
+    for (pointer, owner, sources) in owned {
         let Some(sources) = sources else { continue };
         for (j, source) in sources.all().iter().enumerate() {
             let (path, text) = split(source);
@@ -223,9 +237,17 @@ pub fn check(spec: &Spec, find: &dyn Fn(&str, &[&str]) -> Found) -> Vec<SpecErro
 /// How many sources the spec names.
 #[must_use]
 pub fn count(spec: &Spec) -> usize {
-    let nodes = spec.nodes.iter().map(|n| &n.source);
-    let edges = spec.edges.iter().map(|e| &e.source);
-    nodes.chain(edges).flatten().map(|s| s.all().len()).sum()
+    count_owned(&owned_spec(spec))
+}
+
+/// How many sources the parts name.
+#[must_use]
+pub fn count_owned(owned: &[Owned<'_>]) -> usize {
+    owned
+        .iter()
+        .filter_map(|(_, _, sources)| sources.as_ref())
+        .map(|s| s.all().len())
+        .sum()
 }
 
 #[cfg(test)]

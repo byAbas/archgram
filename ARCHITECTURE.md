@@ -78,6 +78,18 @@ what types cannot express: every edge names existing nodes, frame nesting
 has no cycles, flows follow existing edges. Errors carry a JSON pointer in
 the core and a line and column through `archgram-yaml`.
 
+A spec names its kind of diagram (`diagram`; architecture when it does
+not), and `parse` reads that field alone first, then reads the whole spec
+as that kind's types, so each kind keeps its own fields and its errors
+their lines: `Diagram::Architecture` (`spec`, `validate`) or
+`Diagram::Sequence` (`sequence`). A sequence's message, reply and fragment
+are one type with every field optional, which validation sorts into one
+of the three; an untagged enum would report only that none matched. The
+checks every kind shares, the top-level fields, XML-safe text, a logo's
+slug and a source's form, are `validate`'s, and `sources::check_owned`
+takes any kind's parts with their sources. A sequence is read and checked
+but not yet laid out: `build` says so (docs/features/sequence.md).
+
 A node's or an edge's `source` (docs/SPEC.md, Sources) is checked here
 for its form only. Whether the code is there is `sources::check`, which
 reads no file either: the caller looks each file up once, by its path in

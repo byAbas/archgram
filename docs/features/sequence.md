@@ -2,7 +2,7 @@
 
 | Field   | Value      |
 |---------|------------|
-| Version | 0.1        |
+| Version | 0.2        |
 | Date    | 2026-10-09 |
 | Status  | Draft      |
 | Release | Planned, the first of the new kinds |
@@ -109,15 +109,24 @@ messages:
 
 A sequence spec is rejected, every problem at its line and column, when:
 
-- a message names a participant that does not exist, or a participant is
-  in no message;
-- a reply has no call to that sender before it still unanswered, or names
-  a `to` other than that call's sender;
-- an `alt` has fewer than two operands, an operand of `alt` lacks `when`,
-  or `else` is not the last;
-- a `par` has fewer than two operands, or an operand or a fragment is
-  empty;
-- `refused` is on a message whose request has already been answered.
+- there are fewer than two participants or no message, or a participant
+  is in no message;
+- an item is not exactly one of a message, a reply and a fragment, or a
+  fragment carries a message's fields;
+- a message names a participant that does not exist;
+- a reply has no call to that participant before it still waiting, or
+  names a `to` other than that call's caller; a send that does not wait,
+  and a refused call, wait for no reply. Inside an `alt`, `opt` or
+  `loop`, each way through starts from the calls waiting before it, and
+  a call left waiting by any way may be answered after it; a `par`'s
+  operands run one after another;
+- an `alt` or a `par` has fewer than two operands, an operand of `alt`
+  lacks `when`, `else` is on an operand other than an `alt`'s last, a
+  `par` operand has a guard, a guard is empty, or an operand holds no
+  messages.
+
+An operand may name the code that makes its choice in `source`, as a
+message does.
 
 `archgram check` holds every source to the code as in architecture
 ([sources.md](sources.md)).
@@ -149,7 +158,8 @@ A sequence spec is rejected, every problem at its line and column, when:
 - A participant's head is archgram's card, with its icon and logo, at the
   top of its lifeline, which is dashed.
 - A call is a solid line with a filled arrowhead; a send that does not
-  wait, an open arrowhead; a reply, a dashed line (UML 17.4.4.1). The
+  wait, an open arrowhead; a reply, a dashed line with an open arrowhead
+  (UML 17.4.4.1; Decided 8). The
   label sits above its line, centred between the two lifelines.
 - A refused message ends in a ✕ at the participant that refuses, in the
   refusal colour, as a refused flow does (PRD §6.4).
@@ -237,16 +247,27 @@ A sequence spec is rejected, every problem at its line and column, when:
 5. Sources as in architecture: a participant's file, a call's line,
    optional on a reply and a guard; a document's sentence when drawn from
    one.
+6. A participant's head is drawn once, at the top of its lifeline, as
+   UML draws it (17.3.4.1) and archify does; a sequence past about 15
+   messages is split, so it stays within a screen.
+7. No rule of its own for an `alt` whose operands all refuse, or whose
+   guards none hold: its operands play in turn, each refusal travelling
+   back before the next starts, and an `alt` without `else` plays every
+   operand, since the drawing shows the possible paths, not one run. The
+   still image carries the same: the frame, the guards, the numbers.
+   archify has no fragments to compare (an acknowledged gap, its issues
+   #312 and #93).
+8. Arrowheads keep UML's distinction (17.4.4.1): a call's filled, a
+   send's and a reply's open, a reply's line dashed. The shape, not a
+   colour, says whether a message waits.
 
 ## Open questions
 
-- Whether a participant's head is drawn again at the bottom of a long
-  sequence, as some tools do, or once at the top.
-- How an `alt` whose operands all refuse, or none, reads in the
-  animation.
+None.
 
 ## Changelog
 
 | Version | Date       | Change |
 |---------|------------|--------|
 | 0.1     | 2026-10-09 | First draft, from #126 and UML 2.5.1 clause 17: lifelines, calls, sends and replies, `alt`, `opt`, `loop`, `par`; `diagram: sequence` with `participants` and `messages`; a refused message; no activation bars yet; split past about 15 messages, to be measured; sources as in architecture. |
+| 0.2     | 2026-10-09 | The heads drawn once, at the top; no rule of its own for an `alt` that refuses throughout; UML's arrowheads; the validation as `check` holds it: two participants and a message at least, one form per item, a refused call waiting for no reply, the calls waiting through a fragment; an operand may name its source. |

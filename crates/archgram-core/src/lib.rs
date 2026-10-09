@@ -11,6 +11,7 @@ mod math;
 pub mod measure;
 pub mod motion;
 pub mod render;
+pub mod sequence;
 pub mod sources;
 pub mod spec;
 pub mod theme;
@@ -21,7 +22,8 @@ pub use error::{Location, SpecError};
 pub use spec::Spec;
 pub use validate::{FORMAT_VERSION, validate};
 
-use spec::Direction;
+use serde::Deserialize;
+use spec::{DiagramKind, Direction};
 
 /// The widest drawing a README on GitHub shows with its text at a readable
 /// size (docs/PRD.md 6.6): `direction: auto` keeps left to right within
@@ -53,15 +55,79 @@ pub struct Drawing {
     pub direction: Direction,
 }
 
-/// Reads a JSON spec and checks it. Returns the spec, or every problem found:
-/// one problem when the text is not a well-formed spec, all of them when it
+/// A spec of any kind, read and checked (docs/features/diagram-kinds.md).
+#[derive(Debug, Clone, PartialEq)]
+pub enum Diagram {
+    /// What a system is made of and what calls what; a spec that names no
+    /// kind is one.
+    Architecture(Spec),
+    /// The messages between participants, in order.
+    Sequence(sequence::Sequence),
+}
+
+impl Diagram {
+    /// Every part that may name sources, with its sources, for `check`.
+    #[must_use]
+    pub fn owned(&self) -> Vec<sources::Owned<'_>> {
+        match self {
+            Diagram::Architecture(spec) => sources::owned_spec(spec),
+            Diagram::Sequence(seq) => seq.owned(),
+        }
+    }
+
+    /// Each `tech` that `logos` does not carry, located in the spec, with
+    /// the nearest slugs suggested.
+    #[must_use]
+    pub fn check_logos(&self, logos: &dyn logos::Logos) -> Vec<SpecError> {
+        match self {
+            Diagram::Architecture(spec) => validate::logos(spec, logos),
+            Diagram::Sequence(seq) => sequence::check_logos(seq, logos),
+        }
+    }
+}
+
+/// What a spec says of its kind, read before the spec itself, so the spec
+/// is read as that kind, with that kind's fields. Every other field is
+/// left for that reading.
+#[derive(Deserialize)]
+struct Probe {
+    #[serde(default)]
+    diagram: DiagramKind,
+}
+
+/// Reads a JSON spec of any kind and checks it: an architecture diagram,
+/// or the kind its `diagram` names. Returns the diagram, or every problem
+/// found: one when the text is not a well-formed spec, all of them when it
 /// is well-formed but breaks the rules in docs/SPEC.md.
 ///
 /// # Errors
 ///
 /// The problems, each with its location in the spec.
-pub fn parse_spec(json: &str) -> Result<Spec, Vec<SpecError>> {
-    let spec: Spec = serde_json::from_str(json).map_err(|e| {
+pub fn parse(json: &str) -> Result<Diagram, Vec<SpecError>> {
+    let Probe { diagram } = read(json)?;
+    let (diagram, errors) = match diagram {
+        DiagramKind::Architecture => {
+            let spec: Spec = read(json)?;
+            let errors = validate(&spec);
+            (Diagram::Architecture(spec), errors)
+        }
+        DiagramKind::Sequence => {
+            let seq: sequence::Sequence = read(json)?;
+            let errors = sequence::validate(&seq);
+            (Diagram::Sequence(seq), errors)
+        }
+    };
+    if errors.is_empty() {
+        Ok(diagram)
+    } else {
+        Err(errors)
+    }
+}
+
+/// The JSON read as `T`, or the one problem that stops it, at its line and
+/// column.
+fn read<'a, T: Deserialize<'a>>(json: &'a str) -> Result<T, Vec<SpecError>> {
+    serde_json::from_str(json).map_err(|e| {
         vec![SpecError {
             location: Location::LineColumn {
                 line: e.line(),
@@ -71,12 +137,22 @@ pub fn parse_spec(json: &str) -> Result<Spec, Vec<SpecError>> {
                 e.to_string().split(" at line ").next().unwrap_or_default(),
             ),
         }]
-    })?;
-    let errors = validate(&spec);
-    if errors.is_empty() {
-        Ok(spec)
-    } else {
-        Err(errors)
+    })
+}
+
+/// Reads a JSON architecture spec and checks it, as [`parse`] does; a spec
+/// of another kind is refused at its `diagram`.
+///
+/// # Errors
+///
+/// The problems, each with its location in the spec.
+pub fn parse_spec(json: &str) -> Result<Spec, Vec<SpecError>> {
+    match parse(json)? {
+        Diagram::Architecture(spec) => Ok(spec),
+        Diagram::Sequence(_) => Err(vec![SpecError::at(
+            "/diagram",
+            "a sequence diagram; `archgram_core::parse` reads every kind",
+        )]),
     }
 }
 

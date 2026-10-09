@@ -5,7 +5,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use crate::error::SpecError;
-use crate::spec::{Flow, Sources, Spec, Step};
+use crate::spec::{DiagramKind, Flow, Sources, Spec, Step};
 
 use crate::tokens::PALETTES;
 
@@ -71,44 +71,18 @@ impl<'a> Validator<'a> {
 
     fn top_level(&mut self) {
         let s = self.spec;
-        if s.archgram != FORMAT_VERSION {
+        self.errors.extend(top_level(&Common {
+            archgram: s.archgram,
+            title: &s.title,
+            description: &s.description,
+            shown_width: s.shown_width,
+            palette: &s.palette,
+        }));
+        if s.diagram != DiagramKind::Architecture {
             self.error(
-                "/archgram".into(),
-                format!(
-                    "unsupported format version {}; this archgram reads version {FORMAT_VERSION}",
-                    s.archgram
-                ),
-            );
-        }
-        if s.title.trim().is_empty() {
-            self.error("/title".into(), "the title is empty".into());
-        }
-        if s.description.trim().is_empty() {
-            self.error(
-                "/description".into(),
-                "the description is empty; it is what screen readers announce".into(),
-            );
-        }
-        // A width outside this is a typo, not a place: a column narrower
-        // than a phone, or wider than a wall.
-        if let Some(w) = s.shown_width
-            && !(SHOWN_WIDTH_MIN..=SHOWN_WIDTH_MAX).contains(&w)
-        {
-            self.error(
-                "/shownWidth".into(),
-                format!(
-                    "`shownWidth` is {w}; it is how wide the diagram is shown, in CSS pixels, from {SHOWN_WIDTH_MIN} to {SHOWN_WIDTH_MAX}"
-                ),
-            );
-        }
-        if !PALETTES.contains(&s.palette.as_str()) {
-            self.error(
-                "/palette".into(),
-                format!(
-                    "unknown palette `{}`; known palettes: {}",
-                    s.palette,
-                    PALETTES.join(", ")
-                ),
+                "/diagram".into(),
+                "an architecture spec is read as one; a sequence is read by `archgram_core::parse`"
+                    .into(),
             );
         }
         if s.nodes.is_empty() {
@@ -143,14 +117,8 @@ impl<'a> Validator<'a> {
             texts.push((format!("/flows/{i}/name"), &f.name));
         }
         for (pointer, text) in texts {
-            if let Some(c) = text.chars().find(|&c| !is_xml_char(c)) {
-                self.error(
-                    pointer,
-                    format!(
-                        "the text holds U+{:04X}, which XML does not allow; an SVG with it does not open",
-                        u32::from(c)
-                    ),
-                );
+            if let Some(e) = xml_problem(pointer, text) {
+                self.errors.push(e);
             }
         }
     }
@@ -196,12 +164,9 @@ impl<'a> Validator<'a> {
                 );
             }
             if let Some(tech) = &n.tech
-                && (tech.is_empty()
-                    || !tech
-                        .bytes()
-                        .all(|b| b.is_ascii_lowercase() || b.is_ascii_digit() || b == b'_'))
+                && let Some(message) = tech_form(tech)
             {
-                self.error(format!("/nodes/{i}/tech"), format!("`{tech}` is not a Simple Icons slug; slugs are lowercase letters and digits, such as `postgresql`"));
+                self.error(format!("/nodes/{i}/tech"), message);
             }
             if let Some(frame) = &n.frame {
                 let problem = Self::reference(ids, frame, Named::Frame);
@@ -315,41 +280,8 @@ impl<'a> Validator<'a> {
                 ),
             );
         }
-        let nodes = s.nodes.iter().enumerate().map(|(i, n)| {
-            (
-                format!("/nodes/{i}/source"),
-                format!("node {}", n.id),
-                &n.source,
-            )
-        });
-        let edges = s.edges.iter().enumerate().map(|(i, e)| {
-            (
-                format!("/edges/{i}/source"),
-                format!("edge {} \u{2192} {}", e.from, e.to),
-                &e.source,
-            )
-        });
-        for (pointer, owner, sources) in nodes.chain(edges) {
-            match sources {
-                None => {}
-                Some(Sources::One(source)) => {
-                    if let Some(message) = crate::sources::form(source) {
-                        self.error(pointer, format!("{owner}: {message}"));
-                    }
-                }
-                Some(Sources::Many(list)) if list.is_empty() => self.error(
-                    pointer,
-                    format!("{owner}: the list names no source; leave `source` out instead"),
-                ),
-                Some(Sources::Many(list)) => {
-                    for (j, source) in list.iter().enumerate() {
-                        if let Some(message) = crate::sources::form(source) {
-                            self.error(format!("{pointer}/{j}"), format!("{owner}: {message}"));
-                        }
-                    }
-                }
-            }
-        }
+        self.errors
+            .extend(source_forms(&crate::sources::owned_spec(s)));
     }
 
     fn flows(&mut self, ids: &BTreeMap<&str, Named>) {
@@ -578,12 +510,125 @@ impl<'a> Validator<'a> {
 /// production): tab, line feed, carriage return, and every other character
 /// from U+0020 on except U+FFFE and U+FFFF. A Rust `char` is never a
 /// surrogate, the one other range the production leaves out.
-fn is_xml_char(c: char) -> bool {
+/// The fields every kind of diagram shares at its top (docs/SPEC.md, Top
+/// level).
+pub(crate) struct Common<'a> {
+    pub archgram: u32,
+    pub title: &'a str,
+    pub description: &'a str,
+    pub shown_width: Option<f64>,
+    pub palette: &'a str,
+}
+
+/// The problems with the fields every kind of diagram shares.
+pub(crate) fn top_level(c: &Common<'_>) -> Vec<SpecError> {
+    let mut errors = Vec::new();
+    if c.archgram != FORMAT_VERSION {
+        errors.push(SpecError::at(
+            "/archgram",
+            format!(
+                "unsupported format version {}; this archgram reads version {FORMAT_VERSION}",
+                c.archgram
+            ),
+        ));
+    }
+    if c.title.trim().is_empty() {
+        errors.push(SpecError::at("/title", "the title is empty"));
+    }
+    if c.description.trim().is_empty() {
+        errors.push(SpecError::at(
+            "/description",
+            "the description is empty; it is what screen readers announce",
+        ));
+    }
+    // A width outside this is a typo, not a place: a column narrower
+    // than a phone, or wider than a wall.
+    if let Some(w) = c.shown_width
+        && !(SHOWN_WIDTH_MIN..=SHOWN_WIDTH_MAX).contains(&w)
+    {
+        errors.push(SpecError::at(
+            "/shownWidth",
+            format!(
+                "`shownWidth` is {w}; it is how wide the diagram is shown, in CSS pixels, from {SHOWN_WIDTH_MIN} to {SHOWN_WIDTH_MAX}"
+            ),
+        ));
+    }
+    if !PALETTES.contains(&c.palette) {
+        errors.push(SpecError::at(
+            "/palette",
+            format!(
+                "unknown palette `{}`; known palettes: {}",
+                c.palette,
+                PALETTES.join(", ")
+            ),
+        ));
+    }
+    errors
+}
+
+/// The problem with a text that holds a character XML does not allow.
+pub(crate) fn xml_problem(pointer: String, text: &str) -> Option<SpecError> {
+    text.chars().find(|&c| !is_xml_char(c)).map(|c| {
+        SpecError::at(
+            pointer,
+            format!(
+                "the text holds U+{:04X}, which XML does not allow; an SVG with it does not open",
+                u32::from(c)
+            ),
+        )
+    })
+}
+
+/// The problem with a `tech` that is not written as a Simple Icons slug.
+pub(crate) fn tech_form(tech: &str) -> Option<String> {
+    (tech.is_empty()
+        || !tech
+            .bytes()
+            .all(|b| b.is_ascii_lowercase() || b.is_ascii_digit() || b == b'_'))
+    .then(|| format!("`{tech}` is not a Simple Icons slug; slugs are lowercase letters and digits, such as `postgresql`"))
+}
+
+/// Each source written in a form archgram refuses, for each part that names
+/// sources; whether the code is there is for the caller, who can read it
+/// (`sources::check`).
+pub(crate) fn source_forms(owned: &[crate::sources::Owned<'_>]) -> Vec<SpecError> {
+    let mut errors = Vec::new();
+    for (pointer, owner, sources) in owned {
+        match sources {
+            None => {}
+            Some(Sources::One(source)) => {
+                if let Some(message) = crate::sources::form(source) {
+                    errors.push(SpecError::at(
+                        pointer.clone(),
+                        format!("{owner}: {message}"),
+                    ));
+                }
+            }
+            Some(Sources::Many(list)) if list.is_empty() => errors.push(SpecError::at(
+                pointer.clone(),
+                format!("{owner}: the list names no source; leave `source` out instead"),
+            )),
+            Some(Sources::Many(list)) => {
+                for (j, source) in list.iter().enumerate() {
+                    if let Some(message) = crate::sources::form(source) {
+                        errors.push(SpecError::at(
+                            format!("{pointer}/{j}"),
+                            format!("{owner}: {message}"),
+                        ));
+                    }
+                }
+            }
+        }
+    }
+    errors
+}
+
+pub(crate) fn is_xml_char(c: char) -> bool {
     matches!(c, '\t' | '\n' | '\r') || (c >= ' ' && c != '\u{FFFE}' && c != '\u{FFFF}')
 }
 
 /// Lowercase letters and digits in groups joined by single hyphens.
-fn is_valid_id(id: &str) -> bool {
+pub(crate) fn is_valid_id(id: &str) -> bool {
     !id.is_empty()
         && id.split('-').all(|part| {
             !part.is_empty()
@@ -599,13 +644,26 @@ fn is_valid_id(id: &str) -> bool {
 /// message suggests the nearest slugs. With no logos at all nothing is
 /// checked: the build that draws none cannot tell.
 pub fn logos(spec: &Spec, logos: &dyn crate::logos::Logos) -> Vec<SpecError> {
+    let techs = spec
+        .nodes
+        .iter()
+        .enumerate()
+        .filter_map(|(i, n)| n.tech.as_deref().map(|t| (format!("/nodes/{i}/tech"), t)));
+    techs_carried(techs, logos)
+}
+
+/// Each `tech` that `logos` does not carry, at its pointer, with the
+/// nearest slugs suggested. Empty when `logos` has none at all.
+pub(crate) fn techs_carried<'a>(
+    techs: impl Iterator<Item = (String, &'a str)>,
+    logos: &dyn crate::logos::Logos,
+) -> Vec<SpecError> {
     let slugs = logos.slugs();
     if slugs.is_empty() {
         return Vec::new();
     }
     let mut errors = Vec::new();
-    for (i, node) in spec.nodes.iter().enumerate() {
-        let Some(tech) = &node.tech else { continue };
+    for (pointer, tech) in techs {
         if logos.path(tech).is_some() {
             continue;
         }
@@ -626,7 +684,7 @@ pub fn logos(spec: &Spec, logos: &dyn crate::logos::Logos) -> Vec<SpecError> {
             ),
         };
         errors.push(SpecError::at(
-            format!("/nodes/{i}/tech"),
+            pointer,
             format!("`{tech}` is not a logo archgram carries{hint}"),
         ));
     }
@@ -658,7 +716,7 @@ pub(crate) fn nearest_few<'a>(
     close.into_iter().take(count).map(|(_, c)| c).collect()
 }
 
-fn nearest<'a>(id: &str, candidates: impl Iterator<Item = &'a str>) -> Option<&'a str> {
+pub(crate) fn nearest<'a>(id: &str, candidates: impl Iterator<Item = &'a str>) -> Option<&'a str> {
     let limit = (id.chars().count() / 3).max(1);
     candidates
         .map(|c| (edit_distance(id, c), c))
