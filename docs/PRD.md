@@ -2,8 +2,8 @@
 
 | Field   | Value      |
 |---------|------------|
-| Version | 0.30       |
-| Date    | 2026-10-08 |
+| Version | 0.31       |
+| Date    | 2026-10-09 |
 | Status  | Draft      |
 | Owner   | Abas Turabli |
 
@@ -37,6 +37,13 @@ day, a diagram goes stale faster than anyone reads it closely enough to
 notice. The same holds for a diagram drawn from a document rather than
 from code, a pattern on a docs site or a system in a design doc or an
 engineering blog post: nothing says when the text beside it changes.
+
+A system is not only its parts. Readers also need the order of the calls
+between them, the states a thing goes through, the steps a process takes
+across people, and where data goes. Each has a diagram whose meaning
+people already share, from UML, BPMN or structured analysis. Drawn as an
+architecture diagram they lose that meaning: an OAuth request's eight
+messages on six arrows lose their order.
 
 AI coding agents hit the same wall from the other side. Asked for a
 diagram, an agent writes the SVG by hand, every coordinate and every
@@ -94,6 +101,12 @@ same file every time.
 8. Themeable. Switching palette is one line in the spec or one flag on
    the command line. A project's own design system is used only when
    asked for.
+9. Shared meaning. A kind of diagram other than architecture takes its
+   meaning from the standard that defines it: UML for sequence and state
+   machine diagrams, BPMN for processes, structured analysis for data
+   flow. archgram draws a named subset of it, says what it leaves out and
+   claims no conformance; principles 1 to 8 decide how it looks
+   ([docs/features/diagram-kinds.md](features/diagram-kinds.md)).
 
 ## 5. Scope by version
 
@@ -108,6 +121,7 @@ same file every time.
 | 0.7 | A node or an edge names the code behind it, and archgram says when that code is gone ([docs/features/sources.md](features/sources.md)) |
 | 0.8 | archgram chooses the direction that fits a README, and `build` says the size it drew; `archgram spec` prints a short part of the format, or one section |
 | 0.9 | A spec says how wide it is shown; `build` and `direction: auto` measure against it; the skill keeps a drawing's direction once chosen ([docs/features/shown-width.md](features/shown-width.md)) |
+| Planned | Four more kinds of diagram, each from its standard, in this order: sequence, with the `diagram` field that names a spec's kind; dataflow; workflow; lifecycle ([docs/features/diagram-kinds.md](features/diagram-kinds.md)) |
 | Later | The WASM package, for the browser; the PNG module, drawn from the same scene as the SVG by archgram's own rasterizer |
 
 ## 6. Functional requirements
@@ -127,6 +141,10 @@ same file every time.
   states it, and archgram says when that is no longer there; it is never
   drawn. It finds what the code or the text lost, not what it gained
   ([docs/features/sources.md](features/sources.md)).
+- A spec says which kind of diagram it is, `diagram: sequence`, and
+  archgram draws it by that kind's rules; a spec that does not say is an
+  architecture diagram, as every spec is today, and draws the same bytes
+  ([docs/features/diagram-kinds.md](features/diagram-kinds.md)).
 
 ### 6.2 Layout and routing
 - Edges flow in one main direction, left to right or top to bottom.
@@ -142,6 +160,10 @@ same file every time.
 - Edges are orthogonal, with as few bends and crossings as the layout
   allows.
 - Frames contain their nodes, and an edge may cross a frame's border.
+- Each kind of diagram lays out by its own rules, all deterministic and
+  none from coordinates: architecture, dataflow, workflow and lifecycle in
+  layers along the flow, a workflow's nodes each in its lane; a sequence
+  in columns, one for each participant, with time running down the page.
 
 ### 6.3 Rendering
 - Each node kind has its own shape, so a reader recognises it before
@@ -182,6 +204,10 @@ same file every time.
   chooses: nothing more, the flows in words under the legend, or each
   step's number on its lines. A screen reader hears each flow in words, a
   refused step included.
+- In every kind of diagram, what moves is the order the diagram already
+  states: a flow's steps, a sequence's messages, a lifecycle's run
+  through its states. The rules above hold for each: the timing, a
+  refusal, reduced motion, the still image and a screen reader's account.
 - How each of these is drawn, in which colours and with what timing, is
   in DESIGN.md (Components: Signal, Refusal; Layout: Motion).
 
@@ -224,6 +250,13 @@ same file every time.
   which direction, or calls it by name where the agent offers that
   (`/archgram` in Claude Code); the agent also chooses it when asked for an
   architecture diagram. It never runs by itself.
+- It chooses the kind of diagram from the question the reader asks: what
+  it is made of (architecture), in what order the parts call each other
+  (sequence), what states a thing goes through (lifecycle), what steps the
+  work takes and who does each (workflow), where data goes (dataflow).
+  A request that fits a kind archgram does not draw yet is said to be
+  so, never drawn as another kind
+  ([docs/features/diagram-kinds.md](features/diagram-kinds.md)).
 - It is written to the Agent Skills format alone: its frontmatter keeps the
   format's fields, and its steps name no one agent's tools, so every agent
   that reads skills follows the same steps.
@@ -327,6 +360,15 @@ Icons release, CC0 data; a logo under a licence of its own is left out.
 The brands' guidelines stay with whoever publishes a diagram, and
 archgram records each logo's source and guidelines for them.
 
+Each other kind of diagram has its own vocabulary, from its standard: a
+sequence's participants and messages, a lifecycle's states and
+pseudostates, a workflow's tasks, events, gateways and lanes, a data
+flow's processes, stores and external entities. The kinds above and their
+icons are reused where they mean the same thing, a database as a data
+store, a person as an external entity. The vocabularies are in
+[docs/features/diagram-kinds.md](features/diagram-kinds.md), and in
+docs/SPEC.md once built.
+
 ## 8. Success criteria
 
 - The two README diagrams of ai-powered-cv-screener are reproduced from
@@ -348,14 +390,18 @@ archgram records each logo's source and guidelines for them.
   74 and 36.
 - Each feature with a document of its own meets the criteria there:
   [what backs a diagram](features/sources.md#success-criteria),
-  [where a diagram is shown](features/shown-width.md#success-criteria).
+  [where a diagram is shown](features/shown-width.md#success-criteria),
+  [more kinds of diagram](features/diagram-kinds.md#success-criteria).
 
 ## 9. Non-goals
 
 - An interactive editor or any GUI.
 - Free-form drawing: a box at a chosen position, a line with a chosen
   path.
-- Other diagram types: sequence, entity-relationship, class, Gantt.
+- Other diagram types: entity-relationship, class, Gantt. A sequence,
+  state machine, process or data flow diagram beyond the subset its
+  document names: archgram is not a UML or BPMN modelling tool and claims
+  no conformance to either.
 - A hand-drawn or sketch style.
 - Graphs larger than about 300 nodes.
 - A hosted rendering service.
@@ -401,3 +447,4 @@ None.
 | 0.28    | 2026-10-08 | The kinds' icons come from Hugeicons' free Stroke Rounded set (MIT), copied once, in place of archgram's own drawings (§6.3). |
 | 0.29    | 2026-10-08 | 0.9: a spec says how wide it is shown, a README by default; `build` and `direction: auto` keep the text readable there, and `build` warns but still draws; the skill writes the direction it chose into the spec, so an edit never turns a drawing; no layout per screen (§5, §6.1, §6.2, §6.5, §6.6, §8, §9, `docs/features/shown-width.md`, #114). |
 | 0.30    | 2026-10-08 | A diagram may be drawn from a document the user names rather than from code: the skill takes its facts from the text, in its own words, and each part and line takes the sentence that states it as its source, which `check` holds to the text as it does to code (§1, §2, §6.1, §6.6, §8, `docs/features/sources.md`, #122). |
+| 0.31    | 2026-10-09 | Four more kinds of diagram, each taking its meaning from its standard: sequence and lifecycle from UML 2.5.1, workflow from BPMN 2.0.2, dataflow from structured analysis; a spec names its kind with `diagram`, architecture when it does not; sequence first, then dataflow, workflow, lifecycle; sequence leaves the non-goals (§1, §4, §5, §6.1, §6.2, §6.4, §6.6, §7, §8, §9, `docs/features/diagram-kinds.md`, #126). |
