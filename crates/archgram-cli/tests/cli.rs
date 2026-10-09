@@ -949,7 +949,7 @@ messages:
     assert!(stdout(&run).contains("top to bottom"), "{}", stdout(&run));
     let svg = read(&dir.join("sign-in.svg"));
     assert!(svg.starts_with("<svg"));
-    assert!(svg.contains(r#"class="lifeline""#));
+    assert!(svg.contains(r#"class="band""#));
 }
 
 /// `spec --section sequence` prints the sequence's part of the format.

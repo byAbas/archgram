@@ -21,10 +21,13 @@ follow [Semantic Versioning](https://semver.org/).
   participants, calls, sends that do not wait, replies, `alt`, `opt`,
   `loop` and `par` fragments with their guards, and refused messages, each
   with its sources, which `archgram check` holds to the code.
-  `archgram build` draws it top to bottom, still, each message numbered:
-  heads as cards, dashed lifelines, a call's filled arrowhead, a send's and
-  a reply's open one, a reply's dashed line, framed fragments with UML's
-  tag and guards, a refusal's ✕. `examples/` holds two.
+  `archgram build` draws it top to bottom, still, each message numbered,
+  in one of two looks (`look`): `cards`, card heads and a bar while a
+  participant answers a call, or `avatars`, round heads and no bars. In
+  both, each participant's lifeline is a band, each label in a pill, a
+  call's arrowhead filled, a send's and a reply's open, a reply's line
+  dashed, each fragment framed with its operator and guard in a pill, a
+  refusal's ✕. `examples/` holds two.
 
 ### Changed
 

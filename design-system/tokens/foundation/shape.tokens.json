@@ -108,22 +108,6 @@
         "lineCap": "butt"
       }
     },
-    "lifeline": {
-      "$value": {
-        "dashArray": [
-          {
-            "value": 2,
-            "unit": "px"
-          },
-          {
-            "value": 5,
-            "unit": "px"
-          }
-        ],
-        "lineCap": "butt"
-      },
-      "$description": "A sequence's lifeline: fainter than any other dash, a guide the messages hang from."
-    },
     "reply": {
       "$value": "{dash.edge}",
       "$description": "A reply in a sequence (UML 2.5.1, 17.4.4.1); a sequence has no edge taken only sometimes, so the two never meet."
@@ -131,6 +115,10 @@
     "operand": {
       "$value": "{dash.frame}",
       "$description": "The line between two operands of a fragment (UML 2.5.1, 17.6.4.1)."
+    },
+    "fragment": {
+      "$value": "{dash.frame}",
+      "$description": "A sequence fragment's frame in the avatars look, and the lines between its operands there: a boundary of a stretch of time, as a frame's dash is a boundary."
     }
   },
   "arrowhead": {
@@ -163,6 +151,20 @@
         "value": 120,
         "unit": "px"
       }
+    },
+    "pill-pad-x": {
+      "$value": {
+        "value": 10,
+        "unit": "px"
+      },
+      "$description": "In a sequence, the room inside a pill (a message's label, a fragment's operator and guard) on either side of its words."
+    },
+    "pill-pad-y": {
+      "$value": {
+        "value": 5,
+        "unit": "px"
+      },
+      "$description": "In a sequence, the room inside a pill above and below its words."
     }
   },
   "legend": {
@@ -273,6 +275,39 @@
       "$description": "Between an inline logo and the text after it."
     }
   },
+  "avatar": {
+    "$type": "dimension",
+    "$description": "A sequence participant's head in the avatars look.",
+    "size": {
+      "$value": {
+        "value": 52,
+        "unit": "px"
+      },
+      "$description": "The circle's diameter: the icon (card.horizontal-icon) with room round it, as a vertical card's badge holds its icon."
+    },
+    "label-gap": {
+      "$value": "{card.padding}",
+      "$description": "Between the circle and the participant's name under it."
+    }
+  },
+  "activation": {
+    "$type": "dimension",
+    "$description": "A bar on a sequence lifeline while its participant answers a call (UML 2.5.1, 17.2.4.4).",
+    "width": {
+      "$value": {
+        "value": 3,
+        "unit": "px"
+      },
+      "$description": "The bar's width: a thin rectangle, as UML draws it."
+    },
+    "offset": {
+      "$value": {
+        "value": 4,
+        "unit": "px"
+      },
+      "$description": "How far right a bar drawn over another on the same lifeline is moved, so both show (UML 2.5.1, Figure 17.2)."
+    }
+  },
   "spacing": {
     "$type": "dimension",
     "node-node": {
@@ -338,26 +373,39 @@
     },
     "message-row": {
       "$value": {
-        "value": 42,
+        "value": 48,
         "unit": "px"
       },
-      "$description": "The step from one message of a sequence to the next, down the page: a label of two lines above its line (typography.subtitle, 2 × 12 × 1.2 = 28.8) and spacing.edge-edge, rounded up."
+      "$description": "The step from one message of a sequence to the next, down the page: a label of two lines in its pill (2 × 12 × 1.2 + 2 × label.pill-pad-y = 38.8) and spacing.label-gap above and below it, rounded up."
     },
-    "lifeline-gap": {
-      "$value": "{spacing.node-node}",
-      "$description": "The least room between two participants' heads in a sequence, as between two cards."
+    "band-pad": {
+      "$value": {
+        "value": 12,
+        "unit": "px"
+      },
+      "$description": "In a sequence, the room between a participant's head and the sides and top of its band, and between its band's foot and what is drawn last."
+    },
+    "band-gap": {
+      "$value": {
+        "value": 14,
+        "unit": "px"
+      },
+      "$description": "The least room between two participants' bands in a sequence."
     },
     "self-width": {
       "$value": "{rounded.connector}",
       "$description": "How far a message to its own lifeline reaches out, one rounded bend each way."
     },
     "fragment-padding": {
-      "$value": "{spacing.frame-padding}",
-      "$description": "Room inside a sequence fragment's frame round what it holds, as a frame's."
+      "$value": {
+        "value": 10,
+        "unit": "px"
+      },
+      "$description": "In a sequence, the room between a fragment's frame and the bands it covers, and again for each fragment nested inside it."
     },
     "fragment-tag": {
       "$value": "{spacing.frame-label}",
-      "$description": "The height of a fragment's pentagon tag, at its frame's top left, as a frame's name."
+      "$description": "The height of a sequence fragment's pill, which holds its operator and its first guard on its frame's top edge, and of each later guard's pill, as a frame's name is tall."
     },
     "label-gap": {
       "$value": {
@@ -367,11 +415,8 @@
       "$description": "In a sequence, the room between a label or a guard and what is under it: its line, its number or its frame's edge."
     },
     "fragment-tag-pad": {
-      "$value": {
-        "value": 6,
-        "unit": "px"
-      },
-      "$description": "The room inside a sequence fragment's tag before its operator, and how much its lower right corner is cut."
+      "$value": "{label.pill-pad-x}",
+      "$description": "The room inside a sequence fragment's pill on either side of its words, as a label's pill."
     }
   }
 }

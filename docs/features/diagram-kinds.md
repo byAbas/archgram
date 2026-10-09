@@ -2,7 +2,7 @@
 
 | Field   | Value      |
 |---------|------------|
-| Version | 0.2        |
+| Version | 0.3        |
 | Date    | 2026-10-09 |
 | Status  | Draft      |
 | Release | Planned, sequence first |
@@ -127,10 +127,11 @@ What the standard says, and archgram takes:
   (one of several, each with a guard), `opt` (it happens or not), `loop`
   and `par`.
 - A message to the same lifeline (a self-call).
+- An execution specification, drawn as an activation bar (17.2.4.4), in
+  one of sequence's two looks ([sequence.md](sequence.md), Looks).
 
 Left out: creation and deletion of lifelines, the other operators,
-interaction uses, gates, execution specifications (activation bars, to be
-decided), timing constraints, communication, interaction overview and
+interaction uses, gates, timing constraints, communication, interaction overview and
 timing diagrams.
 
 archgram's own:
@@ -318,7 +319,9 @@ request above lost its order without a word.
    lanes as bands (BPMN 9.3.2), each drawn in archgram's own stroke and
    colours as DESIGN.md sets them. Participants, states, tasks and
    processes stay archgram's cards, with their icons and logos, so a
-   diagram reads as archgram's, not a UML tool's.
+   diagram reads as archgram's, not a UML tool's. A sequence may draw its
+   participants as avatars instead, with the same icons and logos
+   ([sequence.md](sequence.md), Decided 9).
 
 ## Open questions
 
@@ -326,8 +329,6 @@ request above lost its order without a word.
   rules above are from secondary sources (a Yourdon course document and
   course notes citing DeMarco). Read DeMarco 1978 before the dataflow
   feature document, or choose a source that is online.
-- Whether to take activation bars in sequence (UML: ExecutionSpecification,
-  17.2.4.4, 17.12.8) in the first version.
 - Whether workflow's lanes and architecture's frames are one thing in the
   engine with two looks, or two.
 
@@ -337,3 +338,4 @@ request above lost its order without a word.
 |---------|------------|--------|
 | 0.1     | 2026-10-09 | First draft, from #126: sequence and lifecycle from UML 2.5.1, workflow from BPMN 2.0.2, dataflow from structured analysis; a named subset of each, no conformance claimed; `diagram` names a spec's kind; a sequence is a spec of its own; sequence first; a refused message kept; the standard's symbols where readers know them. |
 | 0.2     | 2026-10-09 | Sequence has its own document, [sequence.md](sequence.md). |
+| 0.3     | 2026-10-09 | Sequence takes activation bars, in one of its two looks, and may draw its participants as avatars ([sequence.md](sequence.md), Decided 1 and 9). |

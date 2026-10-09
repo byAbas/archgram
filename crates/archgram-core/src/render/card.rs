@@ -7,10 +7,10 @@ use crate::render::icons::{GRID, icon};
 use crate::render::scene::{Anchor, GroupOf, Item, Place};
 use crate::spec::{CardStyle, Category, LogoPlace, Node, Variant};
 use crate::tokens::{
-    CARD_HORIZONTAL_BADGE, CARD_HORIZONTAL_ICON, CARD_LOGO_CHIP, CARD_LOGO_CHIP_RING,
-    CARD_LOGO_CORNER, CARD_LOGO_INLINE, CARD_LOGO_INLINE_GAP, CARD_MULTI_OFFSET, CARD_PADDING,
-    CARD_VERTICAL_BADGE, CARD_VERTICAL_ICON, ROUNDED_BADGE, ROUNDED_CARD, STROKE_ICON,
-    TYPOGRAPHY_SUBTITLE, TYPOGRAPHY_TITLE,
+    AVATAR_LABEL_GAP, AVATAR_SIZE, CARD_HORIZONTAL_BADGE, CARD_HORIZONTAL_ICON, CARD_LOGO_CHIP,
+    CARD_LOGO_CHIP_RING, CARD_LOGO_CORNER, CARD_LOGO_INLINE, CARD_LOGO_INLINE_GAP,
+    CARD_MULTI_OFFSET, CARD_PADDING, CARD_VERTICAL_BADGE, CARD_VERTICAL_ICON, ROUNDED_BADGE,
+    ROUNDED_CARD, STROKE_ICON, TYPOGRAPHY_SUBTITLE, TYPOGRAPHY_TITLE,
 };
 
 /// The CSS class that gives an icon its category's hue (DESIGN.md, Colors).
@@ -196,6 +196,116 @@ pub fn card(
         of: GroupOf::Node(node.id.clone()),
         items: out,
     }
+}
+
+/// `node`'s head in a sequence's `avatars` look, in its footprint `r`
+/// (DESIGN.md, Components: Sequence): a circle `avatar.size` across, edged
+/// as a card, the kind's icon in its middle, the logo in a chip on its
+/// lower right edge, and the name and note under it. Several instances
+/// show two circles' outlines behind it, up and to the right.
+pub fn avatar(
+    node: &Node,
+    r: Rect,
+    place: LogoPlace,
+    logos: &dyn Logos,
+    brand: Option<&Brand>,
+) -> Item {
+    let mut out = Vec::new();
+    let path = node.tech.as_deref().and_then(|t| logos.path(t));
+    let centre = avatar_centre(node, r);
+    let radius = AVATAR_SIZE / 2.0;
+    if node.variant == Variant::Multi {
+        for step in [2.0, 1.0] {
+            let d = step * CARD_MULTI_OFFSET;
+            out.push(Item::Circle {
+                class: "card".into(),
+                cx: centre.0 + d,
+                cy: centre.1 - d,
+                r: radius,
+            });
+        }
+    }
+    out.push(Item::Circle {
+        class: match node.variant {
+            Variant::External => "card external",
+            Variant::Single | Variant::Multi => "card",
+        }
+        .into(),
+        cx: centre.0,
+        cy: centre.1,
+        r: radius,
+    });
+    let hue = category_class(node.kind.category());
+    let icon_place = Place {
+        x: centre.0 - CARD_HORIZONTAL_ICON / 2.0,
+        y: centre.1 - CARD_HORIZONTAL_ICON / 2.0,
+        scale: CARD_HORIZONTAL_ICON / GRID,
+    };
+    match path.filter(|_| place == LogoPlace::Icon) {
+        Some(logo) => logo_path(
+            &mut out,
+            &format!("logo-icon {hue}"),
+            icon_place,
+            logo,
+            brand,
+        ),
+        None => out.push(Item::Icon {
+            class: format!("icon {hue}"),
+            place: icon_place,
+            stroke_width: STROKE_ICON / icon_place.scale,
+            shapes: icon(node.kind),
+        }),
+    }
+    if let Some(logo) = path.filter(|_| matches!(place, LogoPlace::Corner | LogoPlace::Chip)) {
+        let edge = radius * std::f64::consts::FRAC_1_SQRT_2;
+        let (cx, cy) = (centre.0 + edge, centre.1 + edge);
+        out.push(Item::Circle {
+            class: "logo-chip".into(),
+            cx,
+            cy,
+            r: CARD_LOGO_CHIP_RING / 2.0,
+        });
+        logo_path(
+            &mut out,
+            "logo",
+            Place {
+                x: cx - CARD_LOGO_CHIP / 2.0,
+                y: cy - CARD_LOGO_CHIP / 2.0,
+                scale: CARD_LOGO_CHIP / GRID,
+            },
+            logo,
+            brand,
+        );
+    }
+    let second = crate::measure::note_line(node, place, logos);
+    Lines {
+        title: &node.label,
+        note: second.text,
+        inline: second.logo,
+        brand,
+    }
+    .write(
+        &mut out,
+        centre.0,
+        centre.1 + radius + AVATAR_LABEL_GAP,
+        Anchor::Middle,
+    );
+    Item::Group {
+        of: GroupOf::Node(node.id.clone()),
+        items: out,
+    }
+}
+
+/// The middle of `node`'s circle in its avatar's footprint `r`: centred
+/// across, below the copies behind it.
+#[must_use]
+pub fn avatar_centre(node: &Node, r: Rect) -> (f64, f64) {
+    let copies = if node.variant == Variant::Multi {
+        2.0 * CARD_MULTI_OFFSET
+    } else {
+        0.0
+    };
+    (r.centre_x(), r.y + copies + AVATAR_SIZE / 2.0)
 }
 
 /// The front card in `node`'s footprint `r`: the footprint itself, or for
