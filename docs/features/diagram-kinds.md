@@ -2,7 +2,7 @@
 
 | Field   | Value      |
 |---------|------------|
-| Version | 0.1        |
+| Version | 0.2        |
 | Date    | 2026-10-09 |
 | Status  | Draft      |
 | Release | Planned, sequence first |
@@ -107,6 +107,9 @@ https://bdu.siu.edu.ar/bdu/Record/B-45-UBP01005); their text is not.
   readers know, archgram's card (Decided, 5).
 
 ## Sequence (UML 2.5.1, clause 17)
+
+Its own document, with the spec's shape and its decisions:
+[sequence.md](sequence.md).
 
 What the standard says, and archgram takes:
 
@@ -333,3 +336,4 @@ request above lost its order without a word.
 | Version | Date       | Change |
 |---------|------------|--------|
 | 0.1     | 2026-10-09 | First draft, from #126: sequence and lifecycle from UML 2.5.1, workflow from BPMN 2.0.2, dataflow from structured analysis; a named subset of each, no conformance claimed; `diagram` names a spec's kind; a sequence is a spec of its own; sequence first; a refused message kept; the standard's symbols where readers know them. |
+| 0.2     | 2026-10-09 | Sequence has its own document, [sequence.md](sequence.md). |
