@@ -1,0 +1,252 @@
+# Feature: sequence diagrams
+
+| Field   | Value      |
+|---------|------------|
+| Version | 0.1        |
+| Date    | 2026-10-09 |
+| Status  | Draft      |
+| Release | Planned, the first of the new kinds |
+| Issue   | [#126](https://github.com/byAbas/archgram/issues/126) |
+
+What this kind does and why, in more detail than
+`docs/features/diagram-kinds.md`, which names its source of truth and the
+decisions shared by every kind. Its fields go into `docs/SPEC.md` and its
+symbols into DESIGN.md as it is built.
+
+## Problem
+
+An architecture diagram says what calls what, not in what order, nor what
+comes back. A sign-in, an OAuth exchange, a cache miss or a payment is a
+conversation: the order of its messages and the answers are the point.
+Drawn as architecture, an OAuth request put its 8 messages onto 6 arrows,
+and the still image lost their order. On a frontend system design
+reference site, 20 of 48 diagrams are sequence diagrams, which archgram
+cannot draw today ([diagram-kinds.md](diagram-kinds.md#evidence)).
+
+## Who it serves
+
+| User | What they get |
+|---|---|
+| A reader of a README or a design doc | The order of the calls between the parts, what each returns, and where a request is turned away, in the notation they know from UML |
+| A developer | A sequence beside the code, each call tied to the line that makes it, checked when that line goes |
+| An agent | A spec it writes in the order the code runs, with the vocabulary of an architecture spec |
+
+## Source of truth
+
+OMG Unified Modeling Language 2.5.1, clause 17, Interactions
+(https://www.omg.org/spec/UML/2.5.1/PDF). What archgram takes from it:
+
+- **Lifelines.** "A Lifeline is shown using a symbol that consists of a
+  rectangle forming its 'head' followed by a vertical line (which may be
+  dashed) that represents the lifetime of the participant" (17.3.4.1).
+  "Events on the same time-line are ordered linearly down the page"
+  (17.3.3.1).
+- **Messages.** Of the six sorts (17.12.22, MessageSort): a synchronous
+  call, an asynchronous send (`asynchCall` and `asynchSignal` as one),
+  and a reply, which "has a dashed line with either an open or filled
+  arrow head" (17.4.4.1). A message to the sender's own lifeline.
+- **Combined fragments.** "A solid-outline rectangle. The operator is
+  shown in a pentagon in the upper left corner of the rectangle"; operands
+  "separated by a dashed horizontal line" (17.6.4.3, 17.6.4.1). Of the
+  twelve operators (17.12.15), `alt`, `opt`, `loop` and `par`.
+- **Guards.** "Shown in square brackets covering the lifeline where the
+  first event occurrence will occur", `[else]` among them; omitted, true
+  is assumed (17.6.4.2).
+
+Left out: activation bars (ExecutionSpecification, 17.2.4.4; later),
+creating and deleting lifelines, the other eight operators, interaction
+uses, gates, lost and found messages, timing constraints, and the
+communication, interaction overview and timing diagrams.
+
+## Requirements
+
+### Spec
+
+A spec names its kind, `diagram: sequence`, and holds `participants` and
+`messages`; time is the order of the `messages` list.
+
+```yaml
+archgram: 1
+diagram: sequence
+title: sign in
+description: The browser signs in through the API, which checks the password and returns a session.
+participants:
+  - { id: browser, kind: browser, label: Browser }
+  - { id: api, kind: service, label: API, tech: nodedotjs, source: ../../src/api.ts }
+  - { id: db, kind: database, label: Users, tech: postgresql }
+messages:
+  - { from: browser, to: api, label: POST /login }
+  - { from: api, to: db, label: find user, source: "../../src/api.ts#db.users.find(" }
+  - { reply: db, label: user }
+  - alt:
+      - when: password matches
+        messages:
+          - { reply: api, label: session, to: browser }
+      - when: else
+        messages:
+          - { reply: api, label: 401, to: browser, refused: true }
+```
+
+- `participants` are written as an architecture spec's `nodes`: `id`,
+  `kind`, `label`, `note`, `tech`, `variant`, `source`. A sequence spec
+  stands alone and reads no architecture spec.
+- A message has `from`, `to` and `label`; `async: true` makes it a send
+  that does not wait; `source` as an edge's.
+- `reply: <sender>` answers the latest call to that sender not yet
+  answered; `to` may be left out when that call makes it plain.
+- `alt`, `opt`, `loop` and `par` are items of the list, each holding
+  operands, each operand its own `messages`; fragments nest. Each `alt`
+  operand has a guard in `when`, `else` only on the last; `opt` and
+  `loop` take one operand with an optional `when`; `par` takes two or
+  more operands.
+- `refused: true` marks a message that turns the request away, archgram's
+  addition to UML (diagram-kinds.md, Decided 4).
+- The fields of an architecture spec that do not apply are errors here:
+  `nodes`, `edges`, `frames`, `flows`, `hints`, `direction`. `shownWidth`,
+  `palette`, `logo`, `signal`, `glow`, `still`, `credit` apply as there.
+
+### Validation
+
+A sequence spec is rejected, every problem at its line and column, when:
+
+- a message names a participant that does not exist, or a participant is
+  in no message;
+- a reply has no call to that sender before it still unanswered, or names
+  a `to` other than that call's sender;
+- an `alt` has fewer than two operands, an operand of `alt` lacks `when`,
+  or `else` is not the last;
+- a `par` has fewer than two operands, or an operand or a fragment is
+  empty;
+- `refused` is on a message whose request has already been answered.
+
+`archgram check` holds every source to the code as in architecture
+([sources.md](sources.md)).
+
+### Layout
+
+- Participants are columns, left to right in the order the spec lists
+  them; their heads in one row at the top, their lifelines down from them.
+- Each message is a row of its own, in the list's order, so nothing
+  happens at the same height except inside a `par`, whose operands still
+  take rows of their own. Time runs down the page; there is no
+  `direction`.
+- The space between two columns is as wide as the widest label between
+  them needs, measured as archgram measures every label, a long label on
+  two lines (DESIGN.md, Components: Edge label).
+- A message to the same participant is a short loop out to the right of
+  its lifeline and back, one row high.
+- A fragment's frame covers the columns of the lifelines its messages
+  touch and the rows they take, with its operator in a pentagon at its
+  top left, its operands divided by dashed lines and each guard in square
+  brackets under that line; nested frames sit inside with a margin.
+- Width is held to where the diagram is shown, as in architecture
+  ([shown-width.md](shown-width.md)): `build` warns when the participants
+  need more width than keeps the text readable, and says to drop or merge
+  participants or split the diagram.
+
+### Rendering
+
+- A participant's head is archgram's card, with its icon and logo, at the
+  top of its lifeline, which is dashed.
+- A call is a solid line with a filled arrowhead; a send that does not
+  wait, an open arrowhead; a reply, a dashed line (UML 17.4.4.1). The
+  label sits above its line, centred between the two lifelines.
+- A refused message ends in a ✕ at the participant that refuses, in the
+  refusal colour, as a refused flow does (PRD §6.4).
+- Monochrome, both themes, the embedded font, one self-contained SVG, as
+  every kind.
+
+### Animation
+
+- The messages play in the list's order, a signal along each line from
+  sender to receiver, the label lighting as it passes and the receiver's
+  head lit while the message is its own.
+- A `par`'s operands start together and each keeps its own order.
+- An `alt`'s operands play one after another, each its guard lit, as
+  flows play in turn in architecture; an `opt` plays its operand.
+- A `loop` plays its operand once, its pentagon and guard lit; archgram
+  does not know how many times it repeats and does not pretend to.
+- A refused message: the ✕ lands, and the refusal travels back along the
+  calls not yet answered to where the request began; what follows plays
+  after it.
+- Under reduced motion, nothing moves.
+
+### Still image and screen reader
+
+- The still image numbers each message by its order, on by default: in a
+  sequence the order is the meaning. `still: none` turns the numbers off.
+- A screen reader hears each message in words, in order, after the
+  description, a fragment's guard before its messages ("if password
+  matches: API replies session to Browser"), a refused message ending
+  "refused".
+
+### The skill
+
+- It draws a sequence when the reader asks in what order the parts call
+  each other and what comes back (diagram-kinds.md, Choosing the kind).
+- From code, it follows one entry point's calls in the order they run,
+  each call's source the line that makes it; from a document, each
+  message's source the sentence that states it.
+- Past about 15 messages, it splits the sequence, by phase or by
+  fragment. 15 is a starting value, to be measured (Success criteria).
+
+## Limits
+
+- One diagram, one conversation: a sequence does not show the parts that
+  take no part in it, nor how they are deployed; that is architecture's.
+- A loop is drawn once; its count, if the code knows it, goes in its
+  guard.
+- `par` shows what may happen in any order, not timing: no durations, no
+  clocks.
+- A sequence grows down with its messages; past the split value it is
+  hard to follow on one screen, however wide.
+
+## Not in this
+
+- Activation bars, to be added later (Decided 1).
+- Lifelines created or destroyed during the conversation.
+- The other UML operators, interaction uses and gates.
+- Reading an architecture spec's nodes as participants.
+
+## Success criteria
+
+- A spec without `diagram` draws the same bytes as before; the goldens do
+  not change.
+- The OAuth request draws each of its 8 messages on its own line, in
+  order, numbered in the still image.
+- On a test set: no two labels overlap, no label crosses a lifeline's
+  head, every frame holds its messages; byte-identical output across runs
+  and systems; WCAG 2.1 AA in both themes.
+- `check` fails, at the spec's line, once the code behind a call is gone.
+- The reference site's 20 sequence diagrams are redrawn, and a reviewer
+  accepts them; from them the split value is set where the smallest text
+  stays readable at a README's width, 880 px.
+- The skill: an evaluation case that asks for the order of calls draws a
+  sequence, and one that asks what a system is made of still draws
+  architecture, at the usual bar (PRD §8).
+
+## Decided (2026-10-09)
+
+1. No activation bars in the first version; they may come later.
+2. All four fragments, `alt`, `opt`, `loop` and `par`.
+3. The spec's shape above: `participants`, and `messages` in time's
+   order, fragments as items holding operands; `reply: <sender>`;
+   `when` for a guard; `refused: true`.
+4. The skill splits past about 15 messages, a starting value measured
+   once the engine draws.
+5. Sources as in architecture: a participant's file, a call's line,
+   optional on a reply and a guard; a document's sentence when drawn from
+   one.
+
+## Open questions
+
+- Whether a participant's head is drawn again at the bottom of a long
+  sequence, as some tools do, or once at the top.
+- How an `alt` whose operands all refuse, or none, reads in the
+  animation.
+
+## Changelog
+
+| Version | Date       | Change |
+|---------|------------|--------|
+| 0.1     | 2026-10-09 | First draft, from #126 and UML 2.5.1 clause 17: lifelines, calls, sends and replies, `alt`, `opt`, `loop`, `par`; `diagram: sequence` with `participants` and `messages`; a refused message; no activation bars yet; split past about 15 messages, to be measured; sources as in architecture. |
