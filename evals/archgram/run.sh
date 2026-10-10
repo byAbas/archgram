@@ -5,7 +5,8 @@
 # says how many runs it will start and starts none without --yes.
 #
 #   sh evals/archgram/run.sh --out DIR [--cases 1,3] [--configs with_skill]
-#     [--repeat N] [--model M] [--jobs N] [--budget USD] [--dry-run] [--yes]
+#     [--repeat N] [--model M] [--jobs N] [--budget USD] [--archgram BIN]
+#     [--dry-run] [--yes]
 #
 # It writes skill-creator's layout under DIR, a folder outside the
 # repository: eval-<id>-<name>/eval_metadata.json, and for each run
@@ -39,9 +40,25 @@ if [ "${1:-}" = __one ]; then
     const c = require(process.argv[1]).evals.find((e) => e.id === Number(process.argv[2]));
     console.log(c.files[0]);' "$here/evals.json" "$id")
   cp -R "$here/$files" "$dir/outputs"
+  # With --archgram, the skill's `npx … archgram@X.Y.Z` runs that build:
+  # npx takes a package of the version it asks for from the project's own
+  # node_modules before the registry. Kept out of the copy's git.
+  if [ -n "${EVAL_ARCHGRAM:-}" ]; then
+    pkg="$dir/outputs/node_modules/archgram"
+    mkdir -p "$pkg/bin" "$dir/outputs/node_modules/.bin"
+    printf '{ "name": "archgram", "version": "%s", "bin": { "archgram": "bin/archgram.js" } }\n' \
+      "$EVAL_VERSION" >"$pkg/package.json"
+    printf '#!/usr/bin/env node\nconst r = require("child_process").spawnSync(%s, process.argv.slice(2), { stdio: "inherit" });\nprocess.exit(r.status ?? 1);\n' \
+      "$(node -e 'console.log(JSON.stringify(process.argv[1]))' "$EVAL_ARCHGRAM")" >"$pkg/bin/archgram.js"
+    chmod +x "$pkg/bin/archgram.js"
+    ln -s ../archgram/bin/archgram.js "$dir/outputs/node_modules/.bin/archgram"
+    printf 'node_modules/\n' >>"$dir/outputs/.git-exclude"
+  fi
   # Its own git repository, so archgram's project folder is the copy and
   # nothing of this repository is read.
-  (cd "$dir/outputs" && git init -q && git add -A &&
+  (cd "$dir/outputs" && git init -q &&
+    { [ ! -f .git-exclude ] || { cat .git-exclude >>.git/info/exclude && rm .git-exclude; }; } &&
+    git add -A &&
     git -c user.name=archgram-eval -c user.email=eval@archgram.invalid \
       commit -qm "the project as given")
 
@@ -111,7 +128,7 @@ if [ "${1:-}" = __one ]; then
   exit 0
 fi
 
-out= cases= configs="with_skill without_skill" repeat=1
+out= cases= configs="with_skill without_skill" repeat=1 archgram=
 model=claude-opus-5-5 jobs=1 budget=5 dry=false yes=false
 while [ $# -gt 0 ]; do
   case $1 in
@@ -122,6 +139,7 @@ while [ $# -gt 0 ]; do
     --model) model=$2; shift 2 ;;
     --jobs) jobs=$2; shift 2 ;;
     --budget) budget=$2; shift 2 ;;
+    --archgram) archgram=$2; shift 2 ;;
     --dry-run) dry=true; shift ;;
     --yes) yes=true; shift ;;
     *) sed -n '2,13p' "$0" | sed 's/^# \{0,1\}//' >&2; exit 2 ;;
@@ -133,6 +151,10 @@ case $out in "$root"/*|"$root") die "--out must be outside the repository: $out"
 for c in $configs; do
   case $c in with_skill|without_skill) ;; *) die "a config is with_skill or without_skill, not $c" ;; esac
 done
+if [ -n "$archgram" ]; then
+  case $archgram in /*) ;; *) archgram="$PWD/$archgram" ;; esac
+  [ -x "$archgram" ] || die "--archgram $archgram is not a program"
+fi
 command -v claude >/dev/null || die "claude is not on the PATH"
 command -v node >/dev/null || die "node is not on the PATH"
 [ -n "$cases" ] || cases=$(node -e 'console.log(require(process.argv[1]).evals.map((e) => e.id).join(" "))' "$here/evals.json")
@@ -142,8 +164,9 @@ plan=$(for id in $cases; do for c in $configs; do
   k=1; while [ "$k" -le "$repeat" ]; do echo "$id $c $k"; k=$((k + 1)); done
 done; done)
 n=$(printf '%s\n' "$plan" | grep -c .)
-printf 'run.sh: %s runs: cases %s, %s, %s each, model %s, at most $%s each, archgram@%s\n' \
-  "$n" "$(echo $cases | tr ' ' ',')" "$(echo $configs | tr ' ' ',')" "$repeat" "$model" "$budget" "$version"
+printf 'run.sh: %s runs: cases %s, %s, %s each, model %s, at most $%s each, archgram@%s%s\n' \
+  "$n" "$(echo $cases | tr ' ' ',')" "$(echo $configs | tr ' ' ',')" "$repeat" "$model" "$budget" "$version" \
+  "${archgram:+ (run by $archgram)}"
 if $dry; then
   printf '%s\n' "$plan"
   exit 0
@@ -169,7 +192,7 @@ claude plugin list --json | node -e '
   });' >"$out/settings.json"
 node -e '
   const fs = require("fs"), path = require("path");
-  const [evals, out, cases, commit, model, version] = process.argv.slice(1);
+  const [evals, out, cases, commit, model, version, build] = process.argv.slice(1);
   for (const id of cases.split(" ")) {
     const c = require(evals).evals.find((e) => e.id === Number(id));
     const dir = path.join(out, `eval-${c.id}-${c.name}`);
@@ -178,8 +201,9 @@ node -e '
       { eval_id: c.id, eval_name: c.name, prompt: c.prompt, assertions: c.expectations }, null, 2) + "\n");
   }
   fs.writeFileSync(path.join(out, "run.json"), JSON.stringify(
-    { commit, model, archgram: version, started: new Date().toISOString() }, null, 2) + "\n");' \
-  "$here/evals.json" "$out" "$cases" "$(git -C "$root" rev-parse HEAD)" "$model" "$version"
+    { commit, model, archgram: version, build: build || null, started: new Date().toISOString() }, null, 2) + "\n");' \
+  "$here/evals.json" "$out" "$cases" "$(git -C "$root" rev-parse HEAD)" "$model" "$version" "$archgram"
 
-export EVAL_OUT="$out" EVAL_MODEL="$model" EVAL_BUDGET="$budget" EVAL_VERSION="$version"
+export EVAL_OUT="$out" EVAL_MODEL="$model" EVAL_BUDGET="$budget" EVAL_VERSION="$version" \
+  EVAL_ARCHGRAM="$archgram"
 printf '%s\n' "$plan" | xargs -P "$jobs" -L 1 sh "$0" __one

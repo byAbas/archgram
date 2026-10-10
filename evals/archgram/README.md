@@ -63,6 +63,20 @@ sh evals/archgram/run.sh --out ~/archgram-evals/iteration-1 --repeat 3 --jobs 4 
   refused while the first runs, and a run already in the folder is never
   started again.
 
+Before a release, run them against the archgram this repository builds,
+in place of the version on npm, with `--archgram`:
+
+```sh
+cargo build --release -p archgram-cli
+sh evals/archgram/run.sh --out ~/archgram-evals/pre-release --archgram target/release/archgram --yes
+```
+
+Each copy then holds that build as `node_modules/archgram` at the
+skill's version, kept out of the copy's git: npx takes a package of the
+version it asks for from the project's own `node_modules` before the
+registry, so the skill's commands run unchanged. `run.json` names the
+build.
+
 Follow them live, in a second terminal, one line for each thing a run
 does: its start, with the plugins and skill it loaded, what the model
 says, each tool it calls, each error and denial, and how it ended, with
