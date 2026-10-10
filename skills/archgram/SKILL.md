@@ -1,9 +1,9 @@
 ---
 name: archgram
-description: Draws a project's software architecture as an animated SVG with archgram, for its README and docs, from the code and documentation, or from a document the user names (a docs page, a design doc, an article). Writes a spec in docs/diagrams/, checks and draws it with the archgram command, in the project's own colours when asked, then opens the drawing and lists each part with the file behind it. Use it whenever the user wants an architecture, system, data-flow, pipeline or "how it works" diagram, a diagram for a README, or an existing archgram diagram updated after the code changed or `archgram check` says its code is gone, even if they only say "draw how this works".
+description: Draws a project's software architecture as an animated SVG with archgram, for its README and docs, from the code and documentation, or from a document the user names (a docs page, a design doc, an article). Writes a spec in docs/diagrams/, checks and draws it with the archgram command, in the project's own colours when asked, then opens the drawing and lists each part with the file behind it. Also draws a sequence diagram: the order in which the parts call each other for one request, and what comes back, such as a sign-in or a checkout, in phases. Use it whenever the user wants an architecture, system, data-flow, pipeline, sequence or "how it works" diagram, the steps of a request, a diagram for a README, or an existing archgram diagram updated after the code changed or `archgram check` says its code is gone, even if they only say "draw how this works".
 license: MIT
 compatibility: Requires Node 22 or later, with npx.
-allowed-tools: Bash(npx --yes --loglevel=error archgram@0.9.0 spec --brief) Bash(npx --yes --loglevel=error archgram@0.9.0 spec --section theme-file)
+allowed-tools: Bash(npx --yes --loglevel=error archgram@0.9.0 spec --brief) Bash(npx --yes --loglevel=error archgram@0.9.0 spec --section sequence) Bash(npx --yes --loglevel=error archgram@0.9.0 spec --section theme-file)
 ---
 
 # Drawing architecture with archgram
@@ -26,6 +26,7 @@ npm, say so and stop.
 
 ```
 Progress:
+- [ ] The kind of diagram
 - [ ] 1. Reader contract
 - [ ] 2. Facts, each with its file
 - [ ] 3. The spec format, from archgram itself
@@ -34,6 +35,23 @@ Progress:
 - [ ] 6. Drawn, critiqued, opened
 - [ ] 7. Reported
 ```
+
+## Choose the kind
+
+Draw the kind the reader's question asks for:
+
+| The reader asks | Draw |
+|---|---|
+| What is it made of, and what calls what? | Architecture: the steps below as written |
+| In what order do the parts call each other for one request, and what comes back? | A sequence: the steps below, with `references/sequence.md` in place of `references/architecture.md` and `references/styles.md` |
+| What states does something go through, and what moves it from one to the next (a lifecycle)? Which role does each step of a business process (a workflow in lanes)? | Not a kind archgram draws yet: say so, and offer an architecture diagram or a sequence where one answers part of the question |
+
+"How it works", "the architecture", a data pipeline, a diagram for a
+README: architecture.
+"What happens when …", "step by step", the order of the calls of one
+request: a sequence. Never draw one kind as another without saying so:
+drawn as architecture, a request loses its order, and nothing tells the
+reader.
 
 ## 1. Decide who reads it
 
@@ -46,7 +64,10 @@ README's audience, the user's words); ask only when nothing tells you.
 ## 2. Gather the facts
 
 Read `references/architecture.md`, then the code and the docs the diagram
-describes. Recognise the style the system follows in the table in
+describes. For a sequence, read `references/sequence.md` instead and skip
+the styles: follow one entry point in the order the code runs it, each
+call a message with the line that makes it, and keep its participants,
+messages, fragments and phases as that file says; then go on to step 3. Recognise the style the system follows in the table in
 `references/styles.md`, and read that style's own file. Pick one level for
 the whole diagram, list the entry points, and follow each the reader cares
 about to what it calls, reads and writes. Draw a part only when a file
@@ -105,6 +126,12 @@ brief gives it: the theme file in step 5, or the section a problem from
 npx --yes --loglevel=error archgram@0.9.0 spec --section <name>
 ```
 
+For a sequence, print its section too, before writing:
+
+```bash
+npx --yes --loglevel=error archgram@0.9.0 spec --section sequence
+```
+
 A field the format does not list is an error. Besides the fields, it says
 how a writer fills some of them, such as where the files and lines from
 step 2 go: do as it says. It is the format of the very archgram you run,
@@ -125,6 +152,13 @@ anywhere, and move or remove the part or line. The check cannot see what
 the code gained, so step 2's walk still finds what is new.
 Change what the check and the walk found, and nothing more: a part or a
 flow the request did not ask for is the user's to add.
+
+A sequence's facts map as `references/sequence.md` says: participants,
+messages in the order the code runs, fragments for its branches, phases
+for its steps. A sequence has no `direction` and no `flows`: it is drawn
+top to bottom, numbers its messages and moves on its own, one phase at a
+time, so leave `still` out too. `shownWidth` holds as below. The rest of
+this step is for architecture, except `shownWidth` and the check.
 
 Map the facts onto the format: each part a node of the kind that fits it,
 with its technology's logo (`tech`) when the part is built on one; each
@@ -203,7 +237,8 @@ with what would bring it within: the other direction, with the width it
 would draw, or two diagrams. Do what it says: write that direction in the
 spec, or split the diagram in two, check each, and build again.
 
-Once the drawing passes the critique below, write the direction `build`
+A sequence is always drawn top to bottom; for it, skip the direction
+below. Once the drawing passes the critique below, write the direction `build`
 reported (`right` or `down`) in place of `direction: auto`, and check
 again: the drawing stays the same bytes, and a later edit cannot turn it
 on its side. Turn a drawing only when the user asks or `build` warns that
@@ -230,7 +265,9 @@ Tell the user, briefly:
   `references/styles.md`, or that none fitted;
 - each part drawn, with the file (or the sentence) behind it, and each
   edge with the line (or the sentence)
-  that makes it;
+  that makes it; for a sequence, each participant with its file, and
+  each message in order with the line (or the sentence) that makes it,
+  and what was split or left out past about 15 messages;
 - on an update, what changed in the spec and why, starting with what
   `archgram check` said had lost its code;
 - where the colours came from, or that they are archgram's own and the
