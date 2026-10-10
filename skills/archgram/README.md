@@ -3,7 +3,8 @@
 A skill, and a Claude Code plugin of that one skill in
 [Anthropic's directory](https://claude.ai/directory), that draws a
 project's software architecture as an animated SVG for its README and
-docs. The agent reads the code and the documentation, writes a spec to
+docs, or a sequence diagram of the order in which its parts call each
+other for one request. The agent reads the code and the documentation, writes a spec to
 `docs/diagrams/<name>.archgram.yaml`, and archgram lays it out and draws
 `docs/diagrams/<name>.svg` beside it, in light and dark, in archgram's
 colours or, when asked, the project's own. The report lists each part drawn with the file behind it.
@@ -27,9 +28,10 @@ colours or, when asked, the project's own. The report lists each part drawn with
   at the project's root and, where the colours are not already design
   tokens, `docs/diagrams/theme/archgram.resolver.json`.
 - It opens the SVG once with the system's own viewer.
-- It pre-approves two commands, at that version, which only print parts
-  of the spec format:
-  `npx --yes --loglevel=error archgram@0.9.0 spec --brief` and
+- It pre-approves three commands, at that version, which only print
+  parts of the spec format:
+  `npx --yes --loglevel=error archgram@0.9.0 spec --brief`,
+  `npx --yes --loglevel=error archgram@0.9.0 spec --section sequence` and
   `npx --yes --loglevel=error archgram@0.9.0 spec --section theme-file`.
   Every other command, `check`, `build`, `theme check`, another section
   and the project's own archgram included, asks the user first.

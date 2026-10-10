@@ -1,6 +1,6 @@
 # Evaluations of the archgram skill
 
-Ten cases for `skills/archgram`, in the format of Anthropic's
+Twelve cases for `skills/archgram`, in the format of Anthropic's
 [skill-creator](https://github.com/anthropics/skills/tree/main/skills/skill-creator),
 the one the Agent Skills format's own guide to evaluating skills uses:
 `evals.json` holds each prompt, what a good run produces and the checks a
@@ -18,11 +18,14 @@ prompts run in.
 | `merges-parts-with-the-same-relations` | It merges parts no question tells apart and keeps a crowded system within about 10 nodes and 12 edges |
 | `repairs-what-lost-its-code` | It starts from what `archgram check` says has lost its code, removes only that, keeps every source the check found and the spec's direction |
 | `draws-in-the-project-colours` | Asked for the project's colours, it reads them from its CSS, writes them as tokens and a mapping that `archgram theme check` passes, and draws with them |
+| `draws-a-sequence` | Asked what happens, step by step, when someone signs in, it draws a sequence: the participants in the order the request reaches them, the messages in the order the code runs, each call sourced to its line, the password's branch an `alt` with a refused 401, a send that does not wait, and phases |
+| `says-a-kind-it-cannot-draw` | Asked for a state diagram, it says archgram does not draw one yet and offers what it can, rather than drawing the states as another kind |
 | `draws-from-a-document` | Named a document and no code, it draws the example the document describes, each part and edge sourced to the sentence that states it, in the document's own words, with nothing the text does not state |
 
 Every case that draws expects a source on each node a file backs and on
 each edge, so it needs an archgram that reads them (0.7 or later;
-docs/features/sources.md).
+docs/features/sources.md). `draws-a-sequence` needs one that draws
+sequences with phases, the release after 0.9.0 (docs/features/sequence.md).
 
 Each case runs with the skill and without it, as skill-creator does. The
 runs call a model and cost money, so they run on request, not in CI; the

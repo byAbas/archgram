@@ -54,7 +54,7 @@ above, and quotes each source that holds a `#`.
 - `flows`: steps, branches, a flow that stops, and how archgram times them.
 - `hints`: `first`, `last`, `sameLayer` and `order`.
 - `sequence`: a sequence diagram, `diagram: sequence`: participants,
-  messages, replies and fragments.
+  phases, messages, replies and fragments.
 - `sources`: what a source may name, and how archgram looks it up.
 - `validation`: what makes a spec invalid.
 - `theme-file`: drawing in a project's own colours.

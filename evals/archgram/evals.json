@@ -10,6 +10,7 @@
       "expectations": [
         "A spec at docs/diagrams/<name>.archgram.yaml and <name>.svg beside it exist",
         "The run ran `archgram check` on the final spec, and it passes",
+        "The spec is an architecture diagram, not a sequence: it has no `diagram: sequence`, since the prompt asks what the project is made of",
         "The spec has nodes for the API, Postgres, the Redis cache, the orders queue and the worker",
         "Each of those nodes has a source naming its file in src/",
         "Every node a file backs and every edge has a source, an edge's with a few words of the line that makes it; an edge from a node no file backs is sourced at the line that receives it",
@@ -202,6 +203,42 @@
         "No browser was started and no screenshot taken",
         "The finished SVG was opened with the system's viewer (`open`, `xdg-open` or `start`); a run whose attempt was denied counts as having opened it",
         "README.md is left unchanged, and the report offers the line that shows the drawing in it"
+      ]
+    },
+    {
+      "id": 11,
+      "name": "draws-a-sequence",
+      "prompt": "Draw what happens when someone signs in, step by step, for the README.",
+      "expected_output": "The request asks for the order of the calls of one request, so the skill draws a sequence, not architecture: docs/diagrams/<name>.archgram.yaml has `diagram: sequence`, passes `archgram check`, and <name>.svg is drawn beside it. Its participants are the browser, the API (src/routes/login.ts), the auth service, external (src/auth.ts), the users in Postgres (src/db.ts) and the audit stream in Redis (src/audit.ts), left to right in the order the request reaches them. Its messages follow src/routes/login.ts in the order the code runs: POST /login, verify session and the claims back, find user and the user back, then an `alt` on the password, whose first way records the sign-in in the audit stream as a send that does not wait (`async: true`) and replies with the session, and whose `else` replies 401 with `refused: true`. Each call carries a source with a few words of the line that makes it, which `archgram check` finds. Two to four phases divide the story, each a few words. It has no `direction`, no `flows` and no `still`. The report gives the reader contract, each participant with its file and each message in order with its line. The skill asked no question, started no browser, took no screenshot, and opened only the finished SVG with the system's viewer.",
+      "files": ["files/signin"],
+      "expectations": [
+        "A spec at docs/diagrams/<name>.archgram.yaml with `diagram: sequence`, and <name>.svg beside it, exist",
+        "The run ran `archgram check` on the final spec, and it passes",
+        "The participants are the browser, the API, the auth service marked `variant: external`, the users database and the audit stream, in the order the request reaches them",
+        "Each participant a file backs has a source naming that file in src/",
+        "The messages follow src/routes/login.ts in the order the code runs: POST /login; verify session, and a reply from the auth service; find user, and a reply from the database; then the password's branch",
+        "The password's branch is an `alt` with its guard in words, its first way recording the sign-in in the audit stream with `async: true` and replying with the session, its `else` replying 401 with `refused: true`",
+        "Every call carries a source with a few words of the line that makes it, and each cited line holds the code it quotes",
+        "The messages are divided into two to four `phase` items, each named in a few words, at the top level of `messages`",
+        "The spec has no `direction`, `flows`, `still`, `signal`, `border`, `wait` or `glow`",
+        "There are no more than about 15 messages, and each label is a few words",
+        "The report gives each participant with its file and each message in order with the line that makes it",
+        "The run asked the user no question",
+        "No browser was started and no screenshot taken",
+        "The finished SVG was opened with the system's viewer"
+      ]
+    },
+    {
+      "id": 12,
+      "name": "says-a-kind-it-cannot-draw",
+      "prompt": "Draw the states an order goes through, from placed to shipped, as a state diagram.",
+      "expected_output": "A state diagram is a lifecycle, a kind archgram does not draw yet. The skill says so plainly, offers what archgram can draw instead (an architecture diagram, or a sequence of what happens to an order), and does not draw the states as boxes and arrows of another kind without saying so. No spec or SVG is written, since the user has not chosen the offer.",
+      "files": ["files/shop"],
+      "expectations": [
+        "The reply says archgram does not draw state (lifecycle) diagrams yet",
+        "The reply offers an architecture diagram or a sequence instead",
+        "No archgram spec or SVG is written",
+        "The states are not drawn as an architecture or a sequence diagram without the user's say"
       ]
     }
   ]
