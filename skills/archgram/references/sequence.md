@@ -41,7 +41,10 @@ as its `source`; a system you call but do not own is `variant: external`.
 
 Walk the handler line by line and write a message for each call the
 reader needs, in that order, with the line that makes it as its `source`
-(`src/routes/login.ts#auth.verifySession(`):
+(`src/routes/login.ts#auth.verifySession(`). That is the call in the
+handler the reader follows, not a line inside the function it calls: a
+`fetch` or a query inside `auth.ts` is how the call is done, and the
+reader looks for the call where the request is handled.
 
 - A call that waits for its result (an `await`, a synchronous call, a
   query) is a message: `{ from: api, to: db, label: find user }`.

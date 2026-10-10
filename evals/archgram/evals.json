@@ -5,7 +5,7 @@
       "id": 1,
       "name": "draws-a-project",
       "prompt": "Draw the architecture of this project for the README.",
-      "expected_output": "docs/diagrams/<name>.archgram.yaml passes `archgram check`, and <name>.svg is drawn beside it. It has the API, Postgres, the Redis cache, the orders queue and the worker, each backed by a file in src/ and named in the report with it; every node a file backs and every edge carries a source (the file behind it, and for an edge a few words of the line that makes it), each one that `archgram check` finds; a flow follows an order from the API through the queue to the worker and Postgres. The prompt asks for no colours, so the drawing keeps archgram's own, though src/styles.css has colours of its own: no theme is written and the report says the project's colours can be asked for. The skill did not ask any question. Each edge in the report has the file and line that makes it, the drawing is no wider than 1,300 px, its spec names the direction archgram chose rather than `auto`, and no browser was started and no screenshot taken: only the finished SVG was opened, with the system's viewer.",
+      "expected_output": "docs/diagrams/<name>.archgram.yaml passes `archgram check`, and <name>.svg is drawn beside it. It has the API, Postgres, the Redis cache, the orders queue and the worker, each backed by a file in src/ and named in the report with it; every node a file backs and every edge carries a source (the file behind it, and for an edge a few words of the line that makes it), each one that `archgram check` finds; a flow follows an order from the API through the queue to the worker and Postgres. The prompt asks for no colours, so the drawing keeps archgram's own, though src/styles.css has colours of its own: no theme is written and the report says the project's colours can be asked for. The skill did not ask any question. Each edge in the report has the file and line that makes it, the drawing is no wider than 1,300 px, its spec names the direction archgram chose rather than `auto`, and no browser was started and no screenshot taken: the only thing it tried to open was the finished SVG, with the system's viewer.",
       "files": ["files/shop"],
       "expectations": [
         "A spec at docs/diagrams/<name>.archgram.yaml and <name>.svg beside it exist",
@@ -23,7 +23,7 @@
         "The run asked the user no question",
         "The report gives each edge with the file and line that makes it, and each cited line holds the code it quotes",
         "No browser was started and no screenshot taken",
-        "The finished SVG was opened with the system's viewer (`open`, `xdg-open` or `start`); a run whose attempt was denied counts as having opened it",
+        "The run tried to open the finished SVG with the system's viewer (`open`, `xdg-open` or `start`); the runner denies the command, so the attempt is what counts",
         "README.md is left unchanged, and the report offers the line that shows the drawing in it"
       ]
     },
@@ -44,7 +44,7 @@
       "id": 3,
       "name": "updates-an-existing-diagram",
       "prompt": "The code changed, update the architecture diagram.",
-      "expected_output": "The skill changes docs/diagrams/architecture.archgram.yaml rather than starting a new spec: it keeps the reader, the API and Postgres, adds Elasticsearch and the search call backed by src/api.ts, gives every node a file backs (not the reader) and every edge a source, the new ones and the ones already there, which `archgram check` finds, draws architecture.svg, and says in the report what changed. Each edge in the report has the file and line that makes it, the drawing is no wider than 1,300 px and keeps the direction the spec had, and no browser was started and no screenshot taken: only the finished SVG was opened, with the system's viewer.",
+      "expected_output": "The skill changes docs/diagrams/architecture.archgram.yaml rather than starting a new spec: it keeps the reader, the API and Postgres, adds Elasticsearch and the search call backed by src/api.ts, gives every node a file backs (not the reader) and every edge a source, the new ones and the ones already there, which `archgram check` finds, draws architecture.svg, and says in the report what changed. Each edge in the report has the file and line that makes it, the drawing is no wider than 1,300 px and keeps the direction the spec had, and no browser was started and no screenshot taken: the only thing it tried to open was the finished SVG, with the system's viewer.",
       "files": ["files/search"],
       "expectations": [
         "docs/diagrams/architecture.archgram.yaml is changed in place; no second spec is written",
@@ -57,7 +57,7 @@
         "The report says what changed",
         "The report gives each edge with the file and line that makes it, and each cited line holds the code it quotes",
         "No browser was started and no screenshot taken",
-        "The finished SVG was opened with the system's viewer (`open`, `xdg-open` or `start`); a run whose attempt was denied counts as having opened it"
+        "The run tried to open the finished SVG with the system's viewer (`open`, `xdg-open` or `start`); the runner denies the command, so the attempt is what counts"
       ]
     },
     {
@@ -92,7 +92,7 @@
         "The SVG is no wider than 1,300 px",
         "The report gives each edge with the file and line that makes it, and each cited line holds the code it quotes",
         "No browser was started and no screenshot taken",
-        "The finished SVG was opened with the system's viewer (`open`, `xdg-open` or `start`); a run whose attempt was denied counts as having opened it",
+        "The run tried to open the finished SVG with the system's viewer (`open`, `xdg-open` or `start`); the runner denies the command, so the attempt is what counts",
         "README.md is left unchanged, and the report offers the line that shows the drawing in it"
       ]
     },
@@ -116,7 +116,7 @@
         "The SVG is no wider than 1,300 px",
         "The report gives each edge with the file and line that makes it, and each cited line holds the code it quotes",
         "No browser was started and no screenshot taken",
-        "The finished SVG was opened with the system's viewer (`open`, `xdg-open` or `start`); a run whose attempt was denied counts as having opened it",
+        "The run tried to open the finished SVG with the system's viewer (`open`, `xdg-open` or `start`); the runner denies the command, so the attempt is what counts",
         "README.md is left unchanged, and the report offers the line that shows the drawing in it"
       ]
     },
@@ -142,7 +142,7 @@
         "The SVG is no wider than 1,300 px",
         "The report gives each edge with the file and line that makes it, and each cited line holds the code it quotes",
         "No browser was started and no screenshot taken",
-        "The finished SVG was opened with the system's viewer (`open`, `xdg-open` or `start`); a run whose attempt was denied counts as having opened it"
+        "The run tried to open the finished SVG with the system's viewer (`open`, `xdg-open` or `start`); the runner denies the command, so the attempt is what counts"
       ]
     },
     {
@@ -187,7 +187,7 @@
       "id": 10,
       "name": "draws-from-a-document",
       "prompt": "Draw the example architecture that docs/patterns/backends-for-frontends.md describes, for the README.",
-      "expected_output": "The project has no code, and the user names a document, so the skill draws from it. docs/diagrams/<name>.archgram.yaml passes `archgram check`, and <name>.svg is drawn beside it. It has the example's parts: the mobile client and the desktop client, API Management, Microsoft Entra ID, Azure Monitor, the mobile BFF service and the desktop BFF service, and the microservices; each client reaches API Management, API Management reaches Microsoft Entra ID, Azure Monitor and each BFF service, and each BFF service reaches the microservices. Every node and edge carries a source in docs/patterns/backends-for-frontends.md with a few words from one line of the sentence that states it, and nothing the document does not state is drawn. Labels use the document's own words. The report lists each part and edge with its sentence and what the document leaves out. The skill did not ask any question; no browser was started and no screenshot taken: only the finished SVG was opened, with the system's viewer.",
+      "expected_output": "The project has no code, and the user names a document, so the skill draws from it. docs/diagrams/<name>.archgram.yaml passes `archgram check`, and <name>.svg is drawn beside it. It has the example's parts: the mobile client and the desktop client, API Management, Microsoft Entra ID, Azure Monitor, the mobile BFF service and the desktop BFF service, and the microservices; each client reaches API Management, API Management reaches Microsoft Entra ID, Azure Monitor and each BFF service, and each BFF service reaches the microservices. Every node and edge carries a source in docs/patterns/backends-for-frontends.md with a few words from one line of the sentence that states it, and nothing the document does not state is drawn. Labels use the document's own words. The report lists each part and edge with its sentence and what the document leaves out. The skill did not ask any question; no browser was started and no screenshot taken: the only thing it tried to open was the finished SVG, with the system's viewer.",
       "files": ["files/bff-pattern"],
       "expectations": [
         "A spec at docs/diagrams/<name>.archgram.yaml and <name>.svg beside it exist",
@@ -201,7 +201,7 @@
         "The SVG is no wider than 1,300 px",
         "The run asked the user no question",
         "No browser was started and no screenshot taken",
-        "The finished SVG was opened with the system's viewer (`open`, `xdg-open` or `start`); a run whose attempt was denied counts as having opened it",
+        "The run tried to open the finished SVG with the system's viewer (`open`, `xdg-open` or `start`); the runner denies the command, so the attempt is what counts",
         "README.md is left unchanged, and the report offers the line that shows the drawing in it"
       ]
     },
@@ -209,7 +209,7 @@
       "id": 11,
       "name": "draws-a-sequence",
       "prompt": "Draw what happens when someone signs in, step by step, for the README.",
-      "expected_output": "The request asks for the order of the calls of one request, so the skill draws a sequence, not architecture: docs/diagrams/<name>.archgram.yaml has `diagram: sequence`, passes `archgram check`, and <name>.svg is drawn beside it. Its participants are the browser, the API (src/routes/login.ts), the auth service, external (src/auth.ts), the users in Postgres (src/db.ts) and the audit stream in Redis (src/audit.ts), left to right in the order the request reaches them. Its messages follow src/routes/login.ts in the order the code runs: POST /login, verify session and the claims back, find user and the user back, then an `alt` on the password, whose first way records the sign-in in the audit stream as a send that does not wait (`async: true`) and replies with the session, and whose `else` replies 401 with `refused: true`. Each call carries a source with a few words of the line that makes it, which `archgram check` finds. Two to four phases divide the story, each a few words. It has no `direction`, no `flows` and no `still`. The report gives the reader contract, each participant with its file and each message in order with its line. The skill asked no question, started no browser, took no screenshot, and opened only the finished SVG with the system's viewer.",
+      "expected_output": "The request asks for the order of the calls of one request, so the skill draws a sequence, not architecture: docs/diagrams/<name>.archgram.yaml has `diagram: sequence`, passes `archgram check`, and <name>.svg is drawn beside it. Its participants are the browser, the API (src/routes/login.ts), the auth service, external (src/auth.ts), the users in Postgres (src/db.ts) and the audit stream in Redis (src/audit.ts), left to right in the order the request reaches them. Its messages follow src/routes/login.ts in the order the code runs: POST /login, verify session and the claims back, find user and the user back, then an `alt` on the password, whose first way records the sign-in in the audit stream as a send that does not wait (`async: true`) and replies with the session, and whose `else` replies 401 with `refused: true`. Each call carries a source with a few words of the line that makes it, which `archgram check` finds. Two to four phases divide the story, each a few words. It has no `direction`, no `flows` and no `still`. The report gives the reader contract, each participant with its file and each message in order with its line. The skill asked no question, started no browser, took no screenshot, and tried to open only the finished SVG, with the system's viewer.",
       "files": ["files/signin"],
       "expectations": [
         "A spec at docs/diagrams/<name>.archgram.yaml with `diagram: sequence`, and <name>.svg beside it, exist",
@@ -218,14 +218,14 @@
         "Each participant a file backs has a source naming that file in src/",
         "The messages follow src/routes/login.ts in the order the code runs: POST /login; verify session, and a reply from the auth service; find user, and a reply from the database; then the password's branch",
         "The password's branch is an `alt` with its guard in words, its first way recording the sign-in in the audit stream with `async: true` and replying with the session, its `else` replying 401 with `refused: true`",
-        "Every call carries a source with a few words of the line that makes it, and each cited line holds the code it quotes",
+        "Every call carries a source with a few words of the line in src/routes/login.ts that makes it, not a line inside the function it calls, and each cited line holds the code it quotes",
         "The messages are divided into two to four `phase` items, each named in a few words, at the top level of `messages`",
         "The spec has no `direction`, `flows`, `still`, `signal`, `border`, `wait` or `glow`",
         "There are no more than about 15 messages, and each label is a few words",
         "The report gives each participant with its file and each message in order with the line that makes it",
         "The run asked the user no question",
         "No browser was started and no screenshot taken",
-        "The finished SVG was opened with the system's viewer"
+        "The run tried to open the finished SVG with the system's viewer (`open`, `xdg-open` or `start`); the runner denies the command, so the attempt is what counts"
       ]
     },
     {
