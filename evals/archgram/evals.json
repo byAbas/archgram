@@ -218,7 +218,7 @@
         "Each participant a file backs has a source naming that file in src/",
         "The messages follow src/routes/login.ts in the order the code runs: POST /login; verify session, and a reply from the auth service; find user, and a reply from the database; then the password's branch",
         "The password's branch is an `alt` with its guard in words, its first way recording the sign-in in the audit stream with `async: true` and replying with the session, its `else` replying 401 with `refused: true`",
-        "Every call carries a source with a few words of the line that makes it, and each cited line holds the code it quotes",
+        "Every call carries a source with a few words of the line in src/routes/login.ts that makes it, not a line inside the function it calls, and each cited line holds the code it quotes",
         "The messages are divided into two to four `phase` items, each named in a few words, at the top level of `messages`",
         "The spec has no `direction`, `flows`, `still`, `signal`, `border`, `wait` or `glow`",
         "There are no more than about 15 messages, and each label is a few words",
