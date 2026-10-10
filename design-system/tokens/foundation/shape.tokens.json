@@ -59,6 +59,13 @@
         "value": 1.1,
         "unit": "px"
       }
+    },
+    "message": {
+      "$value": {
+        "value": 1.5,
+        "unit": "px"
+      },
+      "$description": "A sequence's call or send: stronger than a reply's line (`stroke.frame`), so the main path reads first."
     }
   },
   "dash": {
@@ -107,6 +114,22 @@
         ],
         "lineCap": "butt"
       }
+    },
+    "lifeline": {
+      "$value": {
+        "dashArray": [
+          {
+            "value": 2,
+            "unit": "px"
+          },
+          {
+            "value": 4,
+            "unit": "px"
+          }
+        ],
+        "lineCap": "butt"
+      },
+      "$description": "A sequence's lifeline: fainter than any other dash, a guide the messages hang from."
     },
     "reply": {
       "$value": "{dash.edge}",
@@ -158,13 +181,6 @@
         "unit": "px"
       },
       "$description": "In a sequence, the room inside a pill (a message's label, a fragment's operator and guard) on either side of its words."
-    },
-    "pill-pad-y": {
-      "$value": {
-        "value": 5,
-        "unit": "px"
-      },
-      "$description": "In a sequence, the room inside a pill above and below its words."
     }
   },
   "legend": {
@@ -295,10 +311,10 @@
     "$description": "A bar on a sequence lifeline while its participant answers a call (UML 2.5.1, 17.2.4.4).",
     "width": {
       "$value": {
-        "value": 3,
+        "value": 6,
         "unit": "px"
       },
-      "$description": "The bar's width: a thin rectangle, as UML draws it."
+      "$description": "The bar's width: a thin rectangle, light, as UML draws it white (17.2.4.4)."
     },
     "offset": {
       "$value": {
@@ -373,35 +389,29 @@
     },
     "message-row": {
       "$value": {
-        "value": 48,
+        "value": 42,
         "unit": "px"
       },
-      "$description": "The step from one message of a sequence to the next, down the page: a label of two lines in its pill (2 × 12 × 1.2 + 2 × label.pill-pad-y = 38.8) and spacing.label-gap above and below it, rounded up."
+      "$description": "The step from one message of a sequence to the next, down the page: a label of two lines above its line (typography.subtitle, 2 × 12 × 1.2 = 28.8) and spacing.edge-edge, rounded up."
     },
-    "band-pad": {
-      "$value": {
-        "value": 12,
-        "unit": "px"
-      },
-      "$description": "In a sequence, the room between a participant's head and the sides and top of its band, and between its band's foot and what is drawn last."
+    "lifeline-gap": {
+      "$value": "{spacing.node-node}",
+      "$description": "The least room between two participants' heads in a sequence, as between two cards."
     },
-    "band-gap": {
+    "phase-label": {
       "$value": {
-        "value": 14,
+        "value": 30,
         "unit": "px"
       },
-      "$description": "The least room between two participants' bands in a sequence."
+      "$description": "The room a sequence phase's name takes above its first message: the name (typography.frame-label) and its gap, rounded up."
     },
     "self-width": {
       "$value": "{rounded.connector}",
       "$description": "How far a message to its own lifeline reaches out, one rounded bend each way."
     },
     "fragment-padding": {
-      "$value": {
-        "value": 10,
-        "unit": "px"
-      },
-      "$description": "In a sequence, the room between a fragment's frame and the bands it covers, and again for each fragment nested inside it."
+      "$value": "{spacing.frame-padding}",
+      "$description": "Room inside a sequence fragment's frame round the lifelines it covers, as a frame's round its cards, and again for each fragment nested inside it."
     },
     "fragment-tag": {
       "$value": "{spacing.frame-label}",

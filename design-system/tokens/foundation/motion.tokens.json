@@ -67,6 +67,32 @@
         "unit": "ms"
       },
       "$description": "One step of a pending border's dashes as they march round a refused card."
+    },
+    "phase-gap": {
+      "$type": "duration",
+      "$value": {
+        "value": 900,
+        "unit": "ms"
+      },
+      "$description": "In a sequence, the pause between one phase and the next."
+    },
+    "rewind": {
+      "$type": "duration",
+      "$value": {
+        "value": 1100,
+        "unit": "ms"
+      },
+      "$description": "In a sequence, the pause before an alt's next way plays, while the last one dims back."
+    },
+    "dim": {
+      "$type": "number",
+      "$value": 0.6,
+      "$description": "How far a sequence's phases that are not playing dim: never further, so the drawing stays readable."
+    },
+    "tint": {
+      "$type": "number",
+      "$value": 0.03,
+      "$description": "The playing phase's tint between the lifelines its messages join: the text colour this faint, so a connector keeps 3:1 against it in light."
     }
   },
   "signal": {

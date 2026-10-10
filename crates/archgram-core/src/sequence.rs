@@ -44,20 +44,12 @@ pub struct Sequence {
     pub logo: LogoPlace,
     #[serde(default = "default_palette")]
     pub palette: String,
-    #[serde(default)]
-    pub signal: SignalStyle,
     /// What the still image shows: each message's number, by default.
     #[serde(default)]
     pub still: SequenceStill,
     /// How it is drawn: cards and activation bars, by default.
     #[serde(default)]
     pub look: Look,
-    #[serde(default)]
-    pub border: BorderStyle,
-    #[serde(default)]
-    pub wait: Wait,
-    #[serde(default = "default_true")]
-    pub glow: bool,
     #[serde(default = "default_true")]
     pub credit: bool,
     /// Left to right, in this order, each over its lifeline.
@@ -110,7 +102,8 @@ pub struct Participant {
 }
 
 /// One item of a `messages` list, read as written: a message (`from`,
-/// `to`), a reply (`reply`), or a fragment (`alt`, `opt`, `loop`, `par`).
+/// `to`), a reply (`reply`), a fragment (`alt`, `opt`, `loop`, `par`), or
+/// a phase (`phase`).
 #[derive(Debug, Clone, PartialEq, Default, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Item {
@@ -140,6 +133,10 @@ pub struct Item {
     pub repeat: Option<Operand>,
     #[serde(default)]
     pub par: Option<Vec<Operand>>,
+    /// The name of the phase this item starts: the items after it, up to
+    /// the next phase, are that phase (archgram's, not UML's).
+    #[serde(default)]
+    pub phase: Option<String>,
 }
 
 /// One operand of a fragment: its guard, and its own messages.
@@ -194,16 +191,34 @@ pub enum What<'a> {
         operator: Operator,
         operands: &'a [Operand],
     },
+    /// The start of a phase, with its name.
+    Phase(&'a str),
 }
 
 impl Item {
     /// What the item is, or why it is none: the fields of exactly one
-    /// form, a message, a reply or a fragment.
+    /// form, a message, a reply, a fragment or a phase.
     ///
     /// # Errors
     ///
-    /// Why the item is not one of the three.
+    /// Why the item is not one of the four.
     pub fn what(&self) -> Result<What<'_>, String> {
+        if let Some(name) = &self.phase {
+            let alone = Item {
+                phase: None,
+                ..Item::default()
+            };
+            let rest = Item {
+                phase: None,
+                ..self.clone()
+            };
+            if rest != alone {
+                return Err(format!(
+                    "a phase is an item of its own: write `phase: {name}` alone, and its messages after it"
+                ));
+            }
+            return Ok(What::Phase(name));
+        }
         let fragments: Vec<(Operator, &[Operand])> = [
             (Operator::Alt, self.alt.as_deref()),
             (Operator::Opt, self.opt.as_ref().map(std::slice::from_ref)),
@@ -221,7 +236,7 @@ impl Item {
         let forms = usize::from(message && !reply) + usize::from(reply) + fragments.len();
         if forms == 0 {
             return Err(
-                "an item is a message (`from`, `to`), a reply (`reply`), or a fragment (`alt`, `opt`, `loop`, `par`)"
+                "an item is a message (`from`, `to`), a reply (`reply`), a fragment (`alt`, `opt`, `loop`, `par`), or a phase (`phase`)"
                     .into(),
             );
         }
@@ -284,11 +299,11 @@ impl Sequence {
             logo: self.logo,
             palette: self.palette.clone(),
             legend: true,
-            signal: self.signal,
+            signal: SignalStyle::default(),
             still: crate::spec::Still::None,
-            border: self.border,
-            wait: self.wait,
-            glow: self.glow,
+            border: BorderStyle::default(),
+            wait: Wait::default(),
+            glow: true,
             credit: self.credit,
             nodes: self
                 .participants
@@ -349,7 +364,7 @@ impl Sequence {
                         ));
                     }
                 }
-                Err(_) => {}
+                Ok(What::Phase(_)) | Err(_) => {}
             },
         );
         owned
@@ -400,6 +415,9 @@ pub enum Step<'a> {
     /// Its next operand starts, with its guard.
     Operand(Option<&'a str>),
     Close,
+    /// A phase starts, with its name; only ever between the top-level
+    /// items.
+    Phase(&'a str),
 }
 
 /// The latest call to `by` still waiting, which a reply from `by`
@@ -528,6 +546,7 @@ impl Sequence {
                     });
                     out.push(Step::Close);
                 }
+                Ok(What::Phase(name)) => out.push(Step::Phase(name)),
                 // Validation has refused the spec.
                 Err(_) => {}
             }
@@ -589,6 +608,18 @@ pub fn validate(seq: &Sequence) -> Vec<SpecError> {
     }
     let mut open = Vec::new();
     v.items(&seq.messages, "/messages", &ids, &mut open);
+    // Each phase holds at least the item after it.
+    for (i, item) in seq.messages.iter().enumerate() {
+        if let Ok(What::Phase(name)) = item.what() {
+            let next = seq.messages.get(i + 1).map(Item::what);
+            if matches!(next, None | Some(Ok(What::Phase(_)))) {
+                v.error(
+                    &format!("/messages/{i}/phase"),
+                    format!("no message follows the phase `{name}`; put its messages after it, or leave it out"),
+                );
+            }
+        }
+    }
     for (i, p) in seq.participants.iter().enumerate() {
         if ids.contains(p.id.as_str()) && !v.used.contains(p.id.as_str()) {
             v.error(
@@ -646,6 +677,9 @@ impl<'a> Validator<'a> {
         walk(&s.messages, "/messages", &mut |pointer, item| {
             if let Some(label) = &item.label {
                 texts.push((format!("{pointer}/label"), label));
+            }
+            if let Some(name) = &item.phase {
+                texts.push((format!("{pointer}/phase"), name));
             }
             if let Ok(What::Fragment { operator, operands }) = item.what() {
                 for (j, operand) in operands.iter().enumerate() {
@@ -742,10 +776,28 @@ impl<'a> Validator<'a> {
                     }
                 }
                 Ok(What::Reply { by, to }) => self.reply(&pointer, ids, open, by, to),
+                Ok(What::Phase(name)) => self.phase(&pointer, at, name),
                 Ok(What::Fragment { operator, operands }) => {
                     self.fragment(&pointer, ids, open, operator, operands);
                 }
             }
+        }
+    }
+
+    /// A phase divides the top-level list, has a name, and is followed by
+    /// a message before the next phase or the end.
+    fn phase(&mut self, pointer: &str, at: &str, name: &str) {
+        if at != "/messages" {
+            self.error(
+                &format!("{pointer}/phase"),
+                "a phase divides the top-level `messages`; it cannot be inside a fragment, which is part of one phase".into(),
+            );
+        }
+        if name.trim().is_empty() {
+            self.error(
+                &format!("{pointer}/phase"),
+                "a phase needs a name: a few words for its step of the story".into(),
+            );
         }
     }
 

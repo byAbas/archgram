@@ -47,6 +47,22 @@
         }
       }
     },
+    "message": {
+      "$value": {
+        "fontFamily": "{font.sans}",
+        "fontSize": {
+          "value": 12,
+          "unit": "px"
+        },
+        "fontWeight": 500,
+        "lineHeight": 1.2,
+        "letterSpacing": {
+          "value": 0,
+          "unit": "px"
+        }
+      },
+      "$description": "A sequence call's label: a subtitle's size, a title's weight, so the main path reads first."
+    },
     "frame-label": {
       "$value": {
         "fontFamily": "{font.sans}",

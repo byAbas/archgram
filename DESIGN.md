@@ -103,31 +103,42 @@ components:
     textColor: "{color.signal-pass}"
     size: "{stroke.card}"
   lifeline:
-    backgroundColor: "{color.card}"
-    textColor: "{color.card-edge}"
-    rounded: "{rounded.frame}"
-    padding: "{spacing.band-pad}"
+    textColor: "{color.frame}"
+    size: "{stroke.card}"
   avatar:
     backgroundColor: "{color.card}"
     textColor: "{color.text}"
     typography: "{typography.title}"
     size: "{avatar.size}"
   activation:
-    backgroundColor: "{color.text-muted}"
+    backgroundColor: "{color.card}"
+    textColor: "{color.card-edge}"
     width: "{activation.width}"
   message:
-    textColor: "{color.connector}"
-    size: "{arrowhead.length}"
+    textColor: "{color.text}"
+    size: "{stroke.message}"
   message-reply:
     textColor: "{color.connector}"
+    size: "{stroke.frame}"
   message-label:
-    backgroundColor: "{color.card}"
     textColor: "{color.text}"
-    typography: "{typography.subtitle}"
-    padding: "{label.pill-pad-x}"
+    typography: "{typography.message}"
     width: "{label.max-width}"
   message-label-reply:
     textColor: "{color.text-muted}"
+    typography: "{typography.subtitle}"
+  message-number:
+    textColor: "{color.text-muted}"
+    typography: "{typography.legend}"
+  phase:
+    backgroundColor: "{color.card}"
+    rounded: "{rounded.frame}"
+    height: "{spacing.phase-label}"
+  phase-label:
+    textColor: "{color.text-muted}"
+    typography: "{typography.frame-label}"
+  lit-phase-label:
+    textColor: "{color.text}"
   fragment:
     textColor: "{color.frame}"
     rounded: "{rounded.frame}"
@@ -137,6 +148,11 @@ components:
     textColor: "{color.text}"
     typography: "{typography.frame-label}"
     padding: "{spacing.fragment-tag-pad}"
+    height: "{spacing.fragment-tag}"
+  fragment-or:
+    backgroundColor: "{color.text}"
+    textColor: "{color.canvas}"
+    typography: "{typography.frame-label}"
     height: "{spacing.fragment-tag}"
 ---
 
@@ -291,23 +307,23 @@ lists a fallback stack.
 A sequence lays out by its own rules (docs/features/sequence.md). Its
 participants' heads stand in one row at the top, left to right in the
 spec's order, drawn as the spec's `look` draws them, their feet on one
-line. Each participant's column is a band, its lifeline: as wide as the
-widest head of either look with `spacing.band-pad` on either side, so
-both looks set the same columns, every band the same width, from `spacing.band-pad` above the heads to `spacing.band-pad`
-below the last thing drawn. Its middle is where messages start and end.
+line, each a column as wide as the widest head of either look needs, so
+both looks set the same columns. A lifeline runs down from the middle of
+each head to below the last thing drawn; messages start and end on it.
 Messages take one row each, in the spec's order, time running down the
 page: a row is at least `spacing.message-row` high, and taller for a
-label of two lines. Two neighbouring bands are at least
-`spacing.band-gap` apart, and their middles as far apart as the widest
-label between them needs in its pill, a label never wider than
+label of two lines above its line. Two neighbouring heads are at least
+`spacing.lifeline-gap` apart, and their lifelines as far apart as the
+widest label between them needs, a label never wider than
 `label.max-width` and wrapped onto two lines past it, with its arrowhead
 beside it. A message to its own lifeline reaches `spacing.self-width` to
-the right, with its label's pill beyond. A fragment's frame takes the
-rows of what it holds and the bands its messages touch,
-`spacing.fragment-padding` out from those bands and that again for each
-fragment nested inside it, with a row at its top for its pill and a row
-for each later guard's. `spacing.margin` surrounds everything, as in
-every diagram.
+the right, with its label beyond. A phase takes the rows of its messages
+and `spacing.phase-label` above them for its name, across the whole
+drawing. A fragment's frame takes the rows of what it holds and the
+lifelines its messages touch, `spacing.fragment-padding` out from them
+and that again for each fragment nested inside it, with a row at its top
+for its pill and a row for each later guard's. `spacing.margin` surrounds
+everything, as in every diagram.
 
 Motion:
 
@@ -333,6 +349,21 @@ Motion:
   lists the flows under the legend or numbers their steps on the lines
   (Components: Signal).
 
+A sequence moves one phase at a time, and stays readable throughout:
+motion points at a message, it never hides one. The phase that plays has
+its name lit; the others' messages dim to `motion.dim`, never further. Its
+messages play in the spec's order, each a hop along its line at
+`motion.speed`, within `motion.hop-min` and `motion.hop-max`, leaving
+`motion.hop-gap` after the one before it arrives. `motion.phase-gap`
+passes between one phase and the next. A `par`'s operands start
+together, each in its own order, and what follows waits for the last of
+them. An `alt`'s ways play as alternatives: the first, then, after
+`motion.rewind` while it dims back, the next from where the first began.
+An `opt` and a `loop` play their operand once. `motion.rest` passes,
+everything shown, before the cycle repeats. Under
+`prefers-reduced-motion` the diagram is the still image, each message
+numbered.
+
 ## Elevation & Depth
 
 Flat. No shadows and no elevation tokens. Depth appears in one place only:
@@ -353,10 +384,11 @@ say "several instances" rather than "raised".
   `dash.external` marks a node we do not own; `dash.frame` marks a
   boundary; `dash.edge` marks an edge taken only sometimes. The frame's
   dash is longer, so a dashed card inside a dashed frame stays
-  distinguishable. A sequence has three of its own: `dash.reply` for a
-  reply; `dash.operand` between a fragment's operands; and, in the
-  `avatars` look, `dash.fragment` for a fragment's frame. Each has one
-  meaning in the diagram that uses it.
+  distinguishable. A sequence has four of its own: `dash.lifeline`, the
+  faintest, for a lifeline; `dash.reply` for a reply; `dash.operand`
+  between a fragment's operands; and, in the `avatars` look,
+  `dash.fragment` for a fragment's frame. Each has one meaning in the
+  diagram that uses it.
 
 ## Components
 
@@ -599,20 +631,17 @@ archgram's stroke and colours. The spec's `look` picks one of two
 drawings, `cards` by default or `avatars`; where this section names
 neither, a part is the same in both.
 
-**Lifeline** (`lifeline`). A band down the participant's column, filled
-with `color.card` and edged with `color.card-edge` at `stroke.card`, its
-corners `rounded.frame`; its head stands at its top. The band, not a
-line, is the lifeline (UML 2.5.1, 17.3.4.1, draws a line): it says which
-participant a stretch of the drawing belongs to, and every band is filled
-alike, since a tint behind every other one would leave a connector short
-of 3:1 against it in light.
+**Lifeline** (`lifeline`). A straight vertical line from the middle of
+the head's front card, or its circle, to below the last thing drawn,
+`stroke.card` wide, `dash.lifeline`, in `color.frame`: the quietest line
+in the drawing, a guide the messages hang from (UML 2.5.1, 17.3.4.1).
 
-**Participant head.** Drawn once, at the top of its band, never again at
-its foot. A participant that turns a request away is edged in the
+**Participant head.** Drawn once, at the top of its lifeline, never
+again at its foot. A participant that turns a request away is edged in the
 refusal colour (`refused-card`), as a refusing card is.
 
 - In `cards`: a node card (Node card, Variants, Technology logo),
-  unchanged, every head as wide as the widest, so the bands line up.
+  unchanged, every head as wide as the widest, so the columns line up.
 - In `avatars` (`avatar`): a circle `avatar.size` across, filled with
   `color.card` and edged as a card, the kind's icon in its middle at
   `card.horizontal-icon`, in its category's icon role. The logo sits on
@@ -625,9 +654,11 @@ refusal colour (`refused-card`), as a refusing card is.
   offset by `card.multi-offset` up and to the right.
 
 **Activation** (`activation`), in `cards` only. While a participant
-answers a call, a bar on its lifeline, `activation.width` wide, filled
-with `color.text-muted`, its ends rounded: from the call's line to its
-reply's line (UML 2.5.1, 17.2.4.4, "thin rectangles (gray or white)").
+answers a call, a light bar on its lifeline, `activation.width` wide,
+filled with `color.card` and edged with `color.card-edge` at
+`stroke.card`, its ends rounded: from the call's line to its reply's
+line (UML 2.5.1, 17.2.4.4, "thin rectangles (gray or white)"). It marks
+who is busy without weighing more than the messages.
 Answered in each operand of an `alt`, a bar runs to the last of those
 replies. A call never answered keeps its bar to the last message its
 receiver sends before its caller calls it again, and at least half a row;
@@ -638,18 +669,17 @@ moved `activation.offset` to the right (Figure 17.2), and a message to
 or from that participant meets the bar it belongs to.
 
 **Message** (`message`, `message-reply`). A horizontal line between two
-lifelines' middles, `stroke.connector` wide, in `color.connector`, its
-tip `arrowhead.gap` short of the receiving lifeline's middle, or of its
-bar. Its arrowhead, drawn with the line, says what kind of message it is
-(UML 2.5.1, 17.4.4.1); the shape, not a colour, tells whether the sender
-waits:
+lifelines, its tip `arrowhead.gap` short of the receiving lifeline, or of
+its bar. The main path reads first: a call's or a send's line is
+`stroke.message` wide in `color.text`, a reply's `stroke.frame` wide in
+`color.connector`. Its arrowhead, drawn with the line in the line's
+colour, says what kind of message it is (UML 2.5.1, 17.4.4.1); the
+shape, not a colour, tells whether the sender waits:
 
 - a call: solid, ending in a filled arrowhead, `arrowhead.length` back
-  along the line and `arrowhead.width` across, filled in the line's
-  colour;
-- a send that does not wait: solid, ending in the connector's open
-  arrowhead;
-- a reply: `dash.reply`, ending in the open arrowhead.
+  along the line and `arrowhead.width` across;
+- a send that does not wait: solid, ending in an open arrowhead;
+- a reply: `dash.reply`, ending in an open arrowhead.
 
 A message to its own lifeline leaves to the right, `spacing.self-width`
 out, turns down and comes back half a row lower, its arrowhead on the
@@ -657,19 +687,30 @@ lifeline, its bends rounded as far as the loop's size allows
 (`rounded.connector` at most). A refused one reaches further, so its ✕
 sits on its way back, clear of the bend.
 
-**Message label** (`message-label`, `message-label-reply`). In a pill on
-its line, centred between the two lifelines: filled with `color.card`,
-edged with `color.card-edge` at `stroke.card`, fully round, its words
-`label.pill-pad-x` in from its ends and `label.pill-pad-y` from its top
-and bottom. A call's and a send's words are `color.text`, a reply's
-`color.text-muted`, so the answer reads quieter than the question. A
-label wider than `label.max-width` wraps onto two lines, as an edge's
-(Connector), and its pill grows to hold them. A message to itself has its
-pill to the right of its loop, `spacing.label-gap` from it.
+**Message label** (`message-label`, `message-label-reply`,
+`message-number`). Above its line, centred between the two lifelines,
+`spacing.label-gap` clear of the line, as plain text: no pill, no patch.
+A call's and a send's words are in `typography.message` and
+`color.text`, a reply's in `typography.subtitle` and `color.text-muted`,
+so the answer reads quieter than the question. Its number leads it, in
+`typography.legend` and `color.text-muted`. A label wider than
+`label.max-width` wraps onto two lines, as an edge's (Connector). A
+message to itself has its label to the right of its loop,
+`spacing.label-gap` from it.
+
+**Phase** (`phase`, `phase-label`, `lit-phase-label`). A band across the
+whole drawing, from `spacing.margin` to `spacing.margin`, over its
+messages' rows and `spacing.phase-label` above them, filled with
+`color.card` with `rounded.frame` corners; the gap between two phases is
+the canvas, so neighbouring phases stay apart. Its name sits at its top
+left, `spacing.fragment-padding` in, in `typography.frame-label` capitals
+and `color.text-muted`, lit to `color.text` while its phase plays. Every
+phase is filled alike: a tint behind every other one would leave a
+connector short of 3:1 against it in light.
 
 **Fragment** (`fragment`, `fragment-tag`). A rectangle with
 `rounded.frame` corners, a `stroke.frame` line in `color.frame`, no fill,
-round the rows and bands its messages take.
+round the rows and lifelines its messages take.
 
 - In `cards`, its line is solid; in `avatars`, `dash.fragment`.
 - Its pill (`fragment-tag`) stands on its top edge, centred on the line:
@@ -686,21 +727,48 @@ round the rows and bands its messages take.
   the same place, `else` for `else`.
 - A guard wider than `label.max-width` wraps onto two lines, the operator
   leading the first, and its pill grows to hold them.
-- The bands are set far enough apart that a frame and its pills reach no
-  band outside the span its messages take.
+- The lifelines are set far enough apart that a frame and its pills
+  reach no lifeline outside the span its messages take.
 - A fragment nested in another sits inside it, `spacing.fragment-padding`
   in from its sides; frames never cross.
 
 **Refusal.** A refused message ends in the refusal ✕ (`refusal-mark`),
-`refusal.mark-gap` before its arrowhead, on a patch of the band, its
-arrowhead, its label's words and its pill's edge in the refusal colour,
-and the participant that refuses is edged in it (Refusal).
+`refusal.mark-gap` before its arrowhead, on a patch of what it sits on,
+its line, arrowhead and label in the refusal colour, and the participant
+that refuses is edged in it (Refusal).
 
-**Numbers.** Where nothing moves, each message's number, counted in time's
-order through every fragment, leads its label in its pill, in
-`typography.legend` and `color.text-muted`, `spacing.label-gap` before
-the words; a message without a label has a pill with its number alone.
-On by default in a sequence (`still: numbers`): its order is its meaning.
+**Numbers.** Each message's number, counted in time's order through
+every fragment, leads its label, `spacing.label-gap` before the words; a
+message without a label shows its number alone. On by default in a
+sequence (`still: numbers`): its order is its meaning. An `alt`'s ways
+are alternatives, so each of its messages carries its way's letter:
+`4a` to `7a`, then `4b`, each way starting again from the alt's first
+number, the count going on after the `alt` from its longest way; in
+nested `alt`s, each one's letter in turn (`5ab`).
+
+**Motion** (Layout: Motion). One phase plays at a time:
+
+- Its name is lit (`lit-phase-label`); the other phases' messages dim to
+  `motion.dim`. Heads, lifelines and fragments stay as they are.
+- Each of its messages in turn has its line drawn from its sender at
+  its own width, in `color.text` (the refusal colour for a refused one),
+  over its line as it rests; its arrowhead takes that colour the moment
+  the line reaches it, so line and head change as one. A refused
+  message's ✕ appears as it arrives. The line stays drawn until its
+  phase ends, and fades over `motion.fade`.
+- A tint of `color.text` at `motion.tint` grows across the phase's band
+  between the two lifelines each message joins, from its sender's toward
+  its receiver's as it goes, and keeps what it has covered until the
+  phase ends.
+- An `alt`'s first way plays; its lines then fade back and its messages
+  dim to `motion.dim` while, over `motion.rewind`, an "or"
+  (`fragment-or`), a pill `spacing.fragment-tag` high in `color.text`
+  with its word in `color.canvas`, appears after the next operand's pill;
+  the tint goes, and the next way plays from where the first began.
+
+Nothing else lights: not the heads, the pills or the bars. The still
+image, under reduced motion, shows every message at rest, with its
+number, its ✕ and the refusing head's edge.
 
 ## Do's and Don'ts
 
@@ -717,6 +785,9 @@ On by default in a sequence (`still: numbers`): its order is its meaning.
 - Don't animate for decoration; if the flow does not need it, the diagram
   is still.
 - Don't write a value in this file. A new value is a token first.
-- Do keep a sequence's meaning in its shapes: a filled or open arrowhead,
-  a solid or dashed line, a fragment's operator and guards, a bar while a
-  call is answered; never a colour.
+- Do keep a sequence's meaning in its shapes and weights: a filled or
+  open arrowhead, a solid or dashed line, a call stronger than a reply, a
+  fragment's operator and guards, a bar while a call is answered; never
+  a colour.
+- Don't let a sequence's motion hide what it draws: nothing dims below
+  `motion.dim`, and every message is readable at every moment.

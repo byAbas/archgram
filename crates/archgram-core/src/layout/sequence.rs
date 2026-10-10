@@ -1,9 +1,10 @@
 //! Laying out a sequence diagram (docs/features/sequence.md; DESIGN.md,
-//! Layout): the participants' heads in a row, each at the top of its band,
-//! one row for each message in time's order, a frame round each fragment,
-//! and in the `cards` look a bar while a participant answers a call. Every
-//! position comes from the spec's order and the measured text, so the same
-//! spec lays out the same everywhere.
+//! Layout): the participants' heads in a row, a lifeline down from each,
+//! one row for each message in time's order, each phase a band across the
+//! drawing, a frame round each fragment, and in the `cards` look a bar
+//! while a participant answers a call. Every position comes from the
+//! spec's order and the measured text, so the same spec lays out the same
+//! everywhere.
 
 use std::f64::consts::FRAC_1_SQRT_2;
 
@@ -16,10 +17,10 @@ use crate::sequence::{Look, Operator, Sequence, SequenceStill, Step};
 use crate::spec::{LogoPlace, Spec, Variant};
 use crate::tokens::{
     ACTIVATION_OFFSET, ACTIVATION_WIDTH, ARROWHEAD_GAP, ARROWHEAD_LENGTH, AVATAR_LABEL_GAP,
-    AVATAR_SIZE, CARD_LOGO_CHIP_RING, CARD_MULTI_OFFSET, LABEL_PILL_PAD_X, LABEL_PILL_PAD_Y,
-    SPACING_BAND_GAP, SPACING_BAND_PAD, SPACING_EDGE_EDGE, SPACING_FRAGMENT_PADDING,
-    SPACING_FRAGMENT_TAG, SPACING_FRAGMENT_TAG_PAD, SPACING_LABEL_GAP, SPACING_MESSAGE_ROW,
-    SPACING_SELF_WIDTH, TYPOGRAPHY_FRAME_LABEL, TYPOGRAPHY_LEGEND, TYPOGRAPHY_SUBTITLE,
+    AVATAR_SIZE, CARD_LOGO_CHIP_RING, CARD_MULTI_OFFSET, SPACING_EDGE_EDGE,
+    SPACING_FRAGMENT_PADDING, SPACING_FRAGMENT_TAG, SPACING_FRAGMENT_TAG_PAD, SPACING_LABEL_GAP,
+    SPACING_LIFELINE_GAP, SPACING_MESSAGE_ROW, SPACING_PHASE_LABEL, SPACING_SELF_WIDTH,
+    TYPOGRAPHY_FRAME_LABEL, TYPOGRAPHY_LEGEND, TYPOGRAPHY_MESSAGE, TYPOGRAPHY_SUBTITLE,
     TYPOGRAPHY_TITLE,
 };
 
@@ -27,14 +28,16 @@ use super::legend;
 
 pub use crate::sequence::Sort;
 
-/// A message's label in its pill on the line: its number, then its words.
+/// A message's label above its line: its number, then its words.
 #[derive(Debug, Clone, PartialEq)]
-pub struct Pill {
+pub struct Label {
+    /// The box its number and words fill.
     pub rect: Rect,
-    /// The number it leads with, when the still image numbers the messages.
-    pub number: Option<u32>,
-    /// The label's lines, one or two (two past `label.max-width`); none for
-    /// a pill with its number alone.
+    /// The number it leads with, `4a` in an `alt`, when the still image
+    /// numbers the messages.
+    pub number: Option<String>,
+    /// Its lines, one or two (two past `label.max-width`); none for a
+    /// label of its number alone.
     pub lines: Vec<String>,
 }
 
@@ -45,17 +48,26 @@ pub struct Message {
     pub to: usize,
     pub sort: Sort,
     pub refused: bool,
-    /// Its number, counted in time's order from 1.
-    pub number: u32,
+    /// Its number as the still image shows it: its place in time, and in
+    /// an `alt` the letter of each way it is on (`4a`).
+    pub number: String,
     /// Its line, from where it leaves the sender's lifeline (or bar) to
     /// where it meets the receiver's: the drawing stops it
     /// `arrowhead.gap` short of its end.
     pub path: Vec<Point>,
-    /// Its pill, when it has a label or a number to show.
-    pub pill: Option<Pill>,
+    /// Its label, when it has words or a number to show.
+    pub label: Option<Label>,
     /// The participant that turns the request away: who replies with a
     /// refusal, or who refuses a call.
     pub refuser: usize,
+}
+
+/// A bar on a lifeline while its participant answers a call.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct Activation {
+    pub rect: Rect,
+    /// The call it answers, by its place among the messages in time's order.
+    pub call: usize,
 }
 
 /// One fragment as laid out.
@@ -71,6 +83,18 @@ pub struct Fragment {
     pub separators: Vec<f64>,
 }
 
+/// One phase as laid out: a band across the drawing.
+#[derive(Debug, Clone, PartialEq)]
+pub struct Phase {
+    pub name: String,
+    pub band: Rect,
+    /// Where its name's line starts, at the band's top left.
+    pub name_at: Point,
+    /// Its messages, by their places in time: from the first to before the
+    /// end.
+    pub messages: (usize, usize),
+}
+
 /// A sequence laid out.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Layout {
@@ -79,15 +103,16 @@ pub struct Layout {
     pub look: Look,
     /// Each head's footprint, in the participants' order.
     pub heads: Vec<Rect>,
-    /// Each participant's band, its lifeline.
-    pub bands: Vec<Rect>,
-    /// The middle of each band, where messages start and end.
+    /// Each lifeline's x, where messages start and end.
     pub lifelines: Vec<f64>,
+    /// Where every lifeline starts (the heads' foot) and ends.
+    pub lifeline_span: (f64, f64),
     /// The bars on the lifelines, in the order their calls are made.
-    pub activations: Vec<Rect>,
+    pub activations: Vec<Activation>,
     pub messages: Vec<Message>,
     /// Outermost first, then in time's order.
     pub fragments: Vec<Fragment>,
+    pub phases: Vec<Phase>,
     pub legend: Vec<legend::Entry>,
     pub credit: Option<Rect>,
     pub size: Size,
@@ -103,14 +128,14 @@ fn tag_line() -> f64 {
     TYPOGRAPHY_FRAME_LABEL.size * TYPOGRAPHY_FRAME_LABEL.line_height
 }
 
-/// The room between a pill and what is above or below it.
+/// The room between a label and its line, or a pill and what is near it.
 const LABEL_GAP: f64 = SPACING_LABEL_GAP;
-
-/// How far apart, at least, two neighbouring bands are.
-const BAND_GAP: f64 = SPACING_BAND_GAP;
 
 /// The room inside a fragment's pill on either side of its words.
 const TAG_PAD: f64 = SPACING_FRAGMENT_TAG_PAD;
+
+/// The room between two phases' bands.
+const PHASE_GAP: f64 = 2.0 * SPACING_LABEL_GAP;
 
 /// A fragment's pill, its lines and its size: the operator and the first
 /// guard, `alt · password matches`, or the operator alone; a later
@@ -145,21 +170,31 @@ fn tag_pill(operator: Option<Operator>, when: Option<&str>) -> Option<(Vec<Strin
     Some((lines, size))
 }
 
-/// A message's pill: its number, `spacing.label-gap` before its words,
-/// `label.pill-pad-x` in from its ends and `label.pill-pad-y` from its top
-/// and bottom. None when there is neither a number nor a label to show.
-fn message_pill(number: Option<u32>, label: Option<&str>) -> Option<(Vec<String>, Size)> {
+/// A message's label: its number, `spacing.label-gap` before its words,
+/// the words in `typography.message` for a call or a send and in
+/// `typography.subtitle` for a reply. None when there is neither a number
+/// nor a label to show.
+fn label_size(
+    number: Option<&str>,
+    label: Option<&str>,
+    sort: Sort,
+) -> Option<(Vec<String>, Size)> {
     if number.is_none() && label.is_none() {
         return None;
     }
+    let style = if sort == Sort::Reply {
+        TYPOGRAPHY_SUBTITLE
+    } else {
+        TYPOGRAPHY_MESSAGE
+    };
     let lines: Vec<String> = label
         .map(|l| label_lines(l).into_iter().map(str::to_owned).collect())
         .unwrap_or_default();
     let words = lines
         .iter()
-        .map(|l| text_width(l, &TYPOGRAPHY_SUBTITLE))
+        .map(|l| text_width(l, &style))
         .fold(0.0, f64::max);
-    let digits = number.map_or(0.0, |n| text_width(&n.to_string(), &TYPOGRAPHY_LEGEND));
+    let digits = number.map_or(0.0, |n| text_width(n, &TYPOGRAPHY_LEGEND));
     let gap = if number.is_some() && !lines.is_empty() {
         LABEL_GAP
     } else {
@@ -168,8 +203,8 @@ fn message_pill(number: Option<u32>, label: Option<&str>) -> Option<(Vec<String>
     #[allow(clippy::cast_precision_loss)] // one or two lines
     let rows = lines.len().max(1) as f64;
     let size = Size {
-        w: (digits + gap + words + 2.0 * LABEL_PILL_PAD_X).ceil(),
-        h: rows * line_height() + 2.0 * LABEL_PILL_PAD_Y,
+        w: (digits + gap + words).ceil(),
+        h: rows * line_height(),
     };
     Some((lines, size))
 }
@@ -190,9 +225,58 @@ fn self_width(refused: bool) -> f64 {
 /// the same columns.
 const BAR_ROOM: f64 = ACTIVATION_WIDTH / 2.0 + ACTIVATION_OFFSET;
 
+/// Each message's number as the still image shows it: counted in time's
+/// order through every fragment; each way of an `alt` starts again from
+/// the alt's first number with the next letter, `4a` then `4b`, and after
+/// the `alt` the count goes on from its longest way; in nested `alt`s,
+/// each one's letter in turn (`5ab`).
+///
+/// # Panics
+///
+/// When the steps are not a validated sequence's: an operand or a close
+/// outside a fragment.
+#[must_use]
+pub fn numbers(steps: &[Step<'_>]) -> Vec<String> {
+    // Each open fragment: whether it is an `alt`, the number it started
+    // at, its operand, and the furthest count any of its ways reached.
+    let mut open: Vec<(bool, u32, u8, u32)> = Vec::new();
+    let mut count = 1u32;
+    let mut out = Vec::new();
+    for step in steps {
+        match step {
+            Step::Message(_) => {
+                let letters: String = open
+                    .iter()
+                    .filter(|f| f.0)
+                    .map(|f| char::from(b'a' + f.2))
+                    .collect();
+                out.push(format!("{count}{letters}"));
+                count += 1;
+            }
+            Step::Open(operator, _) => {
+                open.push((*operator == Operator::Alt, count, 0, count));
+            }
+            Step::Operand(_) => {
+                let f = open.last_mut().expect("an operand inside a fragment");
+                f.3 = f.3.max(count);
+                if f.0 {
+                    f.2 = f.2.saturating_add(1).min(25);
+                    count = f.1;
+                }
+            }
+            Step::Close => {
+                let f = open.pop().expect("a fragment to close");
+                count = f.3.max(count);
+            }
+            Step::Phase(_) => {}
+        }
+    }
+    out
+}
+
 /// Each head's footprint and how far it reaches left of the lifeline, as
-/// its look draws it: in `cards` a node card, every front card as wide as
-/// the widest so the bands line up; in `avatars` the circle, the logo's
+/// `look` draws it: in `cards` a node card, every front card as wide as
+/// the widest so the columns line up; in `avatars` the circle, the logo's
 /// chip on its edge, and the name and note under it, centred on the
 /// lifeline.
 fn heads(look: Look, seq: &Sequence, spec: &Spec, logos: &dyn Logos) -> Vec<(Size, f64)> {
@@ -256,7 +340,7 @@ fn heads(look: Look, seq: &Sequence, spec: &Spec, logos: &dyn Logos) -> Vec<(Siz
     }
 }
 
-/// How far out from the bands it covers a fragment's frame reaches: a
+/// How far out from the lifelines it covers a fragment's frame reaches: a
 /// padding, and that again for each level of fragments nested inside it.
 fn padding(f: usize, inner: &[Vec<usize>]) -> f64 {
     fn depth(f: usize, inner: &[Vec<usize>]) -> usize {
@@ -286,34 +370,31 @@ struct Span {
     /// How many fragments it is nested in.
     within: usize,
     /// How far right of its rightmost lifeline a message to itself there
-    /// reaches, its pill included.
+    /// reaches, its label included.
     reach: f64,
 }
 
-/// What each fragment needs of the gaps between lifelines `half` a band
-/// either side, so its frame covers only its own bands: on its left, its
-/// padding; on its right, its padding, or a message to itself there, and a
-/// padding for each frame it sits in; across its bands and the gap after
-/// them, its pills. Each with half `spacing.band-gap` to spare before the
-/// next band.
+/// What each fragment needs of the gaps between lifelines, so its frame
+/// covers only its own: on its left, its padding; on its right, its
+/// padding, or a message to itself there, and a padding for each frame it
+/// sits in; across its lifelines and the gap after them, its pills. Each
+/// with `spacing.edge-edge` to spare before the next lifeline.
 fn frame_needs(
     steps: &[Step<'_>],
     count: usize,
-    numbered: bool,
-    half: f64,
+    labels: &[Option<(Vec<String>, Size)>],
 ) -> Vec<(usize, usize, f64)> {
     let mut spans: Vec<Span> = Vec::new();
     let mut open: Vec<usize> = Vec::new();
-    let mut number = 0u32;
+    let mut k = 0usize;
     for step in steps {
         match step {
             Step::Message(m) => {
-                number += 1;
                 let reach = (m.from == m.to).then(|| {
-                    let pill = message_pill(numbered.then_some(number), m.label)
-                        .map_or(0.0, |(_, s)| LABEL_GAP + s.w);
-                    BAR_ROOM + self_width(m.refused) + pill
+                    let label = labels[k].as_ref().map_or(0.0, |(_, s)| LABEL_GAP + s.w);
+                    BAR_ROOM + self_width(m.refused) + label
                 });
+                k += 1;
                 for &f in &open {
                     let s = &mut spans[f];
                     for p in [m.from, m.to] {
@@ -357,6 +438,7 @@ fn frame_needs(
             Step::Close => {
                 open.pop();
             }
+            Step::Phase(_) => {}
         }
     }
     let inner: Vec<Vec<usize>> = spans.iter().map(|s| s.inner.clone()).collect();
@@ -367,13 +449,13 @@ fn frame_needs(
         }
         let pad = padding(f, &inner);
         #[allow(clippy::cast_precision_loss)] // a few levels
-        let spare = BAND_GAP / 2.0 + SPACING_FRAGMENT_PADDING * s.within as f64;
+        let spare = SPACING_EDGE_EDGE + SPACING_FRAGMENT_PADDING * s.within as f64;
         if s.lo > 0 {
-            needs.push((s.lo - 1, s.lo, 2.0 * half + pad + BAND_GAP / 2.0));
+            needs.push((s.lo - 1, s.lo, pad + SPACING_EDGE_EDGE));
         }
         if s.hi + 1 < count {
-            let right = (half + pad).max(s.reach + SPACING_FRAGMENT_PADDING);
-            needs.push((s.hi, s.hi + 1, right + half + spare));
+            let right = pad.max(s.reach + SPACING_FRAGMENT_PADDING);
+            needs.push((s.hi, s.hi + 1, right + spare));
             needs.push((s.lo, s.hi + 1, frame_width(&s.pills) - pad + spare));
         }
     }
@@ -386,7 +468,6 @@ struct Row {
     /// back (the same y for any other).
     y: f64,
     back: f64,
-    pill: Option<(Vec<String>, Size)>,
 }
 
 /// A fragment while it is laid out: its rows, its participants, and the
@@ -408,17 +489,16 @@ struct Open {
 }
 
 /// A bar while a call is answered: on whose lifeline, from where to
-/// where, and over how many other bars there.
-type Bar = (usize, f64, f64, usize);
+/// where, over how many other bars there, and for which call.
+type Bar = (usize, f64, f64, usize, usize);
 
 /// The bars of the `cards` look (UML 2.5.1, 17.2.4.4): for each call that
 /// waits, on its receiver's lifeline, from where it arrives to the last
 /// reply that answers it. A call never answered runs to the last message
 /// the receiver sends before its caller calls it again, and at least half
 /// a row; a call to itself never answered, half a row: what it does is
-/// done in its loop.
-/// Each with how many bars it is drawn over, so it is moved right by as
-/// many offsets.
+/// done in its loop. Each with how many bars it is drawn over, so it is
+/// moved right by as many offsets.
 fn bars(steps: &[Step<'_>], rows: &[Row]) -> Vec<Bar> {
     let messages: Vec<_> = steps
         .iter()
@@ -433,13 +513,13 @@ fn bars(steps: &[Step<'_>], rows: &[Row]) -> Vec<Bar> {
             continue;
         }
         let start = rows[k].back;
+        let least = start + SPACING_MESSAGE_ROW / 2.0;
         let answered = messages
             .iter()
             .zip(rows)
             .filter(|(r, _)| r.answers == Some(k))
             .map(|(_, row)| row.y)
             .fold(f64::NEG_INFINITY, f64::max);
-        let least = start + SPACING_MESSAGE_ROW / 2.0;
         let end = if answered.is_finite() {
             answered
         } else if m.from == m.to {
@@ -457,11 +537,11 @@ fn bars(steps: &[Step<'_>], rows: &[Row]) -> Vec<Bar> {
         // Over every earlier bar on the same lifeline still drawn here.
         let depth = out
             .iter()
-            .filter(|(p, s, e, _)| *p == m.to && *s <= start && start <= *e)
-            .map(|(_, _, _, d)| d + 1)
+            .filter(|(p, s, e, ..)| *p == m.to && *s <= start && start <= *e)
+            .map(|(_, _, _, d, _)| d + 1)
             .max()
             .unwrap_or(0);
-        out.push((m.to, start, end, depth));
+        out.push((m.to, start, end, depth, k));
     }
     out
 }
@@ -481,28 +561,36 @@ pub fn place(seq: &Sequence, logos: &dyn Logos) -> Layout {
     let count = measured.len();
     let steps = seq.steps();
     let numbered = seq.still == SequenceStill::Numbers;
+    let numbers = numbers(&steps);
+    let resolved: Vec<_> = steps
+        .iter()
+        .filter_map(|s| match s {
+            Step::Message(m) => Some(m),
+            _ => None,
+        })
+        .collect();
+    let labels: Vec<Option<(Vec<String>, Size)>> = resolved
+        .iter()
+        .zip(&numbers)
+        .map(|(m, n)| label_size(numbered.then_some(n.as_str()), m.label, m.sort))
+        .collect();
 
-    // Every band as wide as the widest head of either look needs either
-    // side of its lifeline, with `spacing.band-pad` beyond: both looks set
-    // the same columns.
+    // Every column as wide as the widest head of either look needs either
+    // side of its lifeline: both looks set the same columns.
     let half = [Look::Cards, Look::Avatars]
         .into_iter()
         .flat_map(|l| heads(l, seq, &spec, logos))
         .map(|(s, left)| left.max(s.w - left))
-        .fold(0.0, f64::max)
-        + SPACING_BAND_PAD;
+        .fold(0.0, f64::max);
 
     // The room each message needs between its lifelines, and each message
     // to itself to the right of its own.
-    let mut gaps: Vec<f64> = vec![2.0 * half + BAND_GAP; count.saturating_sub(1)];
+    let mut gaps: Vec<f64> = vec![2.0 * half + SPACING_LIFELINE_GAP; count.saturating_sub(1)];
     let mut needs: Vec<(usize, usize, f64)> = Vec::new();
-    let mut number = 0u32;
-    for step in &steps {
-        let Step::Message(msg) = step else { continue };
-        number += 1;
-        let pill = message_pill(numbered.then_some(number), msg.label).map_or(0.0, |(_, s)| s.w);
+    for (msg, label) in resolved.iter().zip(&labels) {
+        let label_w = label.as_ref().map_or(0.0, |(_, s)| s.w);
         if msg.from == msg.to {
-            let reach = BAR_ROOM + self_width(msg.refused) + LABEL_GAP + pill;
+            let reach = BAR_ROOM + self_width(msg.refused) + LABEL_GAP + label_w;
             if msg.from + 1 < count {
                 needs.push((msg.from, msg.from + 1, reach + SPACING_EDGE_EDGE));
             }
@@ -515,14 +603,11 @@ pub fn place(seq: &Sequence, logos: &dyn Logos) -> Layout {
             } else {
                 ARROWHEAD_LENGTH
             }
-            + SPACING_EDGE_EDGE / 2.0;
-        needs.push((
-            msg.from.min(msg.to),
-            msg.from.max(msg.to),
-            pill + 2.0 * tail,
-        ));
+            + SPACING_EDGE_EDGE;
+        let need = (label_w + 2.0 * SPACING_EDGE_EDGE).max(tail + SPACING_EDGE_EDGE);
+        needs.push((msg.from.min(msg.to), msg.from.max(msg.to), need));
     }
-    needs.extend(frame_needs(&steps, count, numbered, half));
+    needs.extend(frame_needs(&steps, count, &labels));
     // Shorter spans first, then from the left: each widens its own gaps
     // evenly, so a span of three never makes room a span of one needed.
     needs.sort_by(|a, b| {
@@ -548,42 +633,45 @@ pub fn place(seq: &Sequence, logos: &dyn Logos) -> Layout {
         .take(count)
         .collect();
 
-    // The heads in a row inside their bands, their feet on one line.
+    // The heads in a row, their feet on one line.
     let head_h = measured.iter().map(|(s, _)| s.h).fold(0.0, f64::max);
     let heads: Vec<Rect> = measured
         .iter()
         .zip(&lifelines)
         .map(|((s, left), &c)| Rect {
             x: c - left,
-            y: SPACING_BAND_PAD + head_h - s.h,
+            y: head_h - s.h,
             w: s.w,
             h: s.h,
         })
         .collect();
 
-    // Down the page: a row for each message, a frame round each fragment.
+    // Down the page: a row for each message, a band for each phase, a
+    // frame round each fragment.
     let row = SPACING_MESSAGE_ROW;
     let drop = row / 2.0;
-    let mut cursor = SPACING_BAND_PAD + head_h + SPACING_BAND_PAD;
+    let mut cursor = head_h + SPACING_EDGE_EDGE;
     let mut rows: Vec<Row> = Vec::new();
     let mut opened: Vec<usize> = Vec::new();
     let mut frames: Vec<Open> = Vec::new();
+    // Each phase's name, its band's top and bottom, and its messages.
+    let mut phases: Vec<(String, f64, f64, (usize, usize))> = Vec::new();
     for step in &steps {
         match step {
             Step::Message(msg) => {
                 let k = rows.len();
-                #[allow(clippy::cast_possible_truncation)] // a few hundred messages
-                let number = k as u32 + 1;
-                let pill = message_pill(numbered.then_some(number), msg.label);
-                let pill_h = pill.as_ref().map_or(0.0, |(_, s)| s.h);
+                let label_h = labels[k].as_ref().map_or(0.0, |(_, s)| s.h);
                 let to_self = msg.from == msg.to;
-                let down = if to_self { drop } else { 0.0 };
-                let height = (row + down).max(pill_h + 2.0 * LABEL_GAP);
-                let y = cursor + (height - down) / 2.0;
+                let (above, below) = if to_self {
+                    (SPACING_EDGE_EDGE / 2.0, drop + SPACING_EDGE_EDGE)
+                } else {
+                    (label_h + LABEL_GAP, SPACING_EDGE_EDGE)
+                };
+                let height = if to_self { row + drop } else { row }.max(above + below);
+                let y = cursor + above;
                 rows.push(Row {
                     y,
-                    back: y + down,
-                    pill,
+                    back: y + if to_self { drop } else { 0.0 },
                 });
                 cursor += height;
                 for &f in &opened {
@@ -637,71 +725,94 @@ pub fn place(seq: &Sequence, logos: &dyn Logos) -> Layout {
                 frames[f].bottom = cursor;
                 cursor += LABEL_GAP;
             }
+            Step::Phase(name) => {
+                if let Some(last) = phases.last_mut() {
+                    last.2 = cursor;
+                    last.3.1 = rows.len();
+                    cursor += PHASE_GAP;
+                }
+                phases.push((
+                    (*name).trim().to_owned(),
+                    cursor,
+                    cursor,
+                    (rows.len(), rows.len()),
+                ));
+                cursor += SPACING_PHASE_LABEL;
+            }
         }
     }
-    let bottom = cursor + SPACING_BAND_PAD;
+    if let Some(last) = phases.last_mut() {
+        last.2 = cursor;
+        last.3.1 = rows.len();
+    }
+    let bottom = cursor + SPACING_EDGE_EDGE / 2.0;
 
-    // The bars, and where a message meets a lifeline: the middle of the
-    // bar drawn there that is moved furthest, over the others.
+    // The bars, and where a message meets a lifeline: the side of the bar
+    // drawn there that is moved furthest, over the others.
     let bars = match look {
         Look::Cards => bars(&steps, &rows),
         Look::Avatars => Vec::new(),
     };
+    // The bar's middle on lifeline `p` at `y`, if a bar is drawn there.
     #[allow(clippy::cast_precision_loss)] // a few bars deep
-    let at_x = |p: usize, y: f64| {
-        lifelines[p]
-            + bars
-                .iter()
-                .filter(|(q, s, e, _)| *q == p && *s <= y && y <= *e)
-                .map(|(_, _, _, d)| *d as f64 * ACTIVATION_OFFSET)
-                .fold(0.0, f64::max)
+    let bar_at = |p: usize, y: f64| {
+        bars.iter()
+            .filter(|(q, s, e, ..)| *q == p && *s <= y && y <= *e)
+            .map(|(_, _, _, d, _)| lifelines[p] + *d as f64 * ACTIVATION_OFFSET)
+            .fold(None, |best: Option<f64>, x| {
+                Some(best.map_or(x, |b| b.max(x)))
+            })
+    };
+    // Where a line toward `toward` meets lifeline `p` at `y`: its bar's
+    // side, or the lifeline.
+    let meet = |p: usize, y: f64, toward: f64| {
+        bar_at(p, y).map_or(lifelines[p], |x| {
+            x + (toward - x).signum() * ACTIVATION_WIDTH / 2.0
+        })
     };
     #[allow(clippy::cast_precision_loss)] // a few bars deep
-    let activations: Vec<Rect> = bars
+    let activations: Vec<Activation> = bars
         .iter()
-        .map(|&(p, start, end, depth)| Rect {
-            x: lifelines[p] + depth as f64 * ACTIVATION_OFFSET - ACTIVATION_WIDTH / 2.0,
-            y: start,
-            w: ACTIVATION_WIDTH,
-            h: end - start,
+        .map(|&(p, start, end, depth, call)| Activation {
+            rect: Rect {
+                x: lifelines[p] + depth as f64 * ACTIVATION_OFFSET - ACTIVATION_WIDTH / 2.0,
+                y: start,
+                w: ACTIVATION_WIDTH,
+                h: end - start,
+            },
+            call,
         })
         .collect();
 
-    // Across: each message's line and its pill.
+    // Across: each message's line and its label.
     let mut messages = Vec::new();
     let mut self_right: Vec<f64> = Vec::new();
-    let resolved = steps.iter().filter_map(|s| match s {
-        Step::Message(m) => Some(m),
-        _ => None,
-    });
-    for (k, (msg, r)) in resolved.zip(&rows).enumerate() {
-        #[allow(clippy::cast_possible_truncation)] // a few hundred messages
-        let number = k as u32 + 1;
-        let start = at_x(msg.from, r.y);
+    for (k, ((msg, r), label)) in resolved.iter().zip(&rows).zip(&labels).enumerate() {
         let to_self = msg.from == msg.to;
         let (path, rect) = if to_self {
+            let start =
+                bar_at(msg.from, r.y).map_or(lifelines[msg.from], |x| x + ACTIVATION_WIDTH / 2.0);
             let out = start + self_width(msg.refused);
-            let rect = r.pill.as_ref().map(|(_, s)| Rect {
+            let rect = label.as_ref().map(|(_, s)| Rect {
                 x: out + LABEL_GAP,
                 y: f64::midpoint(r.y, r.back) - s.h / 2.0,
                 w: s.w,
                 h: s.h,
             });
+            let back = meet(msg.to, r.back, out);
             let path = vec![
                 Point { x: start, y: r.y },
                 Point { x: out, y: r.y },
                 Point { x: out, y: r.back },
-                Point {
-                    x: at_x(msg.to, r.back),
-                    y: r.back,
-                },
+                Point { x: back, y: r.back },
             ];
             (path, rect)
         } else {
-            let end = at_x(msg.to, r.y);
-            let rect = r.pill.as_ref().map(|(_, s)| Rect {
+            let start = meet(msg.from, r.y, lifelines[msg.to]);
+            let end = meet(msg.to, r.y, lifelines[msg.from]);
+            let rect = label.as_ref().map(|(_, s)| Rect {
                 x: f64::midpoint(start, end) - s.w / 2.0,
-                y: r.y - s.h / 2.0,
+                y: r.y - LABEL_GAP - s.h,
                 w: s.w,
                 h: s.h,
             });
@@ -715,9 +826,9 @@ pub fn place(seq: &Sequence, logos: &dyn Logos) -> Layout {
         } else {
             f64::NEG_INFINITY
         });
-        let pill = rect.zip(r.pill.as_ref()).map(|(rect, (lines, _))| Pill {
+        let label = rect.zip(label.as_ref()).map(|(rect, (lines, _))| Label {
             rect,
-            number: numbered.then_some(number),
+            number: numbered.then(|| numbers[k].clone()),
             lines: lines.clone(),
         });
         let refuser = if msg.sort == Sort::Reply {
@@ -730,18 +841,18 @@ pub fn place(seq: &Sequence, logos: &dyn Logos) -> Layout {
             to: msg.to,
             sort: msg.sort,
             refused: msg.refused,
-            number,
+            number: numbers[k].clone(),
             path,
-            pill,
+            label,
             refuser,
         });
     }
 
-    // Each frame round its participants' bands, wider by a padding for
+    // Each frame round its participants' lifelines, wider by a padding for
     // each frame nested inside it, and wide enough for its pills and any
     // message to itself inside it. Inner frames first, so an outer one
     // holds them. The gaps were widened for all of it (`frame_needs`), so
-    // no frame reaches a band it does not cover.
+    // no frame reaches a lifeline it does not cover.
     let inner: Vec<Vec<usize>> = frames.iter().map(|fr| fr.inner.clone()).collect();
     let mut boxes: Vec<Rect> = vec![Rect::default(); frames.len()];
     for f in (0..frames.len()).rev() {
@@ -755,8 +866,8 @@ pub fn place(seq: &Sequence, logos: &dyn Logos) -> Layout {
             .iter()
             .map(|&k| self_right[k])
             .fold(f64::NEG_INFINITY, f64::max);
-        let mut l = lo - half - pad;
-        let mut r = (hi + half + pad).max(reach + SPACING_FRAGMENT_PADDING);
+        let mut l = lo - pad;
+        let mut r = (hi + pad).max(reach + SPACING_FRAGMENT_PADDING);
         for &i in &fr.inner {
             l = l.min(boxes[i].x - SPACING_FRAGMENT_PADDING);
             r = r.max(boxes[i].right() + SPACING_FRAGMENT_PADDING);
@@ -799,28 +910,18 @@ pub fn place(seq: &Sequence, logos: &dyn Logos) -> Layout {
         })
         .collect();
 
-    let bands: Vec<Rect> = lifelines
-        .iter()
-        .map(|&c| Rect {
-            x: c - half,
-            y: 0.0,
-            w: 2.0 * half,
-            h: bottom,
-        })
-        .collect();
-
-    // Everything from the origin: the leftmost of bands, frames and pills
+    // Everything from the origin: the leftmost of heads, frames and labels
     // at 0.
-    let pills: Vec<Rect> = messages
+    let label_boxes: Vec<Rect> = messages
         .iter()
-        .filter_map(|m| m.pill.as_ref().map(|p| p.rect))
+        .filter_map(|m| m.label.as_ref().map(|l| l.rect))
         .collect();
-    let lefts = bands.iter().chain(&boxes).chain(&pills).map(|r| r.x);
+    let lefts = heads.iter().chain(&boxes).chain(&label_boxes).map(|r| r.x);
     let shift = -lefts.fold(0.0, f64::min);
-    let rights = bands
+    let rights = heads
         .iter()
         .chain(&boxes)
-        .chain(&pills)
+        .chain(&label_boxes)
         .map(Rect::right)
         .chain(messages.iter().flat_map(|m| m.path.iter().map(|p| p.x)));
     let width = rights.fold(0.0, f64::max) + shift;
@@ -828,12 +929,36 @@ pub fn place(seq: &Sequence, logos: &dyn Logos) -> Layout {
         x: r.x + shift,
         ..r
     };
+    // A phase's band runs across the whole drawing.
+    let phases: Vec<Phase> = phases
+        .into_iter()
+        .map(|(name, top, bottom, messages)| Phase {
+            name,
+            band: Rect {
+                x: 0.0,
+                y: top,
+                w: width,
+                h: bottom - top,
+            },
+            name_at: Point {
+                x: SPACING_FRAGMENT_PADDING,
+                y: top + (SPACING_PHASE_LABEL - tag_line()) / 2.0,
+            },
+            messages,
+        })
+        .collect();
     let mut layout = Layout {
         look,
         heads: heads.into_iter().map(moved).collect(),
-        bands: bands.into_iter().map(moved).collect(),
         lifelines: lifelines.iter().map(|c| c + shift).collect(),
-        activations: activations.into_iter().map(moved).collect(),
+        lifeline_span: (head_h, bottom),
+        activations: activations
+            .into_iter()
+            .map(|a| Activation {
+                rect: moved(a.rect),
+                ..a
+            })
+            .collect(),
         messages: messages
             .into_iter()
             .map(|m| Message {
@@ -845,9 +970,9 @@ pub fn place(seq: &Sequence, logos: &dyn Logos) -> Layout {
                         y: p.y,
                     })
                     .collect(),
-                pill: m.pill.map(|p| Pill {
-                    rect: moved(p.rect),
-                    ..p
+                label: m.label.map(|l| Label {
+                    rect: moved(l.rect),
+                    ..l
                 }),
                 ..m
             })
@@ -860,6 +985,7 @@ pub fn place(seq: &Sequence, logos: &dyn Logos) -> Layout {
                 ..f
             })
             .collect(),
+        phases,
         legend: Vec::new(),
         credit: None,
         size: Size {
