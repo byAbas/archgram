@@ -57,7 +57,9 @@ sh evals/archgram/run.sh --out ~/archgram-evals/iteration-1 --repeat 3 --jobs 4 
 - **Unattended:** reading, writing in the copy and archgram at the
   skill's version run without a prompt; anything else is denied
   (`--permission-prompts none`), which also takes away the tool that asks
-  the user a question, so a question is asked in the run's reply. Each run
+  the user a question, so a question is asked in the run's reply. The
+  system's viewer is denied too, so a case expects the skill to try to
+  open the drawing, not to open it. Each run
   stops at `--budget` dollars (5 by default) and 80 turns.
 - **One runner per folder:** a second `run.sh` on the same `--out` is
   refused while the first runs, and a run already in the folder is never
