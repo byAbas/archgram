@@ -25,7 +25,7 @@ prompts run in.
 Every case that draws expects a source on each node a file backs and on
 each edge, so it needs an archgram that reads them (0.7 or later;
 docs/features/sources.md). `draws-a-sequence` needs one that draws
-sequences with phases, the release after 0.9.0 (docs/features/sequence.md).
+sequences with phases, 0.10 or later (docs/features/sequence.md).
 
 Each case runs with the skill and without it, as skill-creator does. The
 runs call a model and cost money, so they run on request, not in CI; the

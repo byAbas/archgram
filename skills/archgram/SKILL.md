@@ -3,7 +3,7 @@ name: archgram
 description: Draws a project's software architecture as an animated SVG with archgram, for its README and docs, from the code and documentation, or from a document the user names (a docs page, a design doc, an article). Writes a spec in docs/diagrams/, checks and draws it with the archgram command, in the project's own colours when asked, then opens the drawing and lists each part with the file behind it. Also draws a sequence diagram: the order in which the parts call each other for one request, and what comes back, such as a sign-in or a checkout, in phases. Use it whenever the user wants an architecture, system, data-flow, pipeline, sequence or "how it works" diagram, the steps of a request, a diagram for a README, or an existing archgram diagram updated after the code changed or `archgram check` says its code is gone, even if they only say "draw how this works".
 license: MIT
 compatibility: Requires Node 22 or later, with npx.
-allowed-tools: Bash(npx --yes --loglevel=error archgram@0.9.0 spec --brief) Bash(npx --yes --loglevel=error archgram@0.9.0 spec --section sequence) Bash(npx --yes --loglevel=error archgram@0.9.0 spec --section theme-file)
+allowed-tools: Bash(npx --yes --loglevel=error archgram@0.10.0 spec --brief) Bash(npx --yes --loglevel=error archgram@0.10.0 spec --section sequence) Bash(npx --yes --loglevel=error archgram@0.10.0 spec --section theme-file)
 ---
 
 # Drawing architecture with archgram
@@ -15,10 +15,10 @@ a spec. If the user said what to draw (a flow, a part of the system, a
 direction), draw that.
 
 Every command below runs archgram through npx, so it needs Node 22 or
-later. It names `archgram@0.9.0`, the version released with this skill,
+later. It names `archgram@0.10.0`, the version released with this skill,
 never the latest. When the project's `package.json` lists archgram, run
 the project's own instead: write each command with `archgram` where it
-says `archgram@0.9.0`, and the project's lockfile decides the version.
+says `archgram@0.10.0`, and the project's lockfile decides the version.
 Keep `--loglevel=error` either way: it keeps npm's own warnings, such as
 those about a pnpm project's `.npmrc`, out of archgram's output, and
 changes nothing else. If `npx` is missing, or cannot find that version on
@@ -112,7 +112,7 @@ you found and what you need to know. Everything else you decide yourself.
 ## 3. Learn the spec format from archgram
 
 ```bash
-npx --yes --loglevel=error archgram@0.9.0 spec --brief
+npx --yes --loglevel=error archgram@0.10.0 spec --brief
 ```
 
 This prints the short part of the format the very archgram you run reads:
@@ -123,13 +123,13 @@ brief gives it: the theme file in step 5, or the section a problem from
 `archgram check` points to.
 
 ```bash
-npx --yes --loglevel=error archgram@0.9.0 spec --section <name>
+npx --yes --loglevel=error archgram@0.10.0 spec --section <name>
 ```
 
 For a sequence, print its section too, before writing:
 
 ```bash
-npx --yes --loglevel=error archgram@0.9.0 spec --section sequence
+npx --yes --loglevel=error archgram@0.10.0 spec --section sequence
 ```
 
 A field the format does not list is an error. Besides the fields, it says
@@ -193,7 +193,7 @@ cannot tie to a flow.
 Then check it, and repeat until it passes:
 
 ```bash
-npx --yes --loglevel=error archgram@0.9.0 check docs/diagrams/<name>.archgram.yaml
+npx --yes --loglevel=error archgram@0.10.0 check docs/diagrams/<name>.archgram.yaml
 ```
 
 Check again after every change to the spec, the last one included, before
@@ -223,7 +223,7 @@ before: keep drawing with it.
 ## 6. Draw, critique, open
 
 ```bash
-npx --yes --loglevel=error archgram@0.9.0 build docs/diagrams/<name>.archgram.yaml
+npx --yes --loglevel=error archgram@0.10.0 build docs/diagrams/<name>.archgram.yaml
 ```
 
 Add `--theme-file archgram.theme.json` when the project's root has one.

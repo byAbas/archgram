@@ -6,6 +6,8 @@ follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-10-10
+
 ### Added
 
 - The `archgram` skill draws from a document the user names, such as a
@@ -32,6 +34,18 @@ follow [Semantic Versioning](https://semver.org/).
   it arrives, a faint tint between the lifelines it joins, an `alt`'s
   ways as alternatives, and nothing dimmed below 60%; still under reduced
   motion. `examples/` holds two.
+- The `archgram` skill chooses the kind of diagram from the reader's
+  question: what a system is made of is architecture, as before; the
+  order of the calls of one request, and what comes back, is a sequence,
+  drawn from one entry point in the order the code runs, each call
+  sourced to its line in the handler, its branches as fragments and its
+  steps as phases; a lifecycle or a workflow in lanes, which archgram
+  does not draw yet, is said to be so, never drawn as another kind. It
+  runs `archgram@0.10.0`.
+- Two evaluation cases, `draws-a-sequence` and
+  `says-a-kind-it-cannot-draw`, and `run.sh --archgram BIN`, which runs
+  the evaluations against an unreleased build, so the skill is tested end
+  to end before a release.
 
 ### Changed
 
@@ -349,7 +363,8 @@ same release.
   subset of Geist.
 - `archgram build` and `archgram check`.
 
-[Unreleased]: https://github.com/byAbas/archgram/compare/v0.9.0...HEAD
+[Unreleased]: https://github.com/byAbas/archgram/compare/v0.10.0...HEAD
+[0.10.0]: https://github.com/byAbas/archgram/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/byAbas/archgram/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/byAbas/archgram/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/byAbas/archgram/compare/v0.6.1...v0.7.0
