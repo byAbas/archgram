@@ -49,6 +49,9 @@ pub struct Sequence {
     /// What the still image shows: each message's number, by default.
     #[serde(default)]
     pub still: SequenceStill,
+    /// How it is drawn: cards and activation bars, by default.
+    #[serde(default)]
+    pub look: Look,
     #[serde(default)]
     pub border: BorderStyle,
     #[serde(default)]
@@ -73,6 +76,18 @@ pub enum SequenceStill {
     Numbers,
     /// Nothing more than the diagram.
     None,
+}
+
+/// How a sequence is drawn (docs/features/sequence.md, Looks).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum Look {
+    /// Each head a card, and a bar on a lifeline while its participant
+    /// answers a call.
+    #[default]
+    Cards,
+    /// Each head a circle, and no bars.
+    Avatars,
 }
 
 /// One participant: a node's fields, without a frame.
@@ -131,7 +146,7 @@ pub struct Item {
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Operand {
-    /// The guard, drawn in square brackets; `else` on an `alt`'s last.
+    /// The guard, drawn in its fragment's pill; `else` on an `alt`'s last.
     #[serde(default)]
     pub when: Option<String>,
     /// The code that makes the choice, such as the `if` of the guard.
@@ -371,6 +386,9 @@ pub struct Resolved<'a> {
     pub sort: Sort,
     pub refused: bool,
     pub label: Option<&'a str>,
+    /// For a reply, the call it answers, by its place among the messages
+    /// in time's order.
+    pub answers: Option<usize>,
 }
 
 /// One step of a sequence read in time's order.
@@ -384,13 +402,17 @@ pub enum Step<'a> {
     Close,
 }
 
-/// The caller of the latest call to `by` still waiting, which a reply from
-/// `by` answers; that call stops waiting. The one rule of replies, for
-/// validation, layout and the words a screen reader hears.
-pub(crate) fn answer<T: PartialEq + Copy>(open: &mut Vec<(T, T)>, by: &T) -> Option<T> {
+/// The latest call to `by` still waiting, which a reply from `by`
+/// answers: its caller, and what the reader keeps of it. That call stops
+/// waiting. The one rule of replies, for validation, layout and the words
+/// a screen reader hears.
+pub(crate) fn answer<T: PartialEq + Copy, C>(open: &mut Vec<(T, T, C)>, by: &T) -> Option<(T, C)> {
     open.iter()
-        .rposition(|(_, callee)| callee == by)
-        .map(|k| open.remove(k).0)
+        .rposition(|(_, callee, _)| callee == by)
+        .map(|k| {
+            let (caller, _, kept) = open.remove(k);
+            (caller, kept)
+        })
 }
 
 /// Reads a fragment's `count` operands with `operand`, each from the calls
@@ -460,7 +482,7 @@ impl Sequence {
     fn read<'a>(
         &'a self,
         items: &'a [Item],
-        open: &mut Vec<(usize, usize)>,
+        open: &mut Vec<(usize, usize, usize)>,
         out: &mut Vec<Step<'a>>,
     ) {
         for item in items {
@@ -469,7 +491,7 @@ impl Sequence {
                     let (from, to) = (self.index(from), self.index(to));
                     let sort = if item.sends { Sort::Send } else { Sort::Call };
                     if sort == Sort::Call && !item.refused {
-                        open.push((from, to));
+                        open.push((from, to, messages(out)));
                     }
                     out.push(Step::Message(Resolved {
                         from,
@@ -477,21 +499,21 @@ impl Sequence {
                         sort,
                         refused: item.refused,
                         label: item.label.as_deref(),
+                        answers: None,
                     }));
                 }
                 Ok(What::Reply { by, to }) => {
                     let by = self.index(by);
-                    let caller = answer(open, &by);
-                    let to = to
-                        .map(|t| self.index(t))
-                        .or(caller)
-                        .expect("validated: a reply answers a call still waiting");
+                    let (caller, call) =
+                        answer(open, &by).expect("validated: a reply answers a call still waiting");
+                    let to = to.map_or(caller, |t| self.index(t));
                     out.push(Step::Message(Resolved {
                         from: by,
                         to,
                         sort: Sort::Reply,
                         refused: item.refused,
                         label: item.label.as_deref(),
+                        answers: Some(call),
                     }));
                 }
                 Ok(What::Fragment { operator, operands }) => {
@@ -511,6 +533,14 @@ impl Sequence {
             }
         }
     }
+}
+
+/// How many messages the steps so far hold.
+fn messages(steps: &[Step<'_>]) -> usize {
+    steps
+        .iter()
+        .filter(|s| matches!(s, Step::Message(_)))
+        .count()
 }
 
 /// Visits every item, fragments' operands included, in the spec's order,
@@ -586,7 +616,7 @@ pub fn check_logos(seq: &Sequence, logos: &dyn crate::logos::Logos) -> Vec<SpecE
 }
 
 /// A call waiting for its reply: who called whom.
-type Call<'a> = (&'a str, &'a str);
+type Call<'a> = (&'a str, &'a str, ());
 
 struct Validator<'a> {
     seq: &'a Sequence,
@@ -708,7 +738,7 @@ impl<'a> Validator<'a> {
                     // A call waits for its reply, unless it is refused at
                     // once; a send waits for nothing.
                     if known && !item.sends && !item.refused {
-                        open.push((from, to));
+                        open.push((from, to, ()));
                     }
                 }
                 Ok(What::Reply { by, to }) => self.reply(&pointer, ids, open, by, to),
@@ -739,7 +769,7 @@ impl<'a> Validator<'a> {
             self.error(&format!("{pointer}/to"), message);
             return;
         }
-        let Some(caller) = answer(open, &by) else {
+        let Some((caller, ())) = answer(open, &by) else {
             self.error(
                 &format!("{pointer}/reply"),
                 format!("`{by}` replies, but no call to `{by}` is waiting for a reply before it"),

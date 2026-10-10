@@ -1,8 +1,9 @@
 //! Drawing a laid-out sequence diagram (DESIGN.md, Components: Sequence):
-//! the heads as cards, the lifelines, each message's line with UML's
-//! arrowhead for its sort, its label and number, each fragment's frame, tag
-//! and guards, and a refused message's ✕. A still drawing: the messages'
-//! motion is drawn by a later change.
+//! each participant's band and head, as its look draws it, each fragment's
+//! frame and pills, each message's line with UML's arrowhead for its sort
+//! and its label in a pill, the bars while a call is answered, and a
+//! refused message's ✕. A still drawing: the messages' motion is drawn by
+//! a later change.
 
 use std::collections::BTreeMap;
 use std::fmt::Write as _;
@@ -10,20 +11,17 @@ use std::fmt::Write as _;
 use crate::color::Rgb;
 use crate::font;
 use crate::geometry::{Point, Rect};
-use crate::layout::sequence::{Layout, Message, Sort};
-use crate::sequence::{Operator, Sequence, SequenceStill, Step};
+use crate::layout::sequence::{Layout, Message, Pill, Sort};
+use crate::sequence::{Look, Operator, Sequence, Step};
 use crate::tokens::{
-    ARROWHEAD_LENGTH, FONT_SANS, REFUSAL_MARK, REFUSAL_MARK_GAP, ROUNDED_CANVAS, ROUNDED_CARD,
-    ROUNDED_FRAME, SPACING_FRAGMENT_TAG_PAD, SPACING_MARGIN, TYPOGRAPHY_FRAME_LABEL,
-    TYPOGRAPHY_LEGEND, TYPOGRAPHY_SUBTITLE,
+    ARROWHEAD_LENGTH, AVATAR_SIZE, FONT_SANS, LABEL_PILL_PAD_X, LABEL_PILL_PAD_Y, REFUSAL_MARK,
+    REFUSAL_MARK_GAP, ROUNDED_CANVAS, ROUNDED_CARD, ROUNDED_FRAME, SPACING_LABEL_GAP,
+    SPACING_MARGIN, TYPOGRAPHY_FRAME_LABEL, TYPOGRAPHY_LEGEND, TYPOGRAPHY_SUBTITLE,
 };
 
 use super::scene::{Anchor, GroupOf, Item, Scene};
 use super::svg::num;
 use super::{EDGE_OFFSET, OFFSET, Options, Sheet, card, credit, edge, legend, styles};
-
-/// The room inside a tag before its operator, and the cut of its corner.
-const TAG_PAD: f64 = SPACING_FRAGMENT_TAG_PAD;
 
 /// A laid-out sequence as a scene: every shape in drawing order, with its
 /// style sheet. Long, as the architecture's: one drawing's parts in the
@@ -56,35 +54,37 @@ pub fn scene(
         rx: ROUNDED_CANVAS,
     }];
 
-    // The lifelines, under everything.
-    let (top, bottom) = layout.lifeline_span;
+    // The bands, the lifelines, under everything.
     items.push(Item::Group {
         of: GroupOf::Class("lifelines"),
         items: layout
-            .lifelines
+            .bands
             .iter()
-            .map(|&x| Item::Path {
-                id: None,
-                class: "lifeline".into(),
-                place: None,
-                d: format!(
-                    "M{} {}V{}",
-                    num(x + OFFSET),
-                    num(top + OFFSET),
-                    num(bottom + OFFSET)
-                ),
-                arrowhead: false,
+            .map(|&b| {
+                let r = at(b);
+                Item::Rect {
+                    class: "band".into(),
+                    x: r.x,
+                    y: r.y,
+                    w: r.w,
+                    h: r.h,
+                    rx: Some(ROUNDED_FRAME),
+                }
             })
             .collect(),
     });
 
-    // The fragments, outermost first, their tags and guards over them.
+    // The fragments, outermost first, each with its pills on its lines.
     if !layout.fragments.is_empty() {
+        let class = match layout.look {
+            Look::Cards => "fragment",
+            Look::Avatars => "fragment dashed",
+        };
         let mut frames = Vec::new();
         for f in &layout.fragments {
             let r = at(f.frame);
             frames.push(Item::Rect {
-                class: "fragment".into(),
+                class: class.into(),
                 x: r.x,
                 y: r.y,
                 w: r.w,
@@ -100,15 +100,6 @@ pub fn scene(
                     arrowhead: false,
                 });
             }
-            frames.extend(tag(f.operator, at(f.tag)));
-            // On a patch of the canvas, as a label is, so a lifeline does
-            // not cross its words.
-            for (lines, b) in &f.guards {
-                let lines: Vec<&str> = lines.iter().map(String::as_str).collect();
-                let (patch, words) = edge::label_lines_at(&lines, at(*b), ("label-patch", "sub"));
-                frames.push(patch);
-                frames.extend(words);
-            }
         }
         items.push(Item::Group {
             of: GroupOf::Class("fragments"),
@@ -116,9 +107,8 @@ pub fn scene(
         });
     }
 
-    // The messages: each line, its arrowhead, its label.
+    // The messages: each line and its arrowhead.
     let mut lines = Vec::new();
-    let mut labels = Vec::new();
     let mut marks = Vec::new();
     for m in &layout.messages {
         let points: Vec<Point> = m.path.iter().map(|&p| on_line(p)).collect();
@@ -135,23 +125,63 @@ pub fn scene(
             arrowhead: false,
         });
         lines.push(arrowhead(m, &drawn));
-        if let Some((text, r)) = &m.label {
-            // On a patch of the canvas, so a lifeline passing behind a
-            // label does not cross its words.
-            let lines: Vec<&str> = text.iter().map(String::as_str).collect();
-            let (patch, words) = edge::label_lines_at(&lines, at(*r), ("label-patch", "sub"));
-            labels.push(patch);
-            labels.extend(words);
-        }
         if m.refused {
             marks.extend(cross(&drawn));
         }
     }
-    lines.extend(labels);
     items.push(Item::Group {
         of: GroupOf::Class("edges"),
         items: lines,
     });
+
+    // The bars, over the lines that start and end at them.
+    if !layout.activations.is_empty() {
+        items.push(Item::Group {
+            of: GroupOf::Class("activations"),
+            items: layout
+                .activations
+                .iter()
+                .map(|&b| {
+                    let r = at(b);
+                    Item::Rect {
+                        class: "activation".into(),
+                        x: r.x,
+                        y: r.y,
+                        w: r.w,
+                        h: r.h,
+                        rx: Some(r.w / 2.0),
+                    }
+                })
+                .collect(),
+        });
+    }
+
+    // Each fragment's pills, over the bars that pass them.
+    let tags: Vec<Item> = layout
+        .fragments
+        .iter()
+        .flat_map(|f| f.pills.iter().flat_map(|(lines, b)| tag(lines, at(*b))))
+        .collect();
+    if !tags.is_empty() {
+        items.push(Item::Group {
+            of: GroupOf::Class("fragment-pills"),
+            items: tags,
+        });
+    }
+
+    // Each label in its pill, over its line.
+    let pills: Vec<Item> = layout
+        .messages
+        .iter()
+        .filter_map(|m| m.pill.as_ref().map(|p| pill(m, p, at(p.rect))))
+        .flatten()
+        .collect();
+    if !pills.is_empty() {
+        items.push(Item::Group {
+            of: GroupOf::Class("labels"),
+            items: pills,
+        });
+    }
     if !marks.is_empty() {
         items.push(Item::Group {
             of: GroupOf::Class("refusals"),
@@ -159,7 +189,7 @@ pub fn scene(
         });
     }
 
-    // The heads, each a card over its lifeline; a refusing one edged in the
+    // The heads, each at the top of its band; a refusing one edged in the
     // refusal colour.
     for (node, r) in layout.spec.nodes.iter().zip(&layout.heads) {
         let brand = card::Brand {
@@ -169,13 +199,16 @@ pub fn scene(
                 .filter(|t| brands.contains_key(*t))
                 .map(super::brand_class),
         };
-        items.push(card::card(
-            node,
-            at(*r),
-            (layout.spec.card, layout.spec.logo),
-            logos,
-            Some(&brand),
-        ));
+        items.push(match layout.look {
+            Look::Cards => card::card(
+                node,
+                at(*r),
+                (layout.spec.card, layout.spec.logo),
+                logos,
+                Some(&brand),
+            ),
+            Look::Avatars => card::avatar(node, at(*r), layout.spec.logo, logos, Some(&brand)),
+        });
     }
     let mut refusers: Vec<usize> = layout
         .messages
@@ -186,28 +219,29 @@ pub fn scene(
     refusers.sort_unstable();
     refusers.dedup();
     for p in refusers {
-        let c = card::front(&layout.spec.nodes[p], at(layout.heads[p]));
-        items.push(Item::Rect {
-            class: "refused-head".into(),
-            x: c.x,
-            y: c.y,
-            w: c.w,
-            h: c.h,
-            rx: Some(ROUNDED_CARD.min(c.w / 2.0).min(c.h / 2.0)),
-        });
-    }
-
-    // The numbers, over the lines they sit on.
-    let pills: Vec<Item> = layout
-        .messages
-        .iter()
-        .filter_map(|m| m.pill.map(|p| pill(m.number, at(p))))
-        .flatten()
-        .collect();
-    if !pills.is_empty() {
-        items.push(Item::Group {
-            of: GroupOf::Class("steps"),
-            items: pills,
+        let node = &layout.spec.nodes[p];
+        let head = at(layout.heads[p]);
+        items.push(match layout.look {
+            Look::Cards => {
+                let c = card::front(node, head);
+                Item::Rect {
+                    class: "refused-head".into(),
+                    x: c.x,
+                    y: c.y,
+                    w: c.w,
+                    h: c.h,
+                    rx: Some(ROUNDED_CARD.min(c.w / 2.0).min(c.h / 2.0)),
+                }
+            }
+            Look::Avatars => {
+                let (cx, cy) = card::avatar_centre(node, head);
+                Item::Circle {
+                    class: "refused-head".into(),
+                    cx,
+                    cy,
+                    r: AVATAR_SIZE / 2.0,
+                }
+            }
         });
     }
 
@@ -254,7 +288,7 @@ fn arrowhead(m: &Message, drawn: &edge::Drawn) -> Item {
 }
 
 /// The ✕ on a refused message's line, `refusal.mark-gap` before its
-/// arrowhead, over a patch of the canvas so the line does not cross it.
+/// arrowhead, over a patch of the band so the line does not cross it.
 fn cross(drawn: &edge::Drawn) -> [Item; 2] {
     let half = REFUSAL_MARK / 2.0;
     let c = drawn.behind_tip(ARROWHEAD_LENGTH + REFUSAL_MARK_GAP + half);
@@ -279,66 +313,73 @@ fn cross(drawn: &edge::Drawn) -> [Item; 2] {
     [path("refused-patch"), path("refused-mark")]
 }
 
-/// A fragment's tag: a pentagon at the frame's top left, its corner
-/// following the frame's and its lower right cut (UML 2.5.1, 17.6.4.3),
-/// the operator in it.
-fn tag(operator: Operator, r: Rect) -> [Item; 2] {
-    // The frame's own corner, as far as the tag's height and width allow.
-    let rad = ROUNDED_FRAME.min(r.h).min(r.w - TAG_PAD);
-    let d = format!(
-        "M{} {}A{r} {r} 0 0 1 {} {}H{}V{}L{} {}H{}Z",
-        num(r.x),
-        num(r.y + rad),
-        num(r.x + rad),
-        num(r.y),
-        num(r.right()),
-        num(r.bottom() - TAG_PAD),
-        num(r.right() - TAG_PAD),
-        num(r.bottom()),
-        num(r.x),
-        r = num(rad)
-    );
-    [
-        Item::Path {
-            id: None,
-            class: "fragment-tag".into(),
-            place: None,
-            d,
-            arrowhead: false,
-        },
+/// A fragment's pill on its frame's line, fully round, its operator and
+/// guard centred in it (UML 2.5.1's pentagon and brackets give way to it).
+fn tag(lines: &[String], r: Rect) -> Vec<Item> {
+    let line = TYPOGRAPHY_FRAME_LABEL.size * TYPOGRAPHY_FRAME_LABEL.line_height;
+    #[allow(clippy::cast_precision_loss)] // one or two lines
+    let top = r.y + (r.h - lines.len() as f64 * line) / 2.0;
+    let mut out = vec![Item::Rect {
+        class: "fragment-tag".into(),
+        x: r.x,
+        y: r.y,
+        w: r.w,
+        h: r.h,
+        rx: Some(r.h / 2.0),
+    }];
+    out.extend(lines.iter().enumerate().map(|(i, l)| {
+        #[allow(clippy::cast_precision_loss)] // one or two lines
+        let down = i as f64 * line;
         Item::Text {
             class: "fragment-op".into(),
-            x: r.x + TAG_PAD,
-            y: r.y
-                + (r.h - TYPOGRAPHY_FRAME_LABEL.size * TYPOGRAPHY_FRAME_LABEL.line_height) / 2.0
-                + font::baseline_in_line(&TYPOGRAPHY_FRAME_LABEL),
-            anchor: Anchor::Start,
-            text: operator.name().into(),
-        },
-    ]
+            x: r.centre_x(),
+            y: top + down + font::baseline_in_line(&TYPOGRAPHY_FRAME_LABEL),
+            anchor: Anchor::Middle,
+            text: l.clone(),
+        }
+    }));
+    out
 }
 
-/// A message's number in its pill (DESIGN.md, Components: Signal, a step's
-/// number), its outline on half pixels.
-fn pill(number: u32, b: Rect) -> [Item; 2] {
-    let line = TYPOGRAPHY_LEGEND.size * TYPOGRAPHY_LEGEND.line_height;
-    [
-        Item::Rect {
-            class: "step".into(),
-            x: b.x,
-            y: b.y,
-            w: b.w - 1.0,
-            h: b.h - 1.0,
-            rx: Some((b.h - 1.0) / 2.0),
-        },
+/// A message's label in its pill (DESIGN.md, Components: Sequence, Message
+/// label): its number, muted, then its words; a reply's words quieter than
+/// a call's, a refused message's in the refusal colour.
+fn pill(m: &Message, p: &Pill, r: Rect) -> Vec<Item> {
+    let line = TYPOGRAPHY_SUBTITLE.size * TYPOGRAPHY_SUBTITLE.line_height;
+    let refused = if m.refused { " refused" } else { "" };
+    let mut out = vec![Item::Rect {
+        class: format!("message-pill{refused}"),
+        x: r.x,
+        y: r.y,
+        w: r.w,
+        h: r.h,
+        rx: Some(r.h / 2.0),
+    }];
+    let mut x = r.x + LABEL_PILL_PAD_X;
+    if let Some(n) = p.number {
+        let text = n.to_string();
+        out.push(Item::Text {
+            class: format!("message-number{refused}"),
+            x,
+            y: r.y + (r.h - line) / 2.0 + font::baseline_in_line(&TYPOGRAPHY_LEGEND),
+            anchor: Anchor::Start,
+            text: text.clone(),
+        });
+        x += font::text_width(&text, &TYPOGRAPHY_LEGEND) + SPACING_LABEL_GAP;
+    }
+    let sort = if m.sort == Sort::Reply { " reply" } else { "" };
+    out.extend(p.lines.iter().enumerate().map(|(i, l)| {
+        #[allow(clippy::cast_precision_loss)] // one or two lines
+        let down = i as f64 * line;
         Item::Text {
-            class: "step-text".into(),
-            x: b.x + (b.w - 1.0) / 2.0,
-            y: b.y + (b.h - 1.0) / 2.0 - line / 2.0 + font::baseline_in_line(&TYPOGRAPHY_LEGEND),
-            anchor: Anchor::Middle,
-            text: number.to_string(),
-        },
-    ]
+            class: format!("message-text{sort}{refused}"),
+            x,
+            y: r.y + LABEL_PILL_PAD_Y + down + font::baseline_in_line(&TYPOGRAPHY_SUBTITLE),
+            anchor: Anchor::Start,
+            text: l.clone(),
+        }
+    }));
+    out
 }
 
 /// The style sheet: the theme, the fonts with every text the drawing sets,
@@ -366,9 +407,6 @@ fn style(
     sheet.rules(styles::shapes());
     super::brand_rules(&mut sheet, brands, (&light, &dark, options.mode));
     sheet.rules(styles::sequence());
-    if seq.still == SequenceStill::Numbers {
-        sheet.rules(styles::steps());
-    }
     if refused {
         sheet.rules(styles::sequence_refusal());
     }
@@ -390,25 +428,22 @@ pub fn text_runs(layout: &Layout, logos: &dyn crate::logos::Logos) -> Vec<(u16, 
         .into_iter()
         .map(|(w, t)| (w, t.into_owned()))
         .collect();
-    for m in &layout.messages {
-        if let Some((lines, _)) = &m.label {
-            runs.extend(
-                lines
-                    .iter()
-                    .map(|l| (TYPOGRAPHY_SUBTITLE.weight, l.clone())),
-            );
-        }
-        if m.pill.is_some() {
-            runs.push((TYPOGRAPHY_LEGEND.weight, m.number.to_string()));
+    for p in layout.messages.iter().filter_map(|m| m.pill.as_ref()) {
+        runs.extend(
+            p.lines
+                .iter()
+                .map(|l| (TYPOGRAPHY_SUBTITLE.weight, l.clone())),
+        );
+        if let Some(n) = p.number {
+            runs.push((TYPOGRAPHY_LEGEND.weight, n.to_string()));
         }
     }
     for f in &layout.fragments {
-        runs.push((TYPOGRAPHY_FRAME_LABEL.weight, f.operator.name().into()));
-        for (lines, _) in &f.guards {
+        for (lines, _) in &f.pills {
             runs.extend(
                 lines
                     .iter()
-                    .map(|l| (TYPOGRAPHY_SUBTITLE.weight, l.clone())),
+                    .map(|l| (TYPOGRAPHY_FRAME_LABEL.weight, l.clone())),
             );
         }
     }

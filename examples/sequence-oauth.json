@@ -1,6 +1,7 @@
 {
   "archgram": 1,
   "diagram": "sequence",
+  "look": "avatars",
   "title": "OAuth sign in",
   "description": "The web app sends the user to the identity provider, which asks for consent and returns a code; the app checks its state, trades the code for a token while it warms the profile cache, then reads the profile page by page, signing in again when the token has expired.",
   "participants": [

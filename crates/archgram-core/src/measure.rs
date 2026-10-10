@@ -41,7 +41,7 @@ pub fn note_line<'a>(node: &'a Node, place: LogoPlace, logos: &'a dyn Logos) -> 
 }
 
 /// The width of a card's widest line of text, an inline logo included.
-fn text_width_of(node: &Node, place: LogoPlace, logos: &dyn Logos) -> f64 {
+pub(crate) fn text_width_of(node: &Node, place: LogoPlace, logos: &dyn Logos) -> f64 {
     let title_width = text_width(&node.label, &TYPOGRAPHY_TITLE);
     let line = note_line(node, place, logos);
     let lead = if line.logo.is_some() {
@@ -112,7 +112,14 @@ fn front_card_size(node: &Node, style: CardStyle, logo: LogoPlace, logos: &dyn L
 /// shortest. A label with no space stays one line.
 #[must_use]
 pub fn label_lines(label: &str) -> Vec<&str> {
-    let width = |s: &str| text_width(s, &TYPOGRAPHY_SUBTITLE);
+    lines_in(label, &TYPOGRAPHY_SUBTITLE)
+}
+
+/// [`label_lines`] for text set in `style`: a sequence's guard is set in
+/// `typography.frame-label` and wraps as a label does.
+#[must_use]
+pub fn lines_in<'a>(label: &'a str, style: &crate::tokens::TextStyle) -> Vec<&'a str> {
+    let width = |s: &str| text_width(s, style);
     if width(label) <= LABEL_MAX_WIDTH {
         return vec![label];
     }
