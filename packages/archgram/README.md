@@ -28,6 +28,13 @@ You describe the system: its nodes, what connects them and the paths a
 request takes. archgram lays it out, routes the lines around the boxes and
 draws it, in light and dark, with the flows animated.
 
+It also draws a sequence diagram: the order in which the parts call each
+other for one request, and what comes back, told in phases and played one
+phase at a time ([docs/SPEC.md,
+Sequence](https://github.com/byAbas/archgram/blob/main/docs/SPEC.md)).
+
+![Signing in: the browser posts the login to the API, which finds the user in Postgres; with the right password the API returns a session, and otherwise refuses with a 401.](https://raw.githubusercontent.com/byAbas/archgram/main/docs/images/sequence-sign-in.svg)
+
 ## Install
 
 ```sh
@@ -136,7 +143,7 @@ Print the version, or every command and option.
 ## Draw with your coding agent
 
 The `archgram` skill lets a coding agent draw a project's architecture from
-its code: it reads the code and the docs, writes the spec in
+its code, or the sequence of one request: it reads the code and the docs, writes the spec in
 `docs/diagrams/`, checks and draws it with `npx archgram`, in archgram's
 colours or, when you ask, your project's own, and lists each part it drew
 with the file behind it. It is
@@ -164,7 +171,7 @@ Or take it from the release, into your agent's skills folder
 (`~/.agents/skills`, or `~/.claude/skills` for Claude Code):
 
 ```sh
-mkdir -p ~/.agents/skills && curl -sL https://github.com/byAbas/archgram/releases/download/v0.9.0/archgram-skill-0.9.0.tar.gz | tar -xz -C ~/.agents/skills
+mkdir -p ~/.agents/skills && curl -sL https://github.com/byAbas/archgram/releases/download/v0.10.0/archgram-skill-0.10.0.tar.gz | tar -xz -C ~/.agents/skills
 ```
 
 The skill's archive carries a signed record of the build that made it:
@@ -195,11 +202,11 @@ opened.
 ### How is it different from Mermaid?
 
 Mermaid draws many kinds of diagram from text and is rendered by the page
-that shows it; GitHub renders it in Markdown. archgram draws one kind, the
-architecture of a system, into an SVG file ahead of time: it routes the
-lines around the cards, animates the flows and embeds its font, so the file
-looks the same everywhere. For a sequence diagram or a chart, Mermaid is
-the better tool.
+that shows it; GitHub renders it in Markdown. archgram draws two kinds,
+the architecture of a system and the sequence of one request, into an SVG
+file ahead of time: it routes the lines around the cards, animates the
+flows and embeds its font, so the file looks the same everywhere. For a
+chart, or a kind archgram does not draw, Mermaid is the better tool.
 
 ### How is it different from draw.io or Excalidraw?
 
@@ -210,11 +217,12 @@ git beside the code and changes in a diff when the system does.
 ### How is it different from D2 or PlantUML?
 
 D2 is a language for many kinds of diagram, and PlantUML draws UML from
-text, such as sequence, class and deployment diagrams. archgram draws one
-kind, the architecture of a system, from a spec in plain YAML or JSON that
-an agent can write from the code; it routes the lines, animates the flows
-inside the SVG and gives the same file on every machine. For UML, PlantUML
-is the better tool; for a diagram in many shapes, D2 is.
+text, such as sequence, class and deployment diagrams. archgram draws two
+kinds, the architecture of a system and the sequence of one request, from
+a spec in plain YAML or JSON that an agent can write from the code; it
+routes the lines, animates the flows inside the SVG and gives the same
+file on every machine. For the rest of UML, PlantUML is the better tool;
+for a diagram in many shapes, D2 is.
 
 ### How is it different from Structurizr and the C4 model?
 

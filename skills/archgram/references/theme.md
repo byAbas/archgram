@@ -6,7 +6,7 @@ in what happens on a flow: a green border on a card a signal passes, red
 where a step refuses it. When the user asks for the project's colours,
 or names their own, they reach archgram through a mapping file, `archgram.theme.json` at the project's
 root, passed to `build` with `--theme-file archgram.theme.json`. Its
-format is in `npx --yes --loglevel=error archgram@0.9.0 spec --section theme-file`;
+format is in `npx --yes --loglevel=error archgram@0.10.0 spec --section theme-file`;
 read that section before writing one.
 
 The mapping sits at the root because archgram reads a theme's files only
@@ -118,7 +118,7 @@ the report that dark mode repeats light.
 ## Checking the theme
 
 ```bash
-npx --yes --loglevel=error archgram@0.9.0 theme check archgram.theme.json
+npx --yes --loglevel=error archgram@0.10.0 theme check archgram.theme.json
 ```
 
 It prints each role's colour in both themes, or every problem at its file
