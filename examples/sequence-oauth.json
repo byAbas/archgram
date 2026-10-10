@@ -11,11 +11,13 @@
     { "id": "api", "kind": "service", "label": "Profile API", "variant": "multi" }
   ],
   "messages": [
+    { "phase": "Ask for consent" },
     { "from": "user", "to": "app", "label": "Sign in" },
     { "from": "app", "to": "idp", "label": "redirect to /authorize with the client id and scopes" },
     { "from": "idp", "to": "user", "label": "ask for consent" },
     { "reply": "user", "label": "consent" },
     { "reply": "idp", "to": "app", "label": "code" },
+    { "phase": "Trade the code" },
     { "from": "app", "to": "app", "label": "verify state" },
     { "par": [
       { "messages": [
@@ -24,6 +26,7 @@
       ] },
       { "messages": [ { "from": "app", "to": "api", "label": "warm cache", "async": true } ] }
     ] },
+    { "phase": "Read the profile" },
     { "loop": {
       "when": "for each page of the profile",
       "messages": [

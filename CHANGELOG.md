@@ -21,13 +21,17 @@ follow [Semantic Versioning](https://semver.org/).
   participants, calls, sends that do not wait, replies, `alt`, `opt`,
   `loop` and `par` fragments with their guards, and refused messages, each
   with its sources, which `archgram check` holds to the code.
-  `archgram build` draws it top to bottom, still, each message numbered,
-  in one of two looks (`look`): `cards`, card heads and a bar while a
-  participant answers a call, or `avatars`, round heads and no bars. In
-  both, each participant's lifeline is a band, each label in a pill, a
-  call's arrowhead filled, a send's and a reply's open, a reply's line
-  dashed, each fragment framed with its operator and guard in a pill, a
-  refusal's ✕. `examples/` holds two.
+  `phase` items divide its story into named steps, drawn as bands across
+  the page. `archgram build` draws it top to bottom, thin lifelines, each
+  label above its line led by its number (an `alt`'s ways lettered,
+  `4a`, `4b`), a call stronger than a reply, each fragment framed with its
+  operator and guard in a pill, a refusal's ✕; in one of two looks
+  (`look`): `cards`, card heads and a light bar while a participant
+  answers a call, or `avatars`, round heads and no bars. It moves one
+  phase at a time, each line drawn as it plays with its arrowhead lit as
+  it arrives, a faint tint between the lifelines it joins, an `alt`'s
+  ways as alternatives, and nothing dimmed below 60%; still under reduced
+  motion. `examples/` holds two.
 
 ### Changed
 

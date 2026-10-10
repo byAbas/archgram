@@ -2,7 +2,7 @@
 
 | Field   | Value      |
 |---------|------------|
-| Version | 0.3        |
+| Version | 0.5        |
 | Date    | 2026-10-09 |
 | Status  | Draft      |
 | Release | Planned, the first of the new kinds |
@@ -77,7 +77,9 @@ participants:
   - { id: api, kind: service, label: API, tech: nodedotjs, source: ../../src/api.ts }
   - { id: db, kind: database, label: Users, tech: postgresql }
 messages:
+  - phase: Sign in
   - { from: browser, to: api, label: POST /login }
+  - phase: Check the password
   - { from: api, to: db, label: find user, source: "../../src/api.ts#db.users.find(" }
   - { reply: db, label: user }
   - alt:
@@ -105,9 +107,18 @@ messages:
   addition to UML (diagram-kinds.md, Decided 4).
 - `look` picks how it is drawn: `cards`, the default, or `avatars`
   (Looks, below).
+- `phase: <name>` is an item of the top-level list that starts a phase:
+  the messages after it, up to the next phase, are that phase, a step of
+  the story told in a few words ("Sign in", "Check the password"). It
+  divides the list as PlantUML's `== name ==` divides a diagram into
+  logical steps (plantuml.com/sequence-diagram, "Divider or separator");
+  UML has no such thing, and it is archgram's addition. Messages before
+  the first phase belong to none.
 - The fields of an architecture spec that do not apply are errors here:
-  `nodes`, `edges`, `frames`, `flows`, `hints`, `direction`. `shownWidth`,
-  `palette`, `logo`, `signal`, `glow`, `still`, `credit` apply as there.
+  `nodes`, `edges`, `frames`, `flows`, `hints`, `direction`, and, since a
+  sequence moves in its own way (Animation), `signal`, `border`, `wait`
+  and `glow`. `shownWidth`, `card`, `logo`, `palette`, `still`, `credit`
+  apply as there.
 
 ### Validation
 
@@ -127,7 +138,9 @@ A sequence spec is rejected, every problem at its line and column, when:
 - an `alt` or a `par` has fewer than two operands, an operand of `alt`
   lacks `when`, `else` is on an operand other than an `alt`'s last, a
   `par` operand has a guard, a guard is empty, or an operand holds no
-  messages.
+  messages;
+- a `phase` is inside a fragment, carries any other field, has an empty
+  name, or no message follows it before the next phase or the end.
 
 An operand may name the code that makes its choice in `source`, as a
 message does.
@@ -138,17 +151,19 @@ message does.
 ### Layout
 
 - Participants are columns, left to right in the order the spec lists
-  them; their heads in one row at the top. Each column is a band from its
-  head to the foot of the diagram, every other band tinted: the band is
-  the lifeline (Looks).
+  them; their heads in one row at the top, a thin dashed lifeline down
+  from each to the foot of the diagram (UML 17.3.4.1).
+- Each phase is a band across the page over its messages' rows, its name
+  at its top left in small capitals, with a row of its own above its first
+  message. Every band is filled alike, a gap between two: a tint behind
+  every other one would leave a connector short of 3:1 in light.
 - Each message is a row of its own, in the list's order, so nothing
   happens at the same height except inside a `par`, whose operands still
   take rows of their own. Time runs down the page; there is no
   `direction`.
 - The space between two columns is as wide as the widest label between
-  them needs, with the pill around it, measured as archgram measures
-  every label, a long label on two lines (DESIGN.md, Components: Edge
-  label).
+  them needs, measured as archgram measures every label, a long label on
+  two lines (DESIGN.md, Components: Edge label).
 - A message to the same participant is a short loop out to the right of
   its lifeline and back half a row lower, so it takes a row and a half.
 - A fragment's frame covers the columns of the lifelines its messages
@@ -175,17 +190,20 @@ message does.
 
 ### Rendering
 
-- A participant's head is drawn at the top of its band, as its look
+- A participant's head is drawn at the top of its lifeline, as its look
   draws it (Looks).
 - A call is a solid line with a filled arrowhead; a send that does not
   wait, an open arrowhead; a reply, a dashed line with an open arrowhead
-  (UML 17.4.4.1; Decided 8). The
-  label sits in a pill on its line, centred between the two lifelines; a
-  reply's pill is quieter than a call's. A message to itself keeps its
-  label beside its loop.
+  (UML 17.4.4.1; Decided 8). The label sits above its line, centred
+  between the two lifelines, as plain text led by its number. A message
+  to itself has its label beside its loop.
+- The main path reads first: a call's line and label are in the text's
+  colour, a reply's quieter, its line thinner and its label muted; a send
+  is drawn as a call. Monochrome still: weight and shade, not hue, make
+  the difference.
 - A refused message ends in a ✕ at the participant that refuses, in the
-  refusal colour, as a refused flow does (PRD §6.4); its pill is drawn in
-  that colour too.
+  refusal colour, as a refused flow does (PRD §6.4); its label is in that
+  colour too.
 - Monochrome, both themes, the embedded font, one self-contained SVG, as
   every kind.
 
@@ -198,7 +216,7 @@ themes, are in [docs/samples/sequence/](../samples/sequence/).
 | | `cards`, the default | `avatars` |
 |---|---|---|
 | Head | archgram's card: the icon in its badge, the label beside it, the logo in the corner | A circle with the icon, the logo in a small badge on its edge, the label under it |
-| Activation | A thin bar on the lifeline, from a call to its reply | None |
+| Activation | A thin, light bar on the lifeline, from a call to its reply | None |
 | Fragment frame | Solid, rounded | Dashed, rounded |
 | Operator and guard | A pill on the frame's top edge, at the left | A pill at the middle of the frame's top edge |
 
@@ -208,35 +226,53 @@ node's card does.
 Where both looks part from UML's notation, as archgram's own drawing of
 its symbols (diagram-kinds.md, Decided 5):
 
-- The lifeline is a band, not a line (17.3.4.1 allows a dashed one).
 - The operator's pentagon (17.6.4.3) is a pill, and the guard's square
   brackets (17.6.4.2) are left out: the pill bounds the guard. The
   operator's name stays, so `alt`, `opt`, `loop` and `par` read as UML's.
-- A message's label sits in a pill on its line.
+- Phases are archgram's, drawn as bands across the page.
 
 ### Animation
 
-- The messages play in the list's order, a signal along each line from
-  sender to receiver, the label lighting as it passes and the receiver's
-  head lit while the message is its own.
-- A `par`'s operands start together and each keeps its own order.
-- An `alt`'s operands play one after another, each its guard lit, as
-  flows play in turn in architecture; an `opt` plays its operand.
-- A `loop` plays its operand once, its pill lit; archgram
-  does not know how many times it repeats and does not pretend to.
-- A refused message: the ✕ lands, and the refusal travels back along the
-  calls not yet answered to where the request began; what follows plays
-  after it.
-- Under reduced motion, nothing moves.
+The drawing stays readable the whole time: motion points at a message,
+it never hides one. Samples are in
+[docs/samples/sequence/](../samples/sequence/) (`motion`).
+
+- One phase plays at a time. Its name darkens; the other phases' messages
+  dim to 60% at most, never further, and the heads stay as they are.
+  Messages before the first phase play as a phase of their own.
+- Its messages play in the list's order. A message's line is drawn from
+  its sender, darker than at rest, and its arrowhead takes that colour
+  the moment the line reaches it, so line and head change as one. The
+  line stays dark until its phase ends.
+- While its phase plays, a faint tint grows across the phase's band
+  between the two lifelines each message joins, as the message goes,
+  and keeps what it has covered until the phase ends.
+- An `alt` plays as alternatives, not in sequence: its first way plays,
+  then its lines dim back, an "or" appears by the next operand's pill,
+  and the next way plays from where the first began, the tint starting
+  again with it.
+- A `par`'s operands start together and each keeps its own order; an
+  `opt` and a `loop` play their operand once, archgram not knowing how
+  many times a loop repeats.
+- A refused message's line is drawn in the refusal colour, its ✕ at its
+  end; what follows plays after it.
+- A pause separates one phase from the next, and a rest the end from the
+  start again, with the whole story shown.
+- Under reduced motion, nothing moves: the still image.
 
 ### Still image and screen reader
 
 - The still image numbers each message by its order, on by default: in a
   sequence the order is the meaning. `still: none` turns the numbers off.
+- An `alt`'s operands are alternatives, and their numbers say so: each
+  message of an operand carries its operand's letter, `4a` to `7a`, then
+  `4b`; each later operand starts again from the alt's first number, and
+  after the `alt` the count goes on from its longest operand. In nested
+  `alt`s, each one's letter in turn (`5ab`).
 - A screen reader hears each message in words, in order, after the
   description, a fragment's guard before its messages ("If password
-  matches: 4. API replies to Browser: session."), a refused message ending
-  "refused".
+  matches: 4a. API replies to Browser: session."), a phase's name before
+  its messages, a refused message ending "refused".
 
 ### The skill
 
@@ -312,10 +348,31 @@ its symbols (diagram-kinds.md, Decided 5):
    send's and a reply's open, a reply's line dashed. The shape, not a
    colour, says whether a message waits.
 
-9. Two looks, chosen from samples ([docs/samples/sequence/](../samples/sequence/)):
+9. Its bands and label pills replaced by 12. Two looks, chosen from samples ([docs/samples/sequence/](../samples/sequence/)):
    `look: cards | avatars`, `cards` by default, its activation bars
    UML's (17.2.4.4). The field is `look`, not `style`, which an edge
    already uses for its line (docs/SPEC.md, Edges).
+
+10. Replaced by 13. In `cards`, a bar fills down as its call is answered, rather than
+    lighting at once or not at all: it shows who is waiting, and for how
+    long. archify's trace leaves its bars still (its
+    `renderers/sequence/render-sequence.mjs`).
+
+11. Phases, `phase: <name>` items of the top-level list, each starting a
+    phase up to the next one, as PlantUML's divider does; drawn as bands
+    across the page, named at their top left. Chosen from samples, over a
+    gutter of names on the left.
+12. A lighter drawing, after the owner found the first one hard to follow:
+    thin dashed lifelines in place of bands, labels as plain text above
+    their lines, and a call's line and label stronger than a reply's.
+    Pills stay for a fragment's operator and guards. This replaces the
+    band and the label pills of Decided 9; the two looks stay.
+13. Motion phase by phase, each line drawn with its arrowhead lit as it
+    arrives, a faint tint between the lifelines it joins, an `alt`'s ways
+    as alternatives, numbered `4a`, `4b`; nothing dimmed below 60%. This
+    replaces the lit heads, pills and filling bars of 0.4 (Decided 10),
+    which lit too much at once, and the refusal's way back. Chosen from
+    samples.
 
 ## Open questions
 
@@ -328,3 +385,5 @@ None.
 | 0.1     | 2026-10-09 | First draft, from #126 and UML 2.5.1 clause 17: lifelines, calls, sends and replies, `alt`, `opt`, `loop`, `par`; `diagram: sequence` with `participants` and `messages`; a refused message; no activation bars yet; split past about 15 messages, to be measured; sources as in architecture. |
 | 0.2     | 2026-10-09 | The heads drawn once, at the top; no rule of its own for an `alt` that refuses throughout; UML's arrowheads; the validation as `check` holds it: two participants and a message at least, one form per item, a refused call waiting for no reply, the calls waiting through a fragment; an operand may name its source. |
 | 0.3     | 2026-10-09 | Two looks, `cards` and `avatars`, from samples; each column a band; labels and guards in pills, the operator named; activation bars in `cards`, from a call to its reply. |
+| 0.4     | 2026-10-10 | In `cards`, a bar fills down as its call is answered. |
+| 0.5     | 2026-10-10 | Phases as dividers, drawn as bands; thin lifelines, labels as plain text, a call stronger than a reply; motion phase by phase, an `alt`'s ways as alternatives numbered `4a`, `4b`; the bars no longer fill, and a refusal no longer travels back. |

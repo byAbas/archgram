@@ -4,9 +4,9 @@
 
 use crate::render::scene::{Decl, Paint, Rule};
 use crate::tokens::{
-    DASH_EDGE, DASH_EXTERNAL, DASH_FRAGMENT, DASH_FRAME, DASH_OPERAND, DASH_REPLY, Role,
-    STROKE_CARD, STROKE_CONNECTOR, STROKE_FRAME, TYPOGRAPHY_FRAME_LABEL, TYPOGRAPHY_LEGEND,
-    TYPOGRAPHY_SUBTITLE, TYPOGRAPHY_TITLE,
+    DASH_EDGE, DASH_EXTERNAL, DASH_FRAGMENT, DASH_FRAME, DASH_LIFELINE, DASH_OPERAND, DASH_REPLY,
+    Role, STROKE_CARD, STROKE_CONNECTOR, STROKE_FRAME, STROKE_MESSAGE, TYPOGRAPHY_FRAME_LABEL,
+    TYPOGRAPHY_LEGEND, TYPOGRAPHY_MESSAGE, TYPOGRAPHY_SUBTITLE, TYPOGRAPHY_TITLE,
 };
 
 /// The four category hues, by class name, with their roles.
@@ -173,24 +173,54 @@ pub fn legend() -> Vec<Rule> {
     )]
 }
 
-/// A sequence's own parts (DESIGN.md, Components: Sequence): its bands, a
-/// call's filled arrowhead, a reply's dashed line, the bars while a call is
-/// answered, a fragment's frame, pills and operand lines, and each
-/// message's pill, number and words.
+/// A sequence's own parts (DESIGN.md, Components: Sequence): its phases,
+/// its lifelines, a call's line stronger than a reply's, each arrowhead in
+/// its line's colour, the bars while a call is answered, a fragment's
+/// frame, pills and operand lines, and each message's number and words.
 #[must_use]
 pub fn sequence() -> Vec<Rule> {
     vec![
+        rule(".phase", &[Fill(R(Role::Card))]),
         rule(
-            ".band",
+            ".phase-label",
+            &[Font(TYPOGRAPHY_FRAME_LABEL), Fill(R(Role::TextMuted))],
+        ),
+        rule(".phase-label.lit", &[Fill(R(Role::Text))]),
+        rule(
+            ".lifeline",
+            &[
+                Fill(NoPaint),
+                Stroke(R(Role::Frame)),
+                StrokeWidth(STROKE_CARD),
+                Dash(DASH_LIFELINE),
+            ],
+        ),
+        rule(
+            ".edge.call",
+            &[Stroke(R(Role::Text)), StrokeWidth(STROKE_MESSAGE)],
+        ),
+        rule(
+            ".arrowhead.call",
+            &[Stroke(R(Role::Text)), StrokeWidth(STROKE_MESSAGE)],
+        ),
+        rule(
+            ".edge.reply",
+            &[Stroke(R(Role::Connector)), StrokeWidth(STROKE_FRAME)],
+        ),
+        rule(
+            ".arrowhead.reply",
+            &[Stroke(R(Role::Connector)), StrokeWidth(STROKE_FRAME)],
+        ),
+        rule(".edge.reply", &[Dash(DASH_REPLY)]),
+        rule(".arrowhead.filled", &[Fill(R(Role::Text))]),
+        rule(
+            ".activation",
             &[
                 Fill(R(Role::Card)),
                 Stroke(R(Role::CardEdge)),
                 StrokeWidth(STROKE_CARD),
             ],
         ),
-        rule(".edge.reply", &[Dash(DASH_REPLY)]),
-        rule(".arrowhead.filled", &[Fill(R(Role::Connector))]),
-        rule(".activation", &[Fill(R(Role::TextMuted))]),
         rule(
             ".fragment",
             &[
@@ -222,28 +252,23 @@ pub fn sequence() -> Vec<Rule> {
             ],
         ),
         rule(
-            ".message-pill",
-            &[
-                Fill(R(Role::Card)),
-                Stroke(R(Role::CardEdge)),
-                StrokeWidth(STROKE_CARD),
-            ],
-        ),
-        rule(
             ".message-number",
             &[Font(TYPOGRAPHY_LEGEND), Fill(R(Role::TextMuted))],
         ),
         rule(
             ".message-text",
-            &[Font(TYPOGRAPHY_SUBTITLE), Fill(R(Role::Text))],
+            &[Font(TYPOGRAPHY_MESSAGE), Fill(R(Role::Text))],
         ),
-        rule(".message-text.reply", &[Fill(R(Role::TextMuted))]),
+        rule(
+            ".message-text.reply",
+            &[Font(TYPOGRAPHY_SUBTITLE), Fill(R(Role::TextMuted))],
+        ),
     ]
 }
 
-/// A refused message in a sequence's still image: its ✕ on a patch of the
-/// band, its arrowhead, its pill's edge and words and the refusing head's
-/// border in the refusal colour (DESIGN.md, Components: Refusal).
+/// A refused message in a sequence: its ✕ on a patch of what it sits on,
+/// its line, arrowhead and words and the refusing head's border in the
+/// refusal colour (DESIGN.md, Components: Refusal).
 #[must_use]
 pub fn sequence_refusal() -> Vec<Rule> {
     vec![
@@ -261,11 +286,13 @@ pub fn sequence_refusal() -> Vec<Rule> {
             ".refused-patch",
             &[
                 Fill(NoPaint),
-                Stroke(R(Role::Card)),
+                Stroke(R(Role::Canvas)),
                 StrokeWidth(3.0 * STROKE_CONNECTOR),
             ],
         ),
-        rule(".message-pill.refused", &[Stroke(R(Role::SignalRefusal))]),
+        rule(".refused-patch.band", &[Stroke(R(Role::Card))]),
+        rule(".edge.refused", &[Stroke(R(Role::SignalRefusal))]),
+        rule(".arrowhead.refused", &[Stroke(R(Role::SignalRefusal))]),
         rule(".message-number.refused", &[Fill(R(Role::SignalRefusal))]),
         rule(".message-text.refused", &[Fill(R(Role::SignalRefusal))]),
         rule(

@@ -20,10 +20,11 @@
 
 use std::collections::BTreeMap;
 
+use crate::sequence::{Operator, Sequence, Step};
 use crate::spec::Spec;
 use crate::tokens::{
     MOTION_EASE, MOTION_FADE_MS, MOTION_HOP_GAP_MS, MOTION_HOP_MAX_MS, MOTION_HOP_MIN_MS,
-    MOTION_REFUSAL_HOP_MS, MOTION_REST_MS, MOTION_SPEED,
+    MOTION_PHASE_GAP_MS, MOTION_REFUSAL_HOP_MS, MOTION_REST_MS, MOTION_REWIND_MS, MOTION_SPEED,
 };
 
 /// One signal's move along one edge.
@@ -204,6 +205,203 @@ pub fn timeline(spec: &Spec, lengths: &[f64]) -> Option<Timeline> {
         }
     }
     Some(cycle.settle(t0))
+}
+
+/// A sequence's motion (DESIGN.md, Layout: Motion), one phase at a time,
+/// in whole milliseconds.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SequenceMotion {
+    /// How long the cycle lasts before it repeats.
+    pub period: u32,
+    /// Each message's hop along its line, in time's order: when its line
+    /// starts to be drawn, and when it reaches its arrowhead.
+    pub hops: Vec<(u32, u32)>,
+    /// When each message's drawn line fades: its phase's end, or for an
+    /// `alt`'s way, when the next way rewinds it.
+    pub held: Vec<u32>,
+    /// When each message is at full strength; dimmed to `motion.dim`
+    /// otherwise.
+    pub shown: Vec<Vec<(u32, u32)>>,
+    /// Each phase's time, in the order the layout lists them: when it
+    /// starts and ends.
+    pub phases: Vec<(u32, u32)>,
+    /// Each later way of an `alt`: its fragment (by the order fragments
+    /// open), its operand, and when its "or" shows, from its rewind to its
+    /// phase's end.
+    pub ors: Vec<(usize, usize, u32, u32)>,
+    /// When the tint of each phase starts again: for each later way of an
+    /// `alt`, its first message and its rewind.
+    pub resets: Vec<(usize, u32)>,
+}
+
+/// A sequence's steps as a tree: each message by its place in time, each
+/// fragment by the order it opens, with its operands.
+enum Part {
+    Message(usize),
+    Fragment(usize, Operator, Vec<Vec<Part>>),
+}
+
+/// The parts from `steps[*at]` up to the close of the fragment they are
+/// in, a phase, or the end; `at` is left on what stopped it (past a
+/// close). `counts` holds the messages and fragments read so far.
+fn parts(steps: &[Step<'_>], at: &mut usize, counts: &mut (usize, usize)) -> Vec<Part> {
+    let mut out = Vec::new();
+    while *at < steps.len() {
+        match &steps[*at] {
+            Step::Message(_) => {
+                out.push(Part::Message(counts.0));
+                counts.0 += 1;
+                *at += 1;
+            }
+            Step::Open(operator, _) => {
+                let f = counts.1;
+                counts.1 += 1;
+                *at += 1;
+                let mut operands = vec![parts(steps, at, counts)];
+                while matches!(steps.get(*at), Some(Step::Operand(_))) {
+                    *at += 1;
+                    operands.push(parts(steps, at, counts));
+                }
+                // Past the close.
+                *at += 1;
+                out.push(Part::Fragment(f, *operator, operands));
+            }
+            Step::Operand(_) | Step::Close | Step::Phase(_) => return out,
+        }
+    }
+    out
+}
+
+/// The messages the parts hold, by their places in time.
+fn held_by(parts: &[Part], out: &mut Vec<usize>) {
+    for p in parts {
+        match p {
+            Part::Message(k) => out.push(*k),
+            Part::Fragment(_, _, operands) => operands.iter().for_each(|o| held_by(o, out)),
+        }
+    }
+}
+
+/// The timing of a validated sequence's motion, with `lengths` each
+/// message's drawn length in time's order (DESIGN.md, Layout: Motion).
+/// Messages before the first phase play as a phase of their own, with no
+/// band. A message leaves `motion.hop-gap` after the one before it
+/// arrives; `motion.phase-gap` passes between phases; a `par`'s operands
+/// start together; an `alt`'s ways play as alternatives, each after
+/// `motion.rewind` while the way before it dims back; an `opt` and a
+/// `loop` play once. Everything is shown for `motion.rest` before the
+/// cycle repeats.
+#[must_use]
+pub fn sequence_motion(seq: &Sequence, lengths: &[f64]) -> SequenceMotion {
+    let steps = seq.steps();
+    let count = steps
+        .iter()
+        .filter(|s| matches!(s, Step::Message(_)))
+        .count();
+    let mut play = SequencePlay {
+        lengths,
+        hops: vec![(0, 0); count],
+        held: vec![u32::MAX; count],
+        ors: Vec::new(),
+        resets: Vec::new(),
+    };
+    let mut windows: Vec<(Vec<usize>, u32, u32, bool)> = Vec::new();
+    let mut at = 0;
+    let mut counts = (0, 0);
+    let mut t = fade();
+    let mut named = false;
+    while at < steps.len() {
+        if let Step::Phase(_) = steps[at] {
+            named = true;
+            at += 1;
+        }
+        let group = parts(&steps, &mut at, &mut counts);
+        let mut held = Vec::new();
+        held_by(&group, &mut held);
+        if held.is_empty() {
+            continue;
+        }
+        let end = play.items(&group, t) + hop_gap();
+        windows.push((held, t, end, named));
+        t = end + ms(MOTION_PHASE_GAP_MS);
+    }
+    let rest = t;
+    let period = rest + ms(MOTION_REST_MS);
+    let mut shown = vec![Vec::new(); count];
+    for (held, start, end, _) in &windows {
+        for &k in held {
+            play.held[k] = play.held[k].min(*end);
+            shown[k].push((*start, play.held[k]));
+            shown[k].push((rest, period));
+        }
+    }
+    // An "or" shows until its phase ends.
+    for or in &mut play.ors {
+        if let Some(w) = windows.iter().find(|w| w.1 <= or.2 && or.2 <= w.2) {
+            or.3 = w.2;
+        }
+    }
+    SequenceMotion {
+        period,
+        hops: play.hops,
+        held: play.held,
+        shown,
+        phases: windows.iter().filter(|w| w.3).map(|w| (w.1, w.2)).collect(),
+        ors: play.ors,
+        resets: play.resets,
+    }
+}
+
+/// A sequence as its messages are timed.
+struct SequencePlay<'a> {
+    lengths: &'a [f64],
+    hops: Vec<(u32, u32)>,
+    held: Vec<u32>,
+    ors: Vec<(usize, usize, u32, u32)>,
+    resets: Vec<(usize, u32)>,
+}
+
+impl SequencePlay<'_> {
+    /// Plays `parts` from `t`; returns when the last of them arrives.
+    fn items(&mut self, parts: &[Part], mut t: u32) -> u32 {
+        for part in parts {
+            t = match part {
+                Part::Message(k) => {
+                    let start = t + hop_gap();
+                    let end = start + hop_duration(self.lengths[*k]);
+                    self.hops[*k] = (start, end);
+                    end
+                }
+                Part::Fragment(_, Operator::Par, operands) => {
+                    operands.iter().map(|o| self.items(o, t)).max().unwrap_or(t)
+                }
+                Part::Fragment(f, Operator::Alt, operands) => {
+                    let mut end = self.items(&operands[0], t);
+                    for (j, way) in operands.iter().enumerate().skip(1) {
+                        // The way before dims back while the next waits.
+                        let rewind = end + hop_gap();
+                        let mut before = Vec::new();
+                        held_by(&operands[j - 1], &mut before);
+                        for k in before {
+                            self.held[k] = self.held[k].min(rewind);
+                        }
+                        let mut first = Vec::new();
+                        held_by(way, &mut first);
+                        if let Some(&k) = first.first() {
+                            self.resets.push((k, rewind));
+                        }
+                        self.ors.push((*f, j, rewind, rewind));
+                        end = self.items(way, rewind + ms(MOTION_REWIND_MS));
+                    }
+                    end
+                }
+                Part::Fragment(_, Operator::Opt | Operator::Loop, operands) => {
+                    self.items(&operands[0], t)
+                }
+            };
+        }
+        t
+    }
 }
 
 /// One move of a step: from a node, to a node, along an edge.

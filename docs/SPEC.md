@@ -261,7 +261,9 @@ participants:
   - { id: api, kind: service, label: API, tech: nodedotjs, source: ../../src/api.ts }
   - { id: db, kind: database, label: Users, tech: postgresql }
 messages:
+  - phase: Sign in
   - { from: browser, to: api, label: POST /login, source: "../../src/api.ts#app.post(\"/login\"" }
+  - phase: Check the password
   - { from: api, to: db, label: find user, source: "../../src/api.ts#db.users.find(" }
   - { reply: db, label: user }
   - alt:
@@ -281,13 +283,14 @@ messages:
 | `diagram` | yes | `sequence` | | This section's kind |
 | `participants` | yes | list | | At least two |
 | `messages` | yes | list | | At least one; their order is time's |
-| `still` | no | `numbers`, `none` | `numbers` | Where nothing moves, each message's number by its line, or nothing more: in a sequence the order is the meaning |
+| `still` | no | `numbers`, `none` | `numbers` | Each message's number leading its label, or nothing more: in a sequence the order is the meaning |
 | `look` | no | `cards`, `avatars` | `cards` | How it is drawn: `cards`, each head a card and a bar on a lifeline while its participant answers a call; `avatars`, each head a circle and no bars (How a sequence is drawn) |
-| `shownWidth`, `card`, `logo`, `palette`, `signal`, `border`, `wait`, `glow`, `credit` | no | | | As in Top level |
+| `shownWidth`, `card`, `logo`, `palette`, `credit` | no | | | As in Top level |
 
 `nodes`, `frames`, `edges`, `flows`, `hints`, `direction` and `legend`
 are errors in a sequence: time runs down the page, and the participants'
-order is the list's.
+order is the list's. So are `signal`, `border`, `wait` and `glow`: a
+sequence moves in its own way (How a sequence is drawn).
 
 ### Participants
 
@@ -327,7 +330,8 @@ A reply has `reply` in place of `from`:
 
 A call is drawn as a solid line with a filled arrowhead, a send that does
 not wait with an open one, and a reply as a dashed line, each with its
-label in a pill on the line.
+label above it. A call's line and label are stronger than a reply's, so
+the main path reads first.
 
 ### Fragments
 
@@ -366,39 +370,68 @@ the messages it holds, its operator and its first guard in a pill on its
 top edge, `alt · cached`; its operands are divided by dashed lines, each
 later guard in a pill on its line, `else`.
 
+### Phases
+
+```yaml
+- phase: Sign in
+- { from: browser, to: api, label: POST /login }
+- phase: Check the password
+- { from: api, to: db, label: find user }
+```
+
+`phase` names a step of the story in a few words, as an item of the
+top-level `messages` list: the messages after it, up to the next phase,
+are that phase. Messages before the first phase belong to none. A phase
+holds nothing itself and is never inside a fragment; it is drawn as a band
+across the page over its messages, its name at its top left. It divides
+the list as PlantUML's `== name ==` divides a diagram; UML has no phases,
+and they are archgram's.
+
 ### Refused messages
 
 `refused: true` marks the message that turns the request away, usually a
 reply such as a 401. A ✕ marks its line at the participant that refuses,
-and, where the diagram moves, the refusal travels back along the calls
-not yet answered to where the request began, as a refused flow does
-(Flows). UML has no refusal; it is archgram's.
+its line and label in the refusal colour. UML has no refusal; it is
+archgram's.
 
 ### How a sequence is drawn
 
 `archgram build` draws a sequence top to bottom, as time runs: the heads
-in a row, each participant's column a band down from its head, which is
-its lifeline, one row for each message in the list's order, and each
-fragment framed round its messages.
+in a row, a thin dashed lifeline down from each, one row for each message
+in the list's order, each phase a band across the page, and each fragment
+framed round its messages.
 
 `look` picks one of two drawings of the same columns and rows:
 
 | `look` | Heads | While a participant answers a call | Fragments |
 |---|---|---|---|
-| `cards` | archgram's cards | A bar on its lifeline, from the call to its reply (UML's execution specification) | A solid frame, its pill at the left |
+| `cards` | archgram's cards | A thin bar on its lifeline, from the call to its reply (UML's execution specification) | A solid frame, its pill at the left |
 | `avatars` | Circles, the logo in a badge on the edge | Nothing | A dashed frame, its pill in the middle |
 
 A call never answered keeps its bar to the last message its receiver
 sends before its caller calls it again, or half a row for a call to
-itself; a send, and a refused call, start none; a call to a participant whose
-bar is already drawn, a call to itself among them, draws a second bar
-over the first, moved to its right.
+itself; a send, and a refused call, start none; a call to a participant
+whose bar is already drawn, a call to itself among them, draws a second
+bar over the first, moved to its right.
 
-This version
-draws it still, each message numbered by its order (`still: numbers`); a
-screen reader hears each message in words, in order, a guard before its
-messages. Moving the messages in turn, as flows move, comes in a later
-version.
+Each message is numbered by its order (`still: numbers`). An `alt`'s
+operands are alternatives, so each of its messages carries its operand's
+letter: `4a` to `7a` for the first way, `4b` for the next, each way
+starting again from the alt's first number; after the `alt`, the count
+goes on from its longest way. In nested `alt`s, each one's letter in
+turn (`5ab`).
+
+Then the messages move, one phase at a time, and the drawing stays
+readable throughout. The phase that plays has its name darkened, and the
+others' messages dim, never below 60%. Each of its messages in turn has
+its line drawn from its sender, its arrowhead taking the line's colour as
+the line reaches it, while a faint tint grows across the phase's band
+between the two lifelines it joins. An `alt` plays its ways as
+alternatives: the first, then, dimmed back, the next from where the first
+began, an "or" by its pill. A `par`'s operands start together; an `opt`
+and a `loop` play once. Under reduced motion the drawing is still; a
+screen reader hears each phase's name and each message in words, in
+order, a guard before its messages.
 
 ### Sources in a sequence
 
@@ -510,8 +543,8 @@ its JSON pointer (or its line and column in YAML), when:
 - a sequence has fewer than two participants or no message, or a
   participant is in no message;
 - a sequence's item is not exactly one of a message (`from` and `to`), a
-  reply (`reply`) and a fragment, or a fragment carries a message's
-  fields;
+  reply (`reply`), a fragment and a phase, or a fragment carries a
+  message's fields;
 - a message, or a reply's `reply` or `to`, names a participant that does
   not exist;
 - a reply has no call to its participant before it still waiting, or
@@ -519,7 +552,9 @@ its JSON pointer (or its line and column in YAML), when:
   and a refused call, wait for no reply;
 - an `alt` or a `par` has fewer than two operands, an `alt` operand has no
   `when`, `else` is on an operand other than an `alt`'s last, a `par`
-  operand has a `when`, a guard is empty, or an operand holds no messages.
+  operand has a `when`, a guard is empty, or an operand holds no messages;
+- a `phase` is inside a fragment, carries another field, has an empty
+  name, or no message follows it before the next phase or the end.
 
 `archgram check` then holds each source to the code or the document behind it (Sources).
 

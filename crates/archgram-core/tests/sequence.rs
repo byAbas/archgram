@@ -382,11 +382,8 @@ fn messages_run_down_the_page_one_row_each() {
         let layout = place(&read(name), &NoLogos);
         let ys: Vec<f64> = layout.messages.iter().map(|m| m.path[0].y).collect();
         assert!(ys.windows(2).all(|w| w[0] < w[1]), "{name}: {ys:?}");
-        let numbers: Vec<u32> = layout.messages.iter().map(|m| m.number).collect();
-        let last = u32::try_from(numbers.len()).expect("a few messages");
-        assert_eq!(numbers, (1..=last).collect::<Vec<_>>());
         let top = layout.heads.iter().map(Rect::bottom).fold(0.0, f64::max);
-        let bottom = layout.bands[0].bottom();
+        let bottom = layout.lifeline_span.1;
         assert!(ys.iter().all(|&y| y > top && y < bottom), "{name}");
     }
 }
@@ -402,8 +399,8 @@ fn pills_and_heads_never_overlap() {
             .map(|(i, &r)| (format!("head {i}"), r))
             .collect();
         for m in &layout.messages {
-            if let Some(p) = &m.pill {
-                boxes.push((format!("pill {}", m.number), p.rect));
+            if let Some(l) = &m.label {
+                boxes.push((format!("label {}", m.number), l.rect));
             }
         }
         for (i, (a, ra)) in boxes.iter().enumerate() {
@@ -469,12 +466,16 @@ fn a_call_a_send_and_a_reply_are_drawn_as_uml_draws_them() {
         .iter()
         .filter(|m| m.sort == Sort::Reply)
         .count();
-    assert_eq!(svg.matches(r#"class="arrowhead filled""#).count(), calls);
-    assert_eq!(svg.matches(r#"class="edge reply""#).count(), replies);
     assert_eq!(
-        svg.matches(r#"class="refused-mark""#).count(),
-        2,
-        "the ✕ and its arrowhead"
+        svg.matches(r#"class="arrowhead call filled""#).count(),
+        calls
+    );
+    assert_eq!(svg.matches(r#"class="edge reply"#).count(), replies);
+    assert_eq!(svg.matches(r#"class="refused-mark""#).count(), 1, "the ✕");
+    assert_eq!(
+        svg.matches(r#"class="arrowhead reply refused""#).count(),
+        1,
+        "its arrowhead"
     );
     assert!(svg.contains(r#"class="refused-head""#));
     // Each operator in its pill, before its first guard.
@@ -498,7 +499,7 @@ fn a_screen_reader_hears_each_message_in_order() {
         .expect("a description");
     assert!(
         desc.ends_with(
-            "1. Browser calls API: POST /login. 2. API calls Users: find user. 3. Users replies to API: user. If password matches: 4. API replies to Browser: session. Otherwise: 5. API replies to Browser: 401, refused."
+            "Sign in: 1. Browser calls API: POST /login. Check the password: 2. API calls Users: find user. 3. Users replies to API: user. If password matches: 4a. API replies to Browser: session. Otherwise: 4b. API replies to Browser: 401, refused."
         ),
         "{desc}"
     );
@@ -627,10 +628,10 @@ fn cross(msg: &archgram_core::layout::sequence::Message) -> (Point, Rect) {
     )
 }
 
-/// A frame reaches across only the bands its own messages touch, and
+/// A frame reaches across only the lifelines its own messages touch, and
 /// those between them (UML draws a fragment across a span of lifelines).
 #[test]
-fn a_frame_covers_only_its_own_bands() {
+fn a_frame_covers_only_its_own_lifelines() {
     for (name, json) in cases_in_both_looks() {
         let layout = laid(&json);
         for f in &layout.fragments {
@@ -654,11 +655,11 @@ fn a_frame_covers_only_its_own_bands() {
                 .copied()
                 .max()
                 .expect("a fragment holds messages");
-            for (i, b) in layout.bands.iter().enumerate() {
-                if b.x < f.frame.right() && b.right() > f.frame.x {
+            for (i, &x) in layout.lifelines.iter().enumerate() {
+                if x > f.frame.x && x < f.frame.right() {
                     assert!(
                         (lo..=hi).contains(&i),
-                        "{name}: {:?} crosses band {i} {b:?}",
+                        "{name}: {:?} crosses lifeline {i} at {x}",
                         f.frame
                     );
                 }
@@ -676,9 +677,9 @@ fn boxes(layout: &archgram_core::layout::sequence::Layout) -> Vec<(String, Rect)
         .collect();
     for m in &layout.messages {
         out.extend(
-            m.pill
+            m.label
                 .iter()
-                .map(|p| (format!("pill {}", m.number), p.rect)),
+                .map(|l| (format!("label {}", m.number), l.rect)),
         );
     }
     for f in &layout.fragments {
@@ -762,7 +763,7 @@ fn a_label_keeps_its_measured_lines() {
         r#"{ "from": "a", "to": "b", "label": "mmmmm      mmmmm", "async": true }"#,
     );
     let layout = laid(&json);
-    let lines = layout.messages[0].pill.clone().expect("a label").lines;
+    let lines = layout.messages[0].label.clone().expect("a label").lines;
     let svg = archgram_core::build(&json, Options::default()).expect("draws");
     for line in &lines {
         assert!(
@@ -804,6 +805,7 @@ fn a_bar_runs_from_a_call_to_its_last_reply() {
         layout
             .activations
             .iter()
+            .map(|a| a.rect)
             .filter(move |b| b.x < x && b.right() > x)
             .map(|b| (b.y, b.bottom()))
             .collect::<Vec<_>>()
@@ -828,15 +830,15 @@ fn a_bar_over_another_is_moved_right() {
            { "from": "b", "to": "a", "label": "done", "async": true }"#,
     );
     let layout = laid(&json);
-    let bars = &layout.activations;
+    let bars: Vec<_> = layout.activations.iter().map(|a| a.rect).collect();
     assert_eq!(bars.len(), 2, "{bars:?}");
     let offset = archgram_core::tokens::ACTIVATION_OFFSET;
     assert!((bars[1].x - bars[0].x - offset).abs() < 1e-9, "{bars:?}");
     let half_row = archgram_core::tokens::SPACING_MESSAGE_ROW / 2.0;
     assert!((bars[1].h - half_row).abs() < 1e-9, "{bars:?}");
-    // The loop comes back to the moved bar.
+    // The loop comes back to the moved bar's side.
     let back = layout.messages[1].path.last().expect("a path");
-    assert!((back.x - bars[1].centre_x()).abs() < 1e-9, "{back:?}");
+    assert!((back.x - bars[1].right()).abs() < 1e-9, "{back:?}");
 }
 
 /// `avatars` draws each head as a circle and no bars; `cards`, cards.
@@ -858,4 +860,170 @@ fn look_takes_cards_or_avatars() {
     let spec =
         example("sequence-sign-in").replacen("\"title\"", "\"look\": \"boxes\", \"title\"", 1);
     assert!(parse(&spec).is_err());
+}
+
+// Motion (DESIGN.md, Layout: Motion).
+
+/// A sequence's motion, each message's length its path's.
+fn timed(name: &str) -> archgram_core::motion::SequenceMotion {
+    let seq = read(name);
+    let layout = place(&seq, &NoLogos);
+    let lengths: Vec<f64> = layout
+        .messages
+        .iter()
+        .map(|m| {
+            m.path
+                .windows(2)
+                .map(|w| (w[1].x - w[0].x).abs() + (w[1].y - w[0].y).abs())
+                .sum()
+        })
+        .collect();
+    archgram_core::motion::sequence_motion(&seq, &lengths)
+}
+
+/// One phase at a time: each phase's messages play in its time, the next
+/// phase after a pause, and each message leaves `motion.hop-gap` after the
+/// one before it arrives.
+#[test]
+fn phases_play_one_at_a_time() {
+    let t = timed("sequence-sign-in");
+    assert_eq!(t.phases.len(), 2);
+    let (a, b) = (t.phases[0], t.phases[1]);
+    assert!(a.1 < b.0, "{a:?} then {b:?}");
+    assert!(t.hops[0].0 >= a.0 && t.hops[0].1 <= a.1);
+    for k in 1..t.hops.len() {
+        assert!(
+            t.hops[k].0 >= b.0 && t.hops[k].1 <= b.1,
+            "{k}: {:?}",
+            t.hops[k]
+        );
+    }
+    let gap = archgram_core::motion::hop_gap();
+    assert_eq!(t.hops[2].0, t.hops[1].1 + gap);
+    assert!(t.period > b.1);
+}
+
+/// An `alt`'s ways play as alternatives: the next after the first dims
+/// back, its "or" shown, its tint started again.
+#[test]
+fn an_alt_plays_its_ways_as_alternatives() {
+    let t = timed("sequence-sign-in");
+    // 4a (the session) is held until the rewind; 4b starts after it.
+    let rewind = t.held[3];
+    assert!(rewind < t.hops[4].0, "{rewind} {:?}", t.hops[4]);
+    assert_eq!(t.ors.len(), 1);
+    assert_eq!(t.ors[0].1, 1, "the else's pill");
+    assert_eq!(t.resets, vec![(4, rewind)]);
+    // Neither way is dimmed below its phase while its phase plays.
+    assert!(
+        t.shown[3]
+            .iter()
+            .any(|&(s, e)| s <= t.hops[3].0 && e >= t.hops[3].1)
+    );
+    assert!(
+        t.shown[4]
+            .iter()
+            .any(|&(s, e)| s <= t.hops[4].0 && e >= t.hops[4].1)
+    );
+}
+
+/// A `par`'s operands start together, and what follows waits for both.
+#[test]
+fn a_par_s_operands_start_together() {
+    let t = timed("sequence-oauth");
+    // "exchange code" (7) and "warm cache" (9) open the par's two operands.
+    assert_eq!(t.hops[6].0, t.hops[8].0);
+    assert!(t.hops[9].0 > t.hops[7].1.max(t.hops[8].1));
+}
+
+/// The moving picture: each line drawn as it plays, the tint and the "or";
+/// under reduced motion none of it, and every message at full strength.
+#[test]
+fn a_sequence_moves_and_stays_readable() {
+    let svg = archgram_core::build(&example("sequence-sign-in"), Options::default()).unwrap();
+    let layout = place(&read("sequence-sign-in"), &NoLogos);
+    assert_eq!(
+        svg.matches(r#"<g class="drawn"#).count(),
+        layout.messages.len()
+    );
+    assert_eq!(svg.matches(r#"class="phase-tint motion""#).count(), 2);
+    assert!(svg.contains(r#"class="fragment-or""#));
+    assert!(svg.contains(".dims { opacity: 1 !important; }"));
+    // Nothing dims below `motion.dim`.
+    let dim = archgram_core::render::svg::num(archgram_core::tokens::MOTION_DIM);
+    for group in svg.split(r#"<g class="dims">"#).skip(1) {
+        let values = group
+            .split("values=\"")
+            .nth(1)
+            .and_then(|v| v.split('"').next())
+            .expect("a message's strength");
+        for v in values.split(';') {
+            assert!(v == "1" || v == dim, "{v}");
+        }
+    }
+}
+
+/// Phases divide the top-level list: each has a name and a message after
+/// it, and none sits inside a fragment.
+#[test]
+fn phases_are_checked() {
+    let two = |messages: &str| with(&["a", "b"], messages);
+    let ok = two(r#"{ "phase": "Ask" }, { "from": "a", "to": "b", "label": "q", "async": true }"#);
+    assert!(parse(&ok).is_ok());
+    for (messages, says) in [
+        (
+            r#"{ "phase": "Ask" }, { "phase": "Answer" }, { "from": "a", "to": "b", "async": true }"#,
+            "no message follows the phase `Ask`",
+        ),
+        (
+            r#"{ "from": "a", "to": "b", "async": true }, { "phase": "Done" }"#,
+            "no message follows the phase `Done`",
+        ),
+        (
+            r#"{ "phase": " " }, { "from": "a", "to": "b", "async": true }"#,
+            "a phase needs a name",
+        ),
+        (
+            r#"{ "phase": "Ask", "label": "x" }, { "from": "a", "to": "b", "async": true }"#,
+            "a phase is an item of its own",
+        ),
+        (
+            r#"{ "opt": { "messages": [ { "phase": "Ask" }, { "from": "a", "to": "b", "async": true } ] } }"#,
+            "cannot be inside a fragment",
+        ),
+    ] {
+        let e = one(&two(messages));
+        assert!(e.contains(says), "{e}");
+    }
+}
+
+/// A sequence takes none of the architecture's motion fields.
+#[test]
+fn a_sequence_refuses_the_flows_motion_fields() {
+    for field in ["signal", "border", "wait", "glow"] {
+        let spec = example("sequence-sign-in").replacen(
+            "\"title\"",
+            &format!("\"{field}\": \"x\", \"title\""),
+            1,
+        );
+        assert!(parse(&spec).is_err(), "{field}");
+    }
+}
+
+/// An `alt`'s ways are numbered as alternatives: each way's letter, the
+/// count starting again with each way and going on after the longest.
+#[test]
+fn an_alt_s_ways_are_numbered_as_alternatives() {
+    let json = with(
+        &["a", "b"],
+        r#"{ "from": "a", "to": "b", "async": true },
+           { "alt": [
+             { "when": "x", "messages": [ { "from": "a", "to": "b", "async": true }, { "from": "b", "to": "a", "async": true } ] },
+             { "when": "else", "messages": [ { "from": "a", "to": "b", "async": true },
+               { "alt": [ { "when": "y", "messages": [ { "from": "b", "to": "a", "async": true } ] },
+                          { "when": "else", "messages": [ { "from": "b", "to": "a", "async": true } ] } ] } ] } ] },
+           { "from": "a", "to": "b", "async": true }"#,
+    );
+    let numbers: Vec<String> = laid(&json).messages.into_iter().map(|m| m.number).collect();
+    assert_eq!(numbers, ["1", "2a", "3a", "2b", "3ba", "3bb", "4"]);
 }

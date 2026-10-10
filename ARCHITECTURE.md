@@ -215,16 +215,18 @@ the units would find the same errors. The steps:
 
 A sequence (`layout::sequence`) is laid out without layers: the order
 is the spec's, so nothing is searched. Its participants become columns,
-each a band as wide as the widest head of either look (`cards` or
-`avatars`), so both looks set the same columns, each gap then widened as
-each message's pill and arrowhead between two lifelines need, shorter
-spans first so a long one never makes room a short one needed; its
-messages become rows in the list's order, each fragment a frame round its
-rows and the bands its messages touch, the gaps widened first for each
-frame's padding and pills (`frame_needs`), so no frame reaches a band
-outside its span. In `cards`, each call that waits puts a bar on its
-receiver's lifeline to the last reply that answers it (`bars`), and a
-message meets the bar drawn where it arrives. A reply goes to the caller
+each as wide as the widest head of either look (`cards` or `avatars`),
+so both looks set the same columns, each gap then widened as each
+message's label and arrowhead between two lifelines need, shorter spans
+first so a long one never makes room a short one needed; its messages
+become rows in the list's order, each phase a band across the drawing
+over its rows, each fragment a frame round its rows and the lifelines its
+messages touch, the gaps widened first for each frame's padding and pills
+(`frame_needs`), so no frame reaches a lifeline outside its span. Each
+message is numbered (`layout::sequence::numbers`), an `alt`'s ways by
+letter. In `cards`, each call that waits puts a bar on its receiver's
+lifeline to the last reply that answers it (`bars`), and a message meets
+the side of the bar drawn where it arrives. A reply goes to the caller
 of the call it answers, and `Sequence::steps` says which call that is, by
 one rule,
 `sequence::answer`, and the calls still waiting after a fragment by
@@ -341,14 +343,13 @@ TrueType outlines only; variable fonts are out of scope. `--system-font`
 skips the embedding and falls back to the system font stack.
 
 A sequence is drawn by `render::sequence` into the same scene: the
-bands, the fragments' frames, each message's line with its arrowhead
-drawn on its own (a call's filled, a send's and a reply's open, a refused
-one's in the refusal colour), the bars, the fragments' pills, each
-message's number and label in its pill, the ✕ of a refusal, the heads as
-`card` draws them (`card::card`, or `card::avatar` for round heads), the
-legend and the credit; the theme, fonts and
-styles are the architecture's (`styles::sequence` adds its own). It is
-still in this version: its motion is a later change.
+phases' bands, the lifelines, the fragments' frames, each message as one
+group (its line, its arrowhead drawn on its own, a refusal's ✕, its
+number and label), the bars, the fragments' pills, the heads as `card`
+draws them (`card::card`, or `card::avatar` for round heads), the legend
+and the credit. The theme, fonts and shared styles are the
+architecture's (`styles::sequence` adds its own); its motion is described
+under Animate.
 
 ### Animate
 
@@ -368,6 +369,20 @@ refusal travels back along every line the flow took, the refusing card
 stays refused until a later flow passes it, and the next flow starts a
 rest after the refusal is back. Lit times of one card and one state closer
 than two fades are joined, so one fade ends before the next begins.
+
+A sequence moves by its own timeline (`motion::sequence_motion`), one
+phase at a time: its steps are read as a tree of fragments, each phase's
+group played in turn, a gap between phases; one hop per message, each
+leaving a gap after the one before it arrives; a `par`'s operands start
+together, an `alt`'s ways play as alternatives, each after a rewind that
+dims the way before it. It says when each message's line is drawn and
+how long it is held, when each message is at full strength, each phase's
+time, each "or" and where the tint starts again. `render::sequence` draws
+each line over its rest along its own path to its arrowhead's base, the
+head lit the moment the line reaches it, the tint as a rectangle grown
+across the phase's band, and each message's strength as its group's
+opacity, never below `motion.dim`; under reduced motion a stylesheet rule
+hides the drawn lines and sets every message to full strength.
 
 The output is SMIL, which runs where CSS and scripts do not (an `<img>`,
 GitHub): one cycle shared by every animation; each signal follows its
