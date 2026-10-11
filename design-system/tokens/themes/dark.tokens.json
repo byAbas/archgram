@@ -47,6 +47,12 @@
     },
     "signal-refusal": {
       "$value": "{palette.dark.red}"
+    },
+    "message-call": {
+      "$value": "{palette.dark.blue}"
+    },
+    "message-send": {
+      "$value": "{palette.dark.violet}"
     }
   }
 }

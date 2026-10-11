@@ -2,8 +2,8 @@
 
 | Field   | Value      |
 |---------|------------|
-| Version | 0.5        |
-| Date    | 2026-10-09 |
+| Version | 0.6        |
+| Date    | 2026-10-11 |
 | Status  | Draft      |
 | Release | Planned, the first of the new kinds |
 | Issue   | [#126](https://github.com/byAbas/archgram/issues/126) |
@@ -195,17 +195,28 @@ message does.
 - A call is a solid line with a filled arrowhead; a send that does not
   wait, an open arrowhead; a reply, a dashed line with an open arrowhead
   (UML 17.4.4.1; Decided 8). The label sits above its line, centred
-  between the two lifelines, as plain text led by its number. A message
-  to itself has its label beside its loop.
-- The main path reads first: a call's line and label are in the text's
-  colour, a reply's quieter, its line thinner and its label muted; a send
-  is drawn as a call. Monochrome still: weight and shade, not hue, make
-  the difference.
+  between the two lifelines, as plain text led by its number in brackets,
+  two digits at least: `[01]`, `[04a]`. A message to itself has its label
+  beside its loop.
+- The drawing is a blueprint (Decided 14): a faint grid of dots behind
+  it, thin lines, every message's line as thin as the next, and the
+  labels, numbers, guards and phases' names in a monospace face. The
+  heads keep the sans face of every kind.
+- Each kind of message has its colour, on its line, its arrowhead and its
+  number: a call that waits in blue, a send that does not in violet, a
+  reply in the connector's grey, a refusal in the refusal colour. A
+  label's words stay in the text's colour, a reply's muted and a
+  refusal's in its colour. The shape still says the kind on its own
+  (Decided 8): the colour repeats it. A key under the drawing names the
+  kinds it uses.
+- A label and a phase's name sit on a patch of what they sit on, so a
+  lifeline stops at them rather than running through their words; a
+  phase's name is drawn over the lifelines.
 - A refused message ends in a ✕ at the participant that refuses, in the
   refusal colour, as a refused flow does (PRD §6.4); its label is in that
-  colour too.
-- Monochrome, both themes, the embedded font, one self-contained SVG, as
-  every kind.
+  colour too. The refusing participant's head is not marked at rest: its
+  edge turns the refusal colour while the refusal plays (Animation).
+- Both themes, the embedded fonts, one self-contained SVG, as every kind.
 
 ### Looks
 
@@ -243,7 +254,9 @@ it never hides one. Samples are in
 - Its messages play in the list's order. A message's line is drawn from
   its sender, darker than at rest, and its arrowhead takes that colour
   the moment the line reaches it, so line and head change as one. The
-  line stays dark until its phase ends.
+  line stays dark until its phase ends. A point in the message's colour
+  travels the line as it is drawn, and is gone when the line reaches its
+  end.
 - While its phase plays, a faint tint grows across the phase's band
   between the two lifelines each message joins, as the message goes,
   and keeps what it has covered until the phase ends.
@@ -255,15 +268,20 @@ it never hides one. Samples are in
   `opt` and a `loop` play their operand once, archgram not knowing how
   many times a loop repeats.
 - A refused message's line is drawn in the refusal colour, its ✕ at its
-  end; what follows plays after it.
+  end, and the refusing participant's head takes the refusal colour on
+  its edge while that line shows; what follows plays after it.
 - A pause separates one phase from the next, and a rest the end from the
   start again, with the whole story shown.
-- Under reduced motion, nothing moves: the still image.
+- Under reduced motion, nothing moves: the still image, where no head is
+  marked.
 
 ### Still image and screen reader
 
 - The still image numbers each message by its order, on by default: in a
   sequence the order is the meaning. `still: none` turns the numbers off.
+  A number is shown in brackets, two digits at least (`[01]`, `[11b]`), so
+  it reads apart from the words after it; a screen reader hears it plain
+  ("11b.").
 - An `alt`'s operands are alternatives, and their numbers say so: each
   message of an operand carries its operand's letter, `4a` to `7a`, then
   `4b`; each later operand starts again from the alt's first number, and
@@ -373,6 +391,18 @@ it never hides one. Samples are in
     replaces the lit heads, pills and filling bars of 0.4 (Decided 10),
     which lit too much at once, and the refusal's way back. Chosen from
     samples.
+14. A blueprint, after the owner read the drawing as a newcomer would and
+    found lifelines running through words, a red head before any refusal,
+    and calls hard to tell from sends: a faint dot grid, thin lines,
+    monospace labels with bracketed numbers, a patch under each label and
+    phase name, a colour for each kind of message with a key, a point
+    travelling each message as it plays, and the refusing head marked only
+    while its refusal plays. Chosen from samples over a muted look, label
+    chips, colour for the exceptions only, archify's brighter hues, a
+    glowing look and a fading beam. Colour goes by the message's kind, not
+    by participant as archify colours its heads, and red and green are not
+    set against each other. This replaces the monochrome of Decided 12;
+    a call's words still weigh more than a reply's.
 
 ## Open questions
 
@@ -387,3 +417,4 @@ None.
 | 0.3     | 2026-10-09 | Two looks, `cards` and `avatars`, from samples; each column a band; labels and guards in pills, the operator named; activation bars in `cards`, from a call to its reply. |
 | 0.4     | 2026-10-10 | In `cards`, a bar fills down as its call is answered. |
 | 0.5     | 2026-10-10 | Phases as dividers, drawn as bands; thin lifelines, labels as plain text, a call stronger than a reply; motion phase by phase, an `alt`'s ways as alternatives numbered `4a`, `4b`; the bars no longer fill, and a refusal no longer travels back. |
+| 0.6     | 2026-10-11 | A blueprint: a dot grid, thin lines, monospace labels with bracketed numbers, colour by the kind of message with a key, a patch under labels and phase names, a point travelling each message, and the refusing head marked only while its refusal plays. |

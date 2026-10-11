@@ -484,9 +484,10 @@ fn display_p3(rgb: [f64; 3]) -> [f64; 3] {
 }
 
 /// The pairs DESIGN.md holds to WCAG 2.1 AA (Colors): text 4.5:1 on what
-/// it sits on, lines, icons and a flow's pass and refusal marks 3:1. Each is
-/// a foreground role, the role behind it and the least ratio.
-pub const PAIRS: [(Role, Role, f64); 17] = [
+/// it sits on, a sequence's message numbers among it; lines, icons and a
+/// flow's pass and refusal marks 3:1. Each is a foreground role, the role
+/// behind it and the least ratio.
+pub const PAIRS: [(Role, Role, f64); 21] = [
     (Role::Text, Role::Card, 4.5),
     (Role::TextMuted, Role::Card, 4.5),
     (Role::Text, Role::Canvas, 4.5),
@@ -504,6 +505,10 @@ pub const PAIRS: [(Role, Role, f64); 17] = [
     (Role::SignalPass, Role::Card, 3.0),
     (Role::SignalRefusal, Role::Card, 3.0),
     (Role::SignalRefusal, Role::Canvas, 3.0),
+    (Role::MessageCall, Role::Card, 4.5),
+    (Role::MessageCall, Role::Canvas, 4.5),
+    (Role::MessageSend, Role::Card, 4.5),
+    (Role::MessageSend, Role::Canvas, 4.5),
 ];
 
 /// A pair below its least contrast.

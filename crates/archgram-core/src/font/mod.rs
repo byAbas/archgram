@@ -1,6 +1,7 @@
-//! The embedded font: Geist, measured with `skrifa` and embedded as a subset
-//! (ARCHITECTURE.md, Measure and Render). See `fonts/README.md` for where the
-//! files come from and their licence.
+//! The embedded fonts: Geist, and Geist Mono for a sequence's words,
+//! measured with `skrifa` and embedded as subsets (ARCHITECTURE.md, Measure
+//! and Render). See `fonts/README.md` for where the files come from and
+//! their licence.
 
 mod base64;
 pub mod subset;
@@ -9,12 +10,17 @@ pub use base64::encode as base64;
 
 use skrifa::prelude::{FontRef, LocationRef, MetadataProvider, Size};
 
+pub use crate::tokens::Family;
 use crate::tokens::TextStyle;
 
 /// Geist Regular, weight 400.
 pub static REGULAR: &[u8] = include_bytes!("../../fonts/Geist-Regular.ttf");
 /// Geist Medium, weight 500.
 pub static MEDIUM: &[u8] = include_bytes!("../../fonts/Geist-Medium.ttf");
+/// Geist Mono Regular, weight 400.
+pub static MONO_REGULAR: &[u8] = include_bytes!("../../fonts/GeistMono-Regular.ttf");
+/// Geist Mono Medium, weight 500.
+pub static MONO_MEDIUM: &[u8] = include_bytes!("../../fonts/GeistMono-Medium.ttf");
 
 /// Every character a font maps to a glyph, from its `cmap`.
 ///
@@ -34,11 +40,28 @@ pub fn characters(font: &[u8]) -> Result<std::collections::BTreeSet<char>, Strin
 /// The family name the embedded subsets take in CSS: our own, so a copy of
 /// Geist installed on the reader's machine never stands in for the subset.
 pub const FAMILY: &str = "archgram-geist";
+/// Geist Mono's, likewise.
+pub const FAMILY_MONO: &str = "archgram-geist-mono";
 
-/// The file for a CSS weight: Medium from 500 up, Regular below.
+/// The CSS family name a face's embedded subset takes.
 #[must_use]
-pub fn face(weight: u16) -> &'static [u8] {
-    if weight >= 500 { MEDIUM } else { REGULAR }
+pub fn family_name(family: Family) -> &'static str {
+    match family {
+        Family::Sans => FAMILY,
+        Family::Mono => FAMILY_MONO,
+    }
+}
+
+/// The file for a family and a CSS weight: Medium from 500 up, Regular
+/// below.
+#[must_use]
+pub fn face(family: Family, weight: u16) -> &'static [u8] {
+    match (family, weight >= 500) {
+        (Family::Sans, true) => MEDIUM,
+        (Family::Sans, false) => REGULAR,
+        (Family::Mono, true) => MONO_MEDIUM,
+        (Family::Mono, false) => MONO_REGULAR,
+    }
 }
 
 fn font_ref(bytes: &'static [u8]) -> FontRef<'static> {
@@ -51,7 +74,7 @@ fn font_ref(bytes: &'static [u8]) -> FontRef<'static> {
 /// matches this measure exactly.
 #[must_use]
 pub fn text_width(text: &str, style: &TextStyle) -> f64 {
-    let font = font_ref(face(style.weight));
+    let font = font_ref(face(style.family, style.weight));
     #[allow(clippy::cast_possible_truncation)] // pixel sizes fit an f32
     let metrics = font.glyph_metrics(Size::new(style.size as f32), LocationRef::default());
     let charmap = font.charmap();
@@ -72,11 +95,12 @@ pub fn text_width(text: &str, style: &TextStyle) -> f64 {
         .sum()
 }
 
-/// The characters of `text` that `weight`'s face does not have, in order,
-/// without repeats. The renderer leaves them to the reader's font.
+/// The characters of `text` that `family`'s face in `weight` does not
+/// have, in order, without repeats. The renderer leaves them to the
+/// reader's font.
 #[must_use]
-pub fn uncovered(text: &str, weight: u16) -> Vec<char> {
-    let font = font_ref(face(weight));
+pub fn uncovered(text: &str, family: Family, weight: u16) -> Vec<char> {
+    let font = font_ref(face(family, weight));
     let charmap = font.charmap();
     let mut seen = std::collections::BTreeSet::new();
     text.chars()
@@ -89,7 +113,7 @@ pub fn uncovered(text: &str, weight: u16) -> Vec<char> {
 /// leading, then the font's ascent, the way CSS places a line of text.
 #[must_use]
 pub fn baseline_in_line(style: &TextStyle) -> f64 {
-    let font = font_ref(face(style.weight));
+    let font = font_ref(face(style.family, style.weight));
     #[allow(clippy::cast_possible_truncation)]
     let m = font.metrics(Size::new(style.size as f32), LocationRef::default());
     let (ascent, descent) = (f64::from(m.ascent), f64::from(m.descent).abs());
@@ -100,11 +124,11 @@ pub fn baseline_in_line(style: &TextStyle) -> f64 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::tokens::{TYPOGRAPHY_SUBTITLE, TYPOGRAPHY_TITLE};
+    use crate::tokens::{TYPOGRAPHY_MESSAGE, TYPOGRAPHY_SUBTITLE, TYPOGRAPHY_TITLE};
 
     #[test]
-    fn both_faces_parse_and_map_latin_text() {
-        for bytes in [REGULAR, MEDIUM] {
+    fn every_face_parses_and_maps_latin_text() {
+        for bytes in [REGULAR, MEDIUM, MONO_REGULAR, MONO_MEDIUM] {
             let font = font_ref(bytes);
             for c in "Postgres API, queue: 3 replicas".chars() {
                 assert!(font.charmap().map(c).is_some(), "{c:?}");
@@ -129,15 +153,36 @@ mod tests {
         let han = text_width("用户", &TYPOGRAPHY_TITLE);
         assert!((han - 2.0 * TYPOGRAPHY_TITLE.size).abs() < 1e-6, "{han}");
         assert_eq!(
-            uncovered("API 用户 用 é", TYPOGRAPHY_TITLE.weight),
+            uncovered("API 用户 用 é", Family::Sans, TYPOGRAPHY_TITLE.weight),
             vec!['用', '户']
         );
-        assert!(uncovered("Şəkillər və sənədlər", TYPOGRAPHY_TITLE.weight).is_empty());
+        assert!(
+            uncovered(
+                "Şəkillər və sənədlər",
+                Family::Sans,
+                TYPOGRAPHY_TITLE.weight
+            )
+            .is_empty()
+        );
+    }
+
+    #[test]
+    fn the_mono_face_gives_every_character_one_advance() {
+        let one = text_width("i", &TYPOGRAPHY_MESSAGE);
+        for c in "[01] Wm.@ab".chars() {
+            let w = text_width(&c.to_string(), &TYPOGRAPHY_MESSAGE);
+            assert!((w - one).abs() < 1e-6, "{c:?}: {w} against {one}");
+        }
+        assert!(
+            (text_width("Wm", &TYPOGRAPHY_SUBTITLE) - text_width("il", &TYPOGRAPHY_SUBTITLE)).abs()
+                > 1.0,
+            "the sans face is proportional"
+        );
     }
 
     #[test]
     fn the_baseline_sits_inside_the_line() {
-        for style in [TYPOGRAPHY_TITLE, TYPOGRAPHY_SUBTITLE] {
+        for style in [TYPOGRAPHY_TITLE, TYPOGRAPHY_SUBTITLE, TYPOGRAPHY_MESSAGE] {
             let b = baseline_in_line(&style);
             assert!(
                 b > style.size * 0.6 && b < style.size * style.line_height,

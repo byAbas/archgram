@@ -477,7 +477,13 @@ fn a_call_a_send_and_a_reply_are_drawn_as_uml_draws_them() {
         1,
         "its arrowhead"
     );
-    assert!(svg.contains(r#"class="refused-head""#));
+    // The refusing head is marked only while its refusal plays: hidden at
+    // rest, and under reduced motion.
+    assert!(svg.contains(r#"class="refused-head motion""#));
+    assert!(!svg.contains(r#"class="refused-head""#));
+    // A send takes its own kind's class, its arrowhead open.
+    assert_eq!(svg.matches(r#"class="edge send""#).count(), 1, "warm cache");
+    assert_eq!(svg.matches(r#"class="arrowhead send""#).count(), 1);
     // Each operator in its pill, before its first guard.
     for pill in ["par", "alt · token valid", "else"] {
         assert!(svg.contains(&format!(">{pill}</text>")), "{pill}");
@@ -1026,4 +1032,43 @@ fn an_alt_s_ways_are_numbered_as_alternatives() {
     );
     let numbers: Vec<String> = laid(&json).messages.into_iter().map(|m| m.number).collect();
     assert_eq!(numbers, ["1", "2a", "3a", "2b", "3ba", "3bb", "4"]);
+}
+
+#[test]
+fn a_sequence_is_drawn_as_a_blueprint() {
+    let svg = archgram_core::build(&example("sequence-oauth"), Options::default()).expect("draws");
+    // A faint grid of dots behind it.
+    assert!(svg.contains(r#"<pattern id="archgram-grid""#));
+    assert!(svg.contains(r#"fill="url(#archgram-grid)""#));
+    // Its numbers in brackets, two digits at least, an alt's lettered.
+    for n in ["[01]", "[09]", "[10]", "[11a]", "[11b]"] {
+        assert!(svg.contains(&format!(">{n}</text>")), "{n}");
+    }
+    // Each label on a patch, and the phases' names over the lifelines.
+    let patches = svg.matches(r#"class="label-patch band""#).count();
+    assert!(patches >= 12 + 3, "{patches}");
+    let lifelines = svg.find(r#"<g class="lifelines">"#).expect("lifelines");
+    let names = svg.find(r#"<g class="phase-names">"#).expect("phase names");
+    assert!(names > lifelines, "the names over the lifelines");
+    // The words between the heads in the embedded mono face, the heads in
+    // the sans one.
+    assert!(svg.contains(r#"font-family: "archgram-geist-mono""#));
+    assert!(svg.contains("--mono: \"archgram-geist-mono\""));
+    assert!(svg.contains(".message-text { font-family: var(--mono);"));
+    // Each kind of message in its colour, and a key naming the kinds used.
+    assert!(svg.contains("--message-call:") && svg.contains("--message-send:"));
+    for key in ["call, waits", "send, no wait", "reply", "refused"] {
+        assert!(svg.contains(&format!(">{key}</text>")), "{key}");
+    }
+    // A point travels each message as it is drawn.
+    assert_eq!(svg.matches(r#"<circle class="pulse "#).count(), 12);
+    assert!(svg.contains(r#"<animateMotion calcMode="linear""#));
+}
+
+#[test]
+fn an_architecture_diagram_takes_none_of_a_sequence_s_colours() {
+    let svg = archgram_core::build(&example("linkshort"), Options::default()).expect("draws");
+    assert!(!svg.contains("--message-"));
+    assert!(!svg.contains("--mono"));
+    assert!(!svg.contains("archgram-geist-mono"));
 }

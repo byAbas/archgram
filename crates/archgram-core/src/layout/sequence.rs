@@ -11,7 +11,7 @@ use std::f64::consts::FRAC_1_SQRT_2;
 use crate::font::text_width;
 use crate::geometry::{Point, Rect, Size};
 use crate::logos::Logos;
-use crate::measure::{card_sizes_with, label_lines, lines_in, note_line, text_width_of};
+use crate::measure::{card_sizes_with, lines_in, note_line, text_width_of};
 use crate::render::refusal::mark_reach;
 use crate::sequence::{Look, Operator, Sequence, SequenceStill, Step};
 use crate::spec::{LogoPlace, Spec, Variant};
@@ -20,7 +20,7 @@ use crate::tokens::{
     AVATAR_SIZE, CARD_LOGO_CHIP_RING, CARD_MULTI_OFFSET, SPACING_EDGE_EDGE,
     SPACING_FRAGMENT_PADDING, SPACING_FRAGMENT_TAG, SPACING_FRAGMENT_TAG_PAD, SPACING_LABEL_GAP,
     SPACING_LIFELINE_GAP, SPACING_MESSAGE_ROW, SPACING_PHASE_LABEL, SPACING_SELF_WIDTH,
-    TYPOGRAPHY_FRAME_LABEL, TYPOGRAPHY_LEGEND, TYPOGRAPHY_MESSAGE, TYPOGRAPHY_SUBTITLE,
+    TYPOGRAPHY_FRAGMENT, TYPOGRAPHY_MESSAGE, TYPOGRAPHY_MESSAGE_NUMBER, TYPOGRAPHY_MESSAGE_REPLY,
     TYPOGRAPHY_TITLE,
 };
 
@@ -33,8 +33,8 @@ pub use crate::sequence::Sort;
 pub struct Label {
     /// The box its number and words fill.
     pub rect: Rect,
-    /// The number it leads with, `4a` in an `alt`, when the still image
-    /// numbers the messages.
+    /// The number it leads with as it is shown, `[01]`, `[04a]` in an
+    /// `alt`, when the still image numbers the messages.
     pub number: Option<String>,
     /// Its lines, one or two (two past `label.max-width`); none for a
     /// label of its number alone.
@@ -118,14 +118,14 @@ pub struct Layout {
     pub size: Size,
 }
 
-/// A line of `typography.subtitle`, a label's.
+/// A line of `typography.message`, a label's.
 fn line_height() -> f64 {
-    TYPOGRAPHY_SUBTITLE.size * TYPOGRAPHY_SUBTITLE.line_height
+    TYPOGRAPHY_MESSAGE.size * TYPOGRAPHY_MESSAGE.line_height
 }
 
-/// A line of `typography.frame-label`, a fragment pill's.
+/// A line of `typography.fragment`, a fragment pill's.
 fn tag_line() -> f64 {
-    TYPOGRAPHY_FRAME_LABEL.size * TYPOGRAPHY_FRAME_LABEL.line_height
+    TYPOGRAPHY_FRAGMENT.size * TYPOGRAPHY_FRAGMENT.line_height
 }
 
 /// The room between a label and its line, or a pill and what is near it.
@@ -145,7 +145,7 @@ const PHASE_GAP: f64 = 2.0 * SPACING_LABEL_GAP;
 fn tag_pill(operator: Option<Operator>, when: Option<&str>) -> Option<(Vec<String>, Size)> {
     let mut lines: Vec<String> = when
         .map(|w| {
-            lines_in(w.trim(), &TYPOGRAPHY_FRAME_LABEL)
+            lines_in(w.trim(), &TYPOGRAPHY_FRAGMENT)
                 .into_iter()
                 .map(str::to_owned)
                 .collect()
@@ -159,7 +159,7 @@ fn tag_pill(operator: Option<Operator>, when: Option<&str>) -> Option<(Vec<Strin
     }
     let widest = lines
         .iter()
-        .map(|l| text_width(l, &TYPOGRAPHY_FRAME_LABEL))
+        .map(|l| text_width(l, &TYPOGRAPHY_FRAGMENT))
         .fold(0.0, f64::max);
     #[allow(clippy::cast_precision_loss)] // one or two lines
     let more = (lines.len().max(1) - 1) as f64;
@@ -170,10 +170,10 @@ fn tag_pill(operator: Option<Operator>, when: Option<&str>) -> Option<(Vec<Strin
     Some((lines, size))
 }
 
-/// A message's label: its number, `spacing.label-gap` before its words,
-/// the words in `typography.message` for a call or a send and in
-/// `typography.subtitle` for a reply. None when there is neither a number
-/// nor a label to show.
+/// A message's label: its number in `typography.message-number`,
+/// `spacing.label-gap` before its words, the words in `typography.message`
+/// for a call or a send and in `typography.message-reply` for a reply. None
+/// when there is neither a number nor a label to show.
 fn label_size(
     number: Option<&str>,
     label: Option<&str>,
@@ -183,18 +183,18 @@ fn label_size(
         return None;
     }
     let style = if sort == Sort::Reply {
-        TYPOGRAPHY_SUBTITLE
+        TYPOGRAPHY_MESSAGE_REPLY
     } else {
         TYPOGRAPHY_MESSAGE
     };
     let lines: Vec<String> = label
-        .map(|l| label_lines(l).into_iter().map(str::to_owned).collect())
+        .map(|l| lines_in(l, &style).into_iter().map(str::to_owned).collect())
         .unwrap_or_default();
     let words = lines
         .iter()
         .map(|l| text_width(l, &style))
         .fold(0.0, f64::max);
-    let digits = number.map_or(0.0, |n| text_width(n, &TYPOGRAPHY_LEGEND));
+    let digits = number.map_or(0.0, |n| text_width(n, &TYPOGRAPHY_MESSAGE_NUMBER));
     let gap = if number.is_some() && !lines.is_empty() {
         LABEL_GAP
     } else {
@@ -225,7 +225,41 @@ fn self_width(refused: bool) -> f64 {
 /// the same columns.
 const BAR_ROOM: f64 = ACTIVATION_WIDTH / 2.0 + ACTIVATION_OFFSET;
 
-/// Each message's number as the still image shows it: counted in time's
+/// The kinds of message the drawing uses, in the key's order: a call that
+/// waits, a send that does not, a reply, a refusal.
+fn kinds(messages: &[Message]) -> Vec<legend::Swatch> {
+    let has = |f: fn(&Message) -> bool| messages.iter().any(f);
+    [
+        (
+            legend::Swatch::Call,
+            has(|m| m.sort == Sort::Call && !m.refused),
+        ),
+        (
+            legend::Swatch::Send,
+            has(|m| m.sort == Sort::Send && !m.refused),
+        ),
+        (
+            legend::Swatch::Reply,
+            has(|m| m.sort == Sort::Reply && !m.refused),
+        ),
+        (legend::Swatch::Refused, has(|m| m.refused)),
+    ]
+    .into_iter()
+    .filter_map(|(kind, used)| used.then_some(kind))
+    .collect()
+}
+
+/// A message's number as its label shows it: in square brackets, its
+/// count two digits at least, so it reads apart from the words after it
+/// (`[01]`, `[11b]`, `[05ab]`).
+#[must_use]
+pub fn shown_number(n: &str) -> String {
+    let digits = n.chars().take_while(char::is_ascii_digit).count();
+    let (count, letters) = n.split_at(digits);
+    format!("[{count:0>2}{letters}]")
+}
+
+/// Each message's number as the still image counts it: counted in time's
 /// order through every fragment; each way of an `alt` starts again from
 /// the alt's first number with the next letter, `4a` then `4b`, and after
 /// the `alt` the count goes on from its longest way; in nested `alt`s,
@@ -562,6 +596,7 @@ pub fn place(seq: &Sequence, logos: &dyn Logos) -> Layout {
     let steps = seq.steps();
     let numbered = seq.still == SequenceStill::Numbers;
     let numbers = numbers(&steps);
+    let shown: Vec<String> = numbers.iter().map(|n| shown_number(n)).collect();
     let resolved: Vec<_> = steps
         .iter()
         .filter_map(|s| match s {
@@ -571,7 +606,7 @@ pub fn place(seq: &Sequence, logos: &dyn Logos) -> Layout {
         .collect();
     let labels: Vec<Option<(Vec<String>, Size)>> = resolved
         .iter()
-        .zip(&numbers)
+        .zip(&shown)
         .map(|(m, n)| label_size(numbered.then_some(n.as_str()), m.label, m.sort))
         .collect();
 
@@ -828,7 +863,7 @@ pub fn place(seq: &Sequence, logos: &dyn Logos) -> Layout {
         });
         let label = rect.zip(label.as_ref()).map(|(rect, (lines, _))| Label {
             rect,
-            number: numbered.then(|| numbers[k].clone()),
+            number: numbered.then(|| shown[k].clone()),
             lines: lines.clone(),
         });
         let refuser = if msg.sort == Sort::Reply {
@@ -994,7 +1029,8 @@ pub fn place(seq: &Sequence, logos: &dyn Logos) -> Layout {
         },
         spec,
     };
-    let (entries, _, size) = legend::place(&layout.spec, layout.size);
+    let (entries, size) =
+        legend::place_sequence(&layout.spec, &kinds(&layout.messages), layout.size);
     layout.legend = entries;
     layout.size = size;
     if seq.credit {

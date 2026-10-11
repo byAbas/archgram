@@ -4,6 +4,7 @@
 use crate::font::baseline_in_line;
 use crate::layout::legend::{Entry, FlowLine, Swatch, stack_step};
 use crate::render::scene::{Anchor, GroupOf, Item};
+use crate::render::svg::num;
 use crate::tokens::TYPOGRAPHY_LEGEND;
 
 /// The legend's entries, then the flows in words; nothing when it has
@@ -38,6 +39,22 @@ pub fn legend(entries: &[Entry], flow_lines: &[FlowLine]) -> Option<Item> {
                 for step in [2.0, 1.0, 0.0] {
                     items.push(rect("card", b.x + step * d, b.y + (2.0 - step) * d, w, h));
                 }
+            }
+            Swatch::Call | Swatch::Send | Swatch::Reply | Swatch::Refused => {
+                let kind = match e.swatch {
+                    Swatch::Call => "call",
+                    Swatch::Send => "send",
+                    Swatch::Reply => "reply",
+                    _ => "refused",
+                };
+                let middle = b.y + b.h / 2.0;
+                items.push(Item::Path {
+                    id: None,
+                    class: format!("key {kind}"),
+                    place: None,
+                    d: format!("M{} {}H{}", num(b.x), num(middle), num(b.right())),
+                    arrowhead: false,
+                });
             }
         }
         items.push(text(e.text_box.x, e.text_box.y, e.text));

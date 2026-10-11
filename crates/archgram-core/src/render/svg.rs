@@ -129,8 +129,15 @@ pub fn rule(r: &Rule) -> String {
                 } else {
                     format!(" letter-spacing: {}px;", num(t.letter_spacing))
                 };
+                // A mono face names its family, which the drawing's sheet
+                // sets as `--mono`; a sans face takes the sheet's own.
+                let family = if t.family == crate::tokens::Family::Mono {
+                    "font-family: var(--mono); "
+                } else {
+                    ""
+                };
                 format!(
-                    "font-size: {}px; font-weight: {};{spacing}",
+                    "{family}font-size: {}px; font-weight: {};{spacing}",
                     num(t.size),
                     t.weight
                 )

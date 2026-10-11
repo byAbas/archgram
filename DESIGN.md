@@ -91,6 +91,9 @@ components:
   refused-card:
     textColor: "{color.signal-refusal}"
     size: "{stroke.card}"
+  refused-head:
+    textColor: "{color.signal-refusal}"
+    size: "{stroke.card}"
   refusal-mark:
     textColor: "{color.signal-refusal}"
     size: "{refusal.mark}"
@@ -114,20 +117,36 @@ components:
     backgroundColor: "{color.card}"
     textColor: "{color.card-edge}"
     width: "{activation.width}"
+  sequence-grid:
+    textColor: "{color.frame}"
+    size: "{grid.dot}"
+    padding: "{grid.spacing}"
   message:
-    textColor: "{color.text}"
+    textColor: "{color.message-call}"
+    size: "{stroke.message}"
+  message-send:
+    textColor: "{color.message-send}"
     size: "{stroke.message}"
   message-reply:
     textColor: "{color.connector}"
-    size: "{stroke.frame}"
+    size: "{stroke.message}"
   message-label:
     textColor: "{color.text}"
     typography: "{typography.message}"
     width: "{label.max-width}"
   message-label-reply:
     textColor: "{color.text-muted}"
-    typography: "{typography.subtitle}"
+    typography: "{typography.message-reply}"
   message-number:
+    textColor: "{color.message-call}"
+    typography: "{typography.message-number}"
+  label-patch:
+    backgroundColor: "{color.card}"
+    padding: "{label.patch-pad}"
+  pulse:
+    textColor: "{color.message-call}"
+    size: "{pulse.radius}"
+  message-key:
     textColor: "{color.text-muted}"
     typography: "{typography.legend}"
   phase:
@@ -136,7 +155,7 @@ components:
     height: "{spacing.phase-label}"
   phase-label:
     textColor: "{color.text-muted}"
-    typography: "{typography.frame-label}"
+    typography: "{typography.phase}"
   lit-phase-label:
     textColor: "{color.text}"
   fragment:
@@ -146,13 +165,13 @@ components:
   fragment-tag:
     backgroundColor: "{color.badge}"
     textColor: "{color.text}"
-    typography: "{typography.frame-label}"
+    typography: "{typography.fragment}"
     padding: "{spacing.fragment-tag-pad}"
     height: "{spacing.fragment-tag}"
   fragment-or:
     backgroundColor: "{color.text}"
     textColor: "{color.canvas}"
-    typography: "{typography.frame-label}"
+    typography: "{typography.fragment}"
     height: "{spacing.fragment-tag}"
 ---
 
@@ -202,6 +221,7 @@ The one palette today is `mono`: neutral greys, and its four icon roles
 are the text colour, black on light and white on dark, so a diagram is
 monochrome and colour belongs to the technology logos and to a flow's
 outcome: green where a signal passes a card, red where a step refuses it.
+A sequence adds one more: the kind of each message.
 
 - **Canvas** (`color.canvas`): the diagram's background. Near-white in
   light, near-black in dark, painted by the diagram itself so it reads on
@@ -230,10 +250,17 @@ outcome: green where a signal passes a card, red where a step refuses it.
   the ✕ on its line, the arrowhead after it, the refusal on its way back
   and the borders of the cards it marks (Components: Refusal). Red, the
   one colour a reader already takes for "stopped".
+- **Message call** (`color.message-call`) and **message send**
+  (`color.message-send`): a sequence's call that waits and its send that
+  does not, on the line, the arrowhead, the number and the point that
+  travels it (Components: Sequence). Muted blue and violet, apart from
+  the refusal's red and the pass's green.
 
 Rules:
 
-- Colour lives in technology logos and in a flow's outcome. Icon lines
+- Colour lives in technology logos, in a flow's outcome and in the kind
+  of a sequence's message, where it repeats what the arrowhead and the
+  line already say. Icon lines
   and a flow's signal take the icon roles, which in `mono` are the text
   colour; cards, badges, frames and connectors stay neutral, whatever the
   category. A card's border turns `color.signal-pass` while a signal lights
@@ -248,9 +275,10 @@ Rules:
 - Technology logos are drawn in their brands' own colours, always; a
   logo whose brand gives none is in `color.text-muted`.
 - Contrast follows WCAG 2.1 AA in both themes: text 4.5:1 against what it
-  sits on; icon lines, connectors, frame borders and a flow's pass and
-  refusal colours 3:1 against their background (1.4.11): the pass colour
-  against the card, the refusal colour against the card and the canvas.
+  sits on, a message's number in its colour among it; icon lines,
+  connectors, frame borders and a flow's pass and refusal colours 3:1
+  against their background (1.4.11): the pass colour against the card,
+  the refusal colour against the card and the canvas.
 - A project's own tokens may fill the roles instead of a palette
   (docs/SPEC.md, Theme file); they are held to every rule here, and an
   import that misses a contrast is refused.
@@ -259,7 +287,7 @@ Rules:
 
 ## Typography
 
-Four styles, all from `font.sans`:
+Four styles from `font.sans`:
 
 - `typography.title`: a node's name. The one weight step in the diagram,
   so names are read first.
@@ -268,12 +296,21 @@ Four styles, all from `font.sans`:
   spacing, so it reads as a label for a region, not as a node.
 - `typography.legend`: the legend's entries.
 
+A sequence sets what happens between its heads in `font.mono`, a
+blueprint's face, and its heads in `font.sans` as every kind's:
+
+- `typography.message`: a call's or a send's words, a title's weight.
+- `typography.message-reply`: a reply's words, a subtitle's weight.
+- `typography.message-number`: a message's number.
+- `typography.phase`: a phase's name, in capitals.
+- `typography.fragment`: a fragment's operator and guards, and the "or".
+
 Labels are sentence case except frame names. Text is measured with the
 font the renderer embeds, so a card is exactly as wide as its title needs.
 The renderer embeds a subset of that font, holding only the characters the
 diagram shows, so the reader sees the text as it was measured. On request
 the text is left to the reader's system font, which is why `font.sans`
-lists a fallback stack.
+and `font.mono` list a fallback stack.
 
 ## Layout
 
@@ -631,14 +668,23 @@ archgram's stroke and colours. The spec's `look` picks one of two
 drawings, `cards` by default or `avatars`; where this section names
 neither, a part is the same in both.
 
+Both are drawn as a blueprint: a faint grid behind thin lines, the words
+between the heads in `font.mono`, and each kind of message in its colour.
+
+**Grid** (`sequence-grid`). Dots `grid.dot` in radius, `grid.spacing`
+apart, in `color.frame` at `grid.opacity`, over the canvas and the
+phases' bands and under everything else, so the drawing reads as a
+plan. A label's patch hides the dots behind its words.
+
 **Lifeline** (`lifeline`). A straight vertical line from the middle of
 the head's front card, or its circle, to below the last thing drawn,
 `stroke.card` wide, `dash.lifeline`, in `color.frame`: the quietest line
 in the drawing, a guide the messages hang from (UML 2.5.1, 17.3.4.1).
 
 **Participant head.** Drawn once, at the top of its lifeline, never
-again at its foot. A participant that turns a request away is edged in the
-refusal colour (`refused-card`), as a refusing card is.
+again at its foot. A participant that turns a request away is not marked
+at rest: its edge takes the refusal colour (`refused-head`) while its
+refusal plays (Motion), so the red comes with the refusal that causes it.
 
 - In `cards`: a node card (Node card, Variants, Technology logo),
   unchanged, every head as wide as the widest, so the columns line up.
@@ -668,13 +714,13 @@ participant already answering one, a call to itself among them, is
 moved `activation.offset` to the right (Figure 17.2), and a message to
 or from that participant meets the bar it belongs to.
 
-**Message** (`message`, `message-reply`). A horizontal line between two
-lifelines, its tip `arrowhead.gap` short of the receiving lifeline, or of
-its bar. The main path reads first: a call's or a send's line is
-`stroke.message` wide in `color.text`, a reply's `stroke.frame` wide in
-`color.connector`. Its arrowhead, drawn with the line in the line's
-colour, says what kind of message it is (UML 2.5.1, 17.4.4.1); the
-shape, not a colour, tells whether the sender waits:
+**Message** (`message`, `message-send`, `message-reply`). A horizontal
+line between two lifelines, its tip `arrowhead.gap` short of the
+receiving lifeline, or of its bar, every one `stroke.message` wide: a
+call's in `color.message-call`, a send's in `color.message-send`, a
+reply's in `color.connector`. Its arrowhead, drawn with the line in the
+line's colour, says what kind of message it is (UML 2.5.1, 17.4.4.1); the
+shape tells whether the sender waits, and the colour repeats it:
 
 - a call: solid, ending in a filled arrowhead, `arrowhead.length` back
   along the line and `arrowhead.width` across;
@@ -688,23 +734,27 @@ lifeline, its bends rounded as far as the loop's size allows
 sits on its way back, clear of the bend.
 
 **Message label** (`message-label`, `message-label-reply`,
-`message-number`). Above its line, centred between the two lifelines,
-`spacing.label-gap` clear of the line, as plain text: no pill, no patch.
-A call's and a send's words are in `typography.message` and
-`color.text`, a reply's in `typography.subtitle` and `color.text-muted`,
-so the answer reads quieter than the question. Its number leads it, in
-`typography.legend` and `color.text-muted`. A label wider than
-`label.max-width` wraps onto two lines, as an edge's (Connector). A
-message to itself has its label to the right of its loop,
-`spacing.label-gap` from it.
+`message-number`, `label-patch`). Above its line, centred between the
+two lifelines, `spacing.label-gap` clear of the line, as plain text on a
+patch of what it sits on (`color.card` in a phase's band, `color.canvas`
+outside one), `label.patch-pad` beyond its text, so a lifeline or a dot
+of the grid stops at its words. A call's and a send's words are in
+`typography.message` and `color.text`, a reply's in
+`typography.message-reply` and `color.text-muted`, so the answer reads
+quieter than the question. Its number leads it, in
+`typography.message-number` and its message's colour, a reply's in
+`color.text-muted`. A label wider than `label.max-width` wraps onto two
+lines, as an edge's (Connector). A message to itself has its label to the
+right of its loop, `spacing.label-gap` from it.
 
 **Phase** (`phase`, `phase-label`, `lit-phase-label`). A band across the
 whole drawing, from `spacing.margin` to `spacing.margin`, over its
 messages' rows and `spacing.phase-label` above them, filled with
 `color.card` with `rounded.frame` corners; the gap between two phases is
 the canvas, so neighbouring phases stay apart. Its name sits at its top
-left, `spacing.fragment-padding` in, in `typography.frame-label` capitals
-and `color.text-muted`, lit to `color.text` while its phase plays. Every
+left, `spacing.fragment-padding` in, in `typography.phase` capitals and
+`color.text-muted`, lit to `color.text` while its phase plays, drawn over
+the lifelines on a patch as a label is. Every
 phase is filled alike: a tint behind every other one would leave a
 connector short of 3:1 against it in light.
 
@@ -718,7 +768,7 @@ round the rows and lifelines its messages take.
   its middle. It is `spacing.fragment-tag` high, filled with
   `color.badge`, edged with the frame's line, fully round, and holds the
   operator as the spec writes it (`alt`, `opt`, `loop`, `par`), then ` · `
-  and the first guard, in `typography.frame-label` and `color.text`:
+  and the first guard, in `typography.fragment` and `color.text`:
   `alt · password matches`. UML's pentagon (17.6.4.3) and its guard's
   square brackets (17.6.4.2) give way to the pill, which bounds the
   words; the operator's name stays.
@@ -734,28 +784,39 @@ round the rows and lifelines its messages take.
 
 **Refusal.** A refused message ends in the refusal ✕ (`refusal-mark`),
 `refusal.mark-gap` before its arrowhead, on a patch of what it sits on,
-its line, arrowhead and label in the refusal colour, and the participant
-that refuses is edged in it (Refusal).
+its line, arrowhead, number and words in the refusal colour; the head of
+the participant that refuses takes it on its edge while the refusal plays
+(Refusal, Motion).
 
 **Numbers.** Each message's number, counted in time's order through
 every fragment, leads its label, `spacing.label-gap` before the words; a
 message without a label shows its number alone. On by default in a
-sequence (`still: numbers`): its order is its meaning. An `alt`'s ways
-are alternatives, so each of its messages carries its way's letter:
-`4a` to `7a`, then `4b`, each way starting again from the alt's first
-number, the count going on after the `alt` from its longest way; in
-nested `alt`s, each one's letter in turn (`5ab`).
+sequence (`still: numbers`): its order is its meaning. A number is shown
+in square brackets, two digits at least (`[01]`), so it reads apart from
+the words. An `alt`'s ways are alternatives, so each of its messages
+carries its way's letter: `[04a]` to `[07a]`, then `[04b]`, each way
+starting again from the alt's first number, the count going on after the
+`alt` from its longest way; in nested `alt`s, each one's letter in turn
+(`[05ab]`).
+
+**Key** (`message-key`). Under the drawing, at its left, as the legend's
+entries are (Legend): a short line for each kind of message the drawing
+uses, in that kind's colour and dash, then its name in
+`typography.legend` and `color.text-muted`: "call, waits", "send, no
+wait", "reply", "refused".
 
 **Motion** (Layout: Motion). One phase plays at a time:
 
 - Its name is lit (`lit-phase-label`); the other phases' messages dim to
   `motion.dim`. Heads, lifelines and fragments stay as they are.
 - Each of its messages in turn has its line drawn from its sender at
-  its own width, in `color.text` (the refusal colour for a refused one),
-  over its line as it rests; its arrowhead takes that colour the moment
-  the line reaches it, so line and head change as one. A refused
-  message's ✕ appears as it arrives. The line stays drawn until its
-  phase ends, and fades over `motion.fade`.
+  its own width, in its colour, over its line as it rests; its arrowhead
+  takes that colour the moment the line reaches it, so line and head
+  change as one. A point (`pulse`), `pulse.radius` across and in the
+  message's colour, travels the line as it is drawn and is gone when it
+  arrives. A refused message's ✕ appears as it arrives, and the refusing
+  head's edge (`refused-head`) shows while its line does. The line stays
+  drawn until its phase ends, and fades over `motion.fade`.
 - A tint of `color.text` at `motion.tint` grows across the phase's band
   between the two lifelines each message joins, from its sender's toward
   its receiver's as it goes, and keeps what it has covered until the
@@ -766,16 +827,17 @@ nested `alt`s, each one's letter in turn (`5ab`).
   with its word in `color.canvas`, appears after the next operand's pill;
   the tint goes, and the next way plays from where the first began.
 
-Nothing else lights: not the heads, the pills or the bars. The still
-image, under reduced motion, shows every message at rest, with its
-number, its ✕ and the refusing head's edge.
+Nothing else lights: not the heads but a refusing one's edge, the pills
+or the bars. The still image, under reduced motion, shows every message
+at rest, with its number and its ✕, and no head marked.
 
 ## Do's and Don'ts
 
 - Do let the icon say what a thing is and the title say which one.
-- Do keep colour to logos and a flow's outcome; a coloured card or frame
-  is a new rule, written here first. The ones written so far are a lit
-  card's border and a refused card's.
+- Do keep colour to logos, a flow's outcome and a sequence's kinds of
+  message; a coloured card or frame is a new rule, written here first.
+  The ones written so far are a lit card's border, a refused card's and a
+  refusing head's while its refusal plays.
 - Do use the external variant for anything the system calls but does not
   own, including managed services and third-party APIs.
 - Do name technologies with `tech`, so the logo appears. A logo takes the
@@ -786,8 +848,8 @@ number, its ✕ and the refusing head's edge.
   is still.
 - Don't write a value in this file. A new value is a token first.
 - Do keep a sequence's meaning in its shapes and weights: a filled or
-  open arrowhead, a solid or dashed line, a call stronger than a reply, a
-  fragment's operator and guards, a bar while a call is answered; never
-  a colour.
+  open arrowhead, a solid or dashed line, a call's words stronger than a
+  reply's, a fragment's operator and guards, a bar while a call is
+  answered; its colours repeat the kind, and never carry it alone.
 - Don't let a sequence's motion hide what it draws: nothing dims below
   `motion.dim`, and every message is readable at every moment.

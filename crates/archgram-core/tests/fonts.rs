@@ -1,8 +1,17 @@
-//! The embedded fonts are Geist's release files cut down by `cargo xtask
-//! fonts` (fonts/README.md): every character keeps its advance, its outline
-//! and the line's metrics, and the files are exactly what the task writes.
+//! The embedded fonts are Geist's and Geist Mono's release files cut down by
+//! `cargo xtask fonts` (fonts/README.md): every character keeps its advance,
+//! its outline and the line's metrics, and the files are exactly what the
+//! task writes.
 
-use archgram_core::font::{MEDIUM, REGULAR, characters, subset::subset};
+use archgram_core::font::{MEDIUM, MONO_MEDIUM, MONO_REGULAR, REGULAR, characters, subset::subset};
+
+/// Each embedded file, by its source's name.
+const FACES: [(&str, &[u8]); 4] = [
+    ("Geist-Regular", REGULAR),
+    ("Geist-Medium", MEDIUM),
+    ("GeistMono-Regular", MONO_REGULAR),
+    ("GeistMono-Medium", MONO_MEDIUM),
+];
 use skrifa::instance::{LocationRef, Size};
 use skrifa::outline::{DrawSettings, OutlinePen};
 use skrifa::{FontRef, MetadataProvider};
@@ -49,7 +58,7 @@ fn outline(font: &FontRef, c: char) -> Vec<String> {
 
 #[test]
 fn every_character_keeps_its_advance_outline_and_line() {
-    for (name, embedded) in [("Geist-Regular", REGULAR), ("Geist-Medium", MEDIUM)] {
+    for (name, embedded) in FACES {
         let original = source(name);
         let (was, is) = (
             FontRef::new(&original).unwrap(),
@@ -82,7 +91,7 @@ fn every_character_keeps_its_advance_outline_and_line() {
 
 #[test]
 fn the_fonts_are_what_xtask_fonts_writes() {
-    for (name, embedded) in [("Geist-Regular", REGULAR), ("Geist-Medium", MEDIUM)] {
+    for (name, embedded) in FACES {
         let original = source(name);
         let written = subset(&original, &characters(&original).unwrap()).unwrap();
         assert!(

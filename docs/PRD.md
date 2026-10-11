@@ -2,8 +2,8 @@
 
 | Field   | Value      |
 |---------|------------|
-| Version | 0.31       |
-| Date    | 2026-10-09 |
+| Version | 0.32       |
+| Date    | 2026-10-11 |
 | Status  | Draft      |
 | Owner   | Abas Turabli |
 
@@ -174,8 +174,11 @@ same file every time.
 - The diagram is monochrome: the icon's shape, not a colour, tells a
   node's kind. Colour belongs to the technology logos and to what happens
   on a flow: one colour where a signal passes a card, another where a step
-  refuses it (§6.4). A project's own tokens may still give each category a
-  hue of its own. Which part takes which colour is in DESIGN.md (Colors).
+  refuses it (§6.4). A sequence's messages also take a colour by their
+  kind, a call, a send, a reply, a refusal, repeating what their shape
+  says ([docs/features/sequence.md](features/sequence.md)). A project's
+  own tokens may still give each category a hue of its own. Which part
+  takes which colour is in DESIGN.md (Colors).
 - One SVG carries both themes and follows `prefers-color-scheme`; on
   request archgram writes one file per theme.
 - On request, a project's own DTCG design tokens fill archgram's colour
@@ -448,3 +451,4 @@ None.
 | 0.29    | 2026-10-08 | 0.9: a spec says how wide it is shown, a README by default; `build` and `direction: auto` keep the text readable there, and `build` warns but still draws; the skill writes the direction it chose into the spec, so an edit never turns a drawing; no layout per screen (§5, §6.1, §6.2, §6.5, §6.6, §8, §9, `docs/features/shown-width.md`, #114). |
 | 0.30    | 2026-10-08 | A diagram may be drawn from a document the user names rather than from code: the skill takes its facts from the text, in its own words, and each part and line takes the sentence that states it as its source, which `check` holds to the text as it does to code (§1, §2, §6.1, §6.6, §8, `docs/features/sources.md`, #122). |
 | 0.31    | 2026-10-09 | Four more kinds of diagram, each taking its meaning from its standard: sequence and lifecycle from UML 2.5.1, workflow from BPMN 2.0.2, dataflow from structured analysis; a spec names its kind with `diagram`, architecture when it does not; sequence first, then dataflow, workflow, lifecycle; sequence leaves the non-goals (§1, §4, §5, §6.1, §6.2, §6.4, §6.6, §7, §8, §9, `docs/features/diagram-kinds.md`, #126). |
+| 0.32    | 2026-10-11 | A sequence's messages take a colour by their kind, repeating their shape; a sequence is drawn as a blueprint (§6.3, `docs/features/sequence.md`). |

@@ -6,6 +6,21 @@ follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+
+- A sequence diagram is drawn as a blueprint (docs/SPEC.md, How a
+  sequence is drawn): a faint grid of dots behind it, thin lines, and its
+  labels, numbers, guards and phases' names in Geist Mono, which archgram
+  now embeds as it does Geist. Each kind of message has its colour on its
+  line, arrowhead and number, a call that waits in blue, a send that does
+  not in violet, a reply in grey, a refusal in red, and a key under the
+  drawing names the kinds it uses. Numbers read `[01]`, `[04a]`. A label
+  and a phase's name sit on a patch, so a lifeline no longer runs through
+  their words. As each message plays, a point travels its line, and the
+  refusing participant's head is marked only while its refusal plays,
+  not at rest. Two colour roles, `message-call` and `message-send`, join
+  the theme file's. Architecture diagrams draw the same bytes as before.
+
 ### Fixed
 
 - The `archgram` skill reports in full on an update too: each part with

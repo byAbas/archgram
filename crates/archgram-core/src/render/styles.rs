@@ -5,8 +5,10 @@
 use crate::render::scene::{Decl, Paint, Rule};
 use crate::tokens::{
     DASH_EDGE, DASH_EXTERNAL, DASH_FRAGMENT, DASH_FRAME, DASH_LIFELINE, DASH_OPERAND, DASH_REPLY,
-    Role, STROKE_CARD, STROKE_CONNECTOR, STROKE_FRAME, STROKE_MESSAGE, TYPOGRAPHY_FRAME_LABEL,
-    TYPOGRAPHY_LEGEND, TYPOGRAPHY_MESSAGE, TYPOGRAPHY_SUBTITLE, TYPOGRAPHY_TITLE,
+    GRID_OPACITY, Role, STROKE_CARD, STROKE_CONNECTOR, STROKE_FRAME, STROKE_MESSAGE,
+    TYPOGRAPHY_FRAGMENT, TYPOGRAPHY_FRAME_LABEL, TYPOGRAPHY_LEGEND, TYPOGRAPHY_MESSAGE,
+    TYPOGRAPHY_MESSAGE_NUMBER, TYPOGRAPHY_MESSAGE_REPLY, TYPOGRAPHY_PHASE, TYPOGRAPHY_SUBTITLE,
+    TYPOGRAPHY_TITLE,
 };
 
 /// The four category hues, by class name, with their roles.
@@ -173,19 +175,28 @@ pub fn legend() -> Vec<Rule> {
     )]
 }
 
-/// A sequence's own parts (DESIGN.md, Components: Sequence): its phases,
-/// its lifelines, a call's line stronger than a reply's, each arrowhead in
-/// its line's colour, the bars while a call is answered, a fragment's
-/// frame, pills and operand lines, and each message's number and words.
+/// A sequence's own parts (DESIGN.md, Components: Sequence), drawn as a
+/// blueprint: its grid, phases and lifelines; each kind of message's line,
+/// arrowhead, number and travelling point in its colour; the bars while a
+/// call is answered; a fragment's frame, pills and operand lines; each
+/// label's patch and words; and the key.
 #[must_use]
+#[allow(clippy::too_many_lines)] // one rule per part, in drawing order
 pub fn sequence() -> Vec<Rule> {
-    vec![
+    let kinds = [
+        ("call", Role::MessageCall),
+        ("send", Role::MessageSend),
+        ("reply", Role::Connector),
+    ];
+    let mut rules = vec![
+        rule(".grid-dot", &[Fill(R(Role::Frame)), Opacity(GRID_OPACITY)]),
         rule(".phase", &[Fill(R(Role::Card))]),
         rule(
             ".phase-label",
-            &[Font(TYPOGRAPHY_FRAME_LABEL), Fill(R(Role::TextMuted))],
+            &[Font(TYPOGRAPHY_PHASE), Fill(R(Role::TextMuted))],
         ),
         rule(".phase-label.lit", &[Fill(R(Role::Text))]),
+        rule(".label-patch.band", &[Fill(R(Role::Card))]),
         rule(
             ".lifeline",
             &[
@@ -195,24 +206,20 @@ pub fn sequence() -> Vec<Rule> {
                 Dash(DASH_LIFELINE),
             ],
         ),
-        rule(
-            ".edge.call",
-            &[Stroke(R(Role::Text)), StrokeWidth(STROKE_MESSAGE)],
-        ),
-        rule(
-            ".arrowhead.call",
-            &[Stroke(R(Role::Text)), StrokeWidth(STROKE_MESSAGE)],
-        ),
-        rule(
-            ".edge.reply",
-            &[Stroke(R(Role::Connector)), StrokeWidth(STROKE_FRAME)],
-        ),
-        rule(
-            ".arrowhead.reply",
-            &[Stroke(R(Role::Connector)), StrokeWidth(STROKE_FRAME)],
-        ),
+    ];
+    for (kind, role) in kinds {
+        rules.push(rule(
+            format!(".edge.{kind}"),
+            &[Stroke(R(role)), StrokeWidth(STROKE_MESSAGE)],
+        ));
+        rules.push(rule(
+            format!(".arrowhead.{kind}"),
+            &[Stroke(R(role)), StrokeWidth(STROKE_MESSAGE)],
+        ));
+    }
+    rules.extend([
         rule(".edge.reply", &[Dash(DASH_REPLY)]),
-        rule(".arrowhead.filled", &[Fill(R(Role::Text))]),
+        rule(".arrowhead.filled", &[Fill(R(Role::MessageCall))]),
         rule(
             ".activation",
             &[
@@ -240,7 +247,7 @@ pub fn sequence() -> Vec<Rule> {
         ),
         rule(
             ".fragment-op",
-            &[Font(TYPOGRAPHY_FRAME_LABEL), Fill(R(Role::Text))],
+            &[Font(TYPOGRAPHY_FRAGMENT), Fill(R(Role::Text))],
         ),
         rule(
             ".operand",
@@ -253,22 +260,34 @@ pub fn sequence() -> Vec<Rule> {
         ),
         rule(
             ".message-number",
-            &[Font(TYPOGRAPHY_LEGEND), Fill(R(Role::TextMuted))],
+            &[Font(TYPOGRAPHY_MESSAGE_NUMBER), Fill(R(Role::MessageCall))],
         ),
+        rule(".message-number.send", &[Fill(R(Role::MessageSend))]),
+        rule(".message-number.reply", &[Fill(R(Role::TextMuted))]),
         rule(
             ".message-text",
             &[Font(TYPOGRAPHY_MESSAGE), Fill(R(Role::Text))],
         ),
         rule(
             ".message-text.reply",
-            &[Font(TYPOGRAPHY_SUBTITLE), Fill(R(Role::TextMuted))],
+            &[Font(TYPOGRAPHY_MESSAGE_REPLY), Fill(R(Role::TextMuted))],
         ),
-    ]
+        rule(".key", &[Fill(NoPaint), StrokeWidth(STROKE_MESSAGE)]),
+    ]);
+    for (kind, role) in kinds {
+        rules.push(rule(format!(".key.{kind}"), &[Stroke(R(role))]));
+    }
+    rules.extend([
+        rule(".key.reply", &[Dash(DASH_REPLY)]),
+        rule(".key.refused", &[Stroke(R(Role::SignalRefusal))]),
+    ]);
+    rules
 }
 
 /// A refused message in a sequence: its ✕ on a patch of what it sits on,
-/// its line, arrowhead and words and the refusing head's border in the
-/// refusal colour (DESIGN.md, Components: Refusal).
+/// its line, arrowhead, number and words in the refusal colour, and the
+/// refusing head's border while its refusal plays (DESIGN.md, Components:
+/// Refusal).
 #[must_use]
 pub fn sequence_refusal() -> Vec<Rule> {
     vec![

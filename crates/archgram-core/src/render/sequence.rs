@@ -1,10 +1,11 @@
-//! Drawing a laid-out sequence diagram (DESIGN.md, Components: Sequence):
-//! each phase's band, each participant's head and lifeline as its look
-//! draws them, each fragment's frame and pills, each message's line with
-//! UML's arrowhead for its sort and its label above it, the bars while a
-//! call is answered, and a refused message's ✕; and the motion, one phase
-//! at a time, the drawing readable throughout (DESIGN.md, Layout: Motion).
-//! Under reduced motion it is still.
+//! Drawing a laid-out sequence diagram (DESIGN.md, Components: Sequence),
+//! as a blueprint: a faint grid, each phase's band, each participant's head
+//! and lifeline as its look draws them, each fragment's frame and pills,
+//! each message's line with UML's arrowhead for its sort in its kind's
+//! colour and its label above it on a patch, the bars while a call is
+//! answered, a refused message's ✕, and the key; and the motion, one phase
+//! at a time, a point travelling each message, the drawing readable
+//! throughout (DESIGN.md, Layout: Motion). Under reduced motion it is still.
 
 use std::collections::BTreeMap;
 use std::fmt::Write as _;
@@ -16,11 +17,11 @@ use crate::layout::sequence::{Label, Layout, Message, Sort};
 use crate::motion::{SequenceMotion, fade, hop_gap};
 use crate::sequence::{Look, Operator, Sequence, Step};
 use crate::tokens::{
-    ACTIVATION_WIDTH, ARROWHEAD_LENGTH, AVATAR_SIZE, FONT_SANS, MOTION_DIM, MOTION_TINT,
-    REFUSAL_MARK, REFUSAL_MARK_GAP, ROUNDED_CANVAS, ROUNDED_CARD, ROUNDED_FRAME,
-    SPACING_FRAGMENT_TAG, SPACING_FRAGMENT_TAG_PAD, SPACING_LABEL_GAP, SPACING_MARGIN,
-    STROKE_FRAME, STROKE_MESSAGE, TYPOGRAPHY_FRAME_LABEL, TYPOGRAPHY_LEGEND, TYPOGRAPHY_MESSAGE,
-    TYPOGRAPHY_SUBTITLE,
+    ACTIVATION_WIDTH, ARROWHEAD_LENGTH, AVATAR_SIZE, FONT_MONO, FONT_SANS, GRID_DOT, GRID_SPACING,
+    LABEL_PATCH_PAD, MOTION_DIM, MOTION_TINT, PULSE_RADIUS, REFUSAL_MARK, REFUSAL_MARK_GAP,
+    ROUNDED_CANVAS, ROUNDED_CARD, ROUNDED_FRAME, SPACING_FRAGMENT_TAG, SPACING_FRAGMENT_TAG_PAD,
+    SPACING_LABEL_GAP, SPACING_MARGIN, STROKE_MESSAGE, TYPOGRAPHY_FRAGMENT, TYPOGRAPHY_LEGEND,
+    TYPOGRAPHY_MESSAGE, TYPOGRAPHY_MESSAGE_NUMBER, TYPOGRAPHY_MESSAGE_REPLY, TYPOGRAPHY_PHASE,
 };
 
 use super::scene::{Anchor, GroupOf, Item, Scene};
@@ -96,8 +97,10 @@ pub fn scene(
         rx: ROUNDED_CANVAS,
     }];
 
-    // The phases' bands, their names, and the tint that grows across the
-    // one that plays.
+    // The phases' bands, and the tint that grows across the one that
+    // plays.
+    let mut names = Vec::new();
+    let mut patches = Vec::new();
     if !layout.phases.is_empty() {
         let mut drawn_phases = Vec::new();
         for (n, p) in layout.phases.iter().enumerate() {
@@ -110,10 +113,22 @@ pub fn scene(
                 h: r.h,
                 rx: Some(ROUNDED_FRAME),
             });
+            // Its name, drawn later over the lifelines on a patch.
             let name = p.name.to_uppercase();
-            let y = p.name_at.y + OFFSET + font::baseline_in_line(&TYPOGRAPHY_FRAME_LABEL);
+            let top = p.name_at.y + OFFSET;
+            let y = top + font::baseline_in_line(&TYPOGRAPHY_PHASE);
             let x = p.name_at.x + OFFSET;
-            drawn_phases.push(Item::Text {
+            let line = TYPOGRAPHY_PHASE.size * TYPOGRAPHY_PHASE.line_height;
+            patches.push(patch(
+                Rect {
+                    x,
+                    y: top,
+                    w: font::text_width(&name, &TYPOGRAPHY_PHASE),
+                    h: line,
+                },
+                true,
+            ));
+            names.push(Item::Text {
                 class: "phase-label".into(),
                 x,
                 y,
@@ -121,7 +136,7 @@ pub fn scene(
                 text: name.clone(),
             });
             if let Some(&(start, end)) = motion.phases.get(n) {
-                drawn_phases.push(Item::Motion(format!(
+                names.push(Item::Motion(format!(
                     r#"<text class="phase-label lit motion" x="{}" y="{}" opacity="0">{}{}</text>"#,
                     num(x),
                     num(y),
@@ -136,6 +151,9 @@ pub fn scene(
             items: drawn_phases,
         });
     }
+
+    // The grid, over the canvas and the bands, under all else.
+    items.push(grid(width, height));
 
     // The lifelines, under the messages.
     let (top, bottom) = layout.lifeline_span;
@@ -189,6 +207,26 @@ pub fn scene(
         items.push(Item::Group {
             of: GroupOf::Class("fragments"),
             items: frames,
+        });
+    }
+
+    // A patch under each label and each phase's name, so a lifeline stops
+    // at its words; then the phases' names.
+    for (k, m) in layout.messages.iter().enumerate() {
+        if let Some(l) = &m.label {
+            patches.push(patch(at(l.rect), in_phase[k]));
+        }
+    }
+    if !patches.is_empty() {
+        items.push(Item::Group {
+            of: GroupOf::Class("patches"),
+            items: patches,
+        });
+    }
+    if !names.is_empty() {
+        items.push(Item::Group {
+            of: GroupOf::Class("phase-names"),
+            items: names,
         });
     }
 
@@ -276,8 +314,8 @@ pub fn scene(
         });
     }
 
-    // The heads, each at the top of its lifeline; a refusing one edged in
-    // the refusal colour.
+    // The heads, each at the top of its lifeline; a refusing one's edge in
+    // the refusal colour while its refusal plays.
     for (node, r) in layout.spec.nodes.iter().zip(&layout.heads) {
         let brand = card::Brand {
             class: node
@@ -297,39 +335,36 @@ pub fn scene(
             Look::Avatars => card::avatar(node, at(*r), layout.spec.logo, logos, Some(&brand)),
         });
     }
-    let mut refusers: Vec<usize> = layout
-        .messages
-        .iter()
-        .filter(|m| m.refused)
-        .map(|m| m.refuser)
-        .collect();
-    refusers.sort_unstable();
-    refusers.dedup();
-    for p in refusers {
-        let node = &layout.spec.nodes[p];
-        let head = at(layout.heads[p]);
-        items.push(match layout.look {
+    for (k, m) in layout.messages.iter().enumerate() {
+        if !m.refused {
+            continue;
+        }
+        let node = &layout.spec.nodes[m.refuser];
+        let head = at(layout.heads[m.refuser]);
+        let (s, e) = motion.hops[k];
+        let while_shown = shown(period, s, motion.held[k].max(e + hop_gap()).min(period));
+        items.push(Item::Motion(match layout.look {
             Look::Cards => {
                 let c = card::front(node, head);
-                Item::Rect {
-                    class: "refused-head".into(),
-                    x: c.x,
-                    y: c.y,
-                    w: c.w,
-                    h: c.h,
-                    rx: Some(ROUNDED_CARD.min(c.w / 2.0).min(c.h / 2.0)),
-                }
+                format!(
+                    r#"<rect class="refused-head motion" x="{}" y="{}" width="{}" height="{}" rx="{}" opacity="0">{while_shown}</rect>"#,
+                    num(c.x),
+                    num(c.y),
+                    num(c.w),
+                    num(c.h),
+                    num(ROUNDED_CARD.min(c.w / 2.0).min(c.h / 2.0))
+                )
             }
             Look::Avatars => {
                 let (cx, cy) = card::avatar_centre(node, head);
-                Item::Circle {
-                    class: "refused-head".into(),
-                    cx,
-                    cy,
-                    r: AVATAR_SIZE / 2.0,
-                }
+                format!(
+                    r#"<circle class="refused-head motion" cx="{}" cy="{}" r="{}" opacity="0">{while_shown}</circle>"#,
+                    num(cx),
+                    num(cy),
+                    num(AVATAR_SIZE / 2.0)
+                )
             }
-        });
+        }));
     }
 
     let entries: Vec<crate::layout::legend::Entry> = layout
@@ -355,13 +390,13 @@ pub fn scene(
     }
 }
 
-/// The classes of a message's line: a call's or a send's, or a reply's;
-/// and a refused one's.
+/// The classes of a message's line, by its kind: a call's, a send's or a
+/// reply's; and a refused one's.
 fn line_class(m: &Message) -> String {
-    let sort = if m.sort == Sort::Reply {
-        "reply"
-    } else {
-        "call"
+    let sort = match m.sort {
+        Sort::Call => "call",
+        Sort::Send => "send",
+        Sort::Reply => "reply",
     };
     if m.refused {
         format!("{sort} refused")
@@ -427,10 +462,42 @@ fn cross(drawn: &edge::Drawn, on_band: bool) -> [Item; 2] {
     ]
 }
 
+/// The faint grid of dots behind a sequence (DESIGN.md, Components:
+/// Sequence, Grid): a pattern of dots `grid.spacing` apart, from the
+/// drawing's margin, filling the canvas in its rounded corners.
+fn grid(width: f64, height: f64) -> Item {
+    Item::Motion(format!(
+        r#"<defs><pattern id="archgram-grid" x="{m}" y="{m}" width="{g}" height="{g}" patternUnits="userSpaceOnUse"><circle class="grid-dot" cx="{d}" cy="{d}" r="{d}"/></pattern></defs><rect class="grid" width="{}" height="{}" rx="{}" fill="url(#archgram-grid)"/>"#,
+        num(width),
+        num(height),
+        num(ROUNDED_CANVAS),
+        m = num(SPACING_MARGIN - GRID_DOT),
+        g = num(GRID_SPACING),
+        d = num(GRID_DOT),
+    ))
+}
+
+/// A patch of what a label or a phase's name sits on, `label.patch-pad`
+/// beyond its box: a phase's band, or the canvas.
+fn patch(r: Rect, on_band: bool) -> Item {
+    Item::Rect {
+        class: if on_band {
+            "label-patch band".into()
+        } else {
+            "label-patch".into()
+        },
+        x: r.x - LABEL_PATCH_PAD,
+        y: r.y - LABEL_PATCH_PAD,
+        w: r.w + 2.0 * LABEL_PATCH_PAD,
+        h: r.h + 2.0 * LABEL_PATCH_PAD,
+        rx: Some(LABEL_PATCH_PAD),
+    }
+}
+
 /// A fragment's pill on its frame's line, fully round, its operator and
 /// guard centred in it (UML 2.5.1's pentagon and brackets give way to it).
 fn tag(lines: &[String], r: Rect) -> Vec<Item> {
-    let line = TYPOGRAPHY_FRAME_LABEL.size * TYPOGRAPHY_FRAME_LABEL.line_height;
+    let line = TYPOGRAPHY_FRAGMENT.size * TYPOGRAPHY_FRAGMENT.line_height;
     #[allow(clippy::cast_precision_loss)] // one or two lines
     let top = r.y + (r.h - lines.len() as f64 * line) / 2.0;
     let mut out = vec![Item::Rect {
@@ -447,7 +514,7 @@ fn tag(lines: &[String], r: Rect) -> Vec<Item> {
         Item::Text {
             class: "fragment-op".into(),
             x: r.centre_x(),
-            y: top + down + font::baseline_in_line(&TYPOGRAPHY_FRAME_LABEL),
+            y: top + down + font::baseline_in_line(&TYPOGRAPHY_FRAGMENT),
             anchor: Anchor::Middle,
             text: l.clone(),
         }
@@ -456,16 +523,17 @@ fn tag(lines: &[String], r: Rect) -> Vec<Item> {
 }
 
 /// A message's label above its line (DESIGN.md, Components: Sequence,
-/// Message label): its number, muted, then its words; a reply's words
-/// quieter than a call's, a refused message's in the refusal colour.
+/// Message label): its number in its kind's colour, then its words; a
+/// reply's words quieter than a call's, a refused message's in the
+/// refusal colour.
 fn label(m: &Message, l: &Label, r: Rect) -> Vec<Item> {
     // The number leads the first line; a second line starts under the
     // first's words.
-    let line = TYPOGRAPHY_SUBTITLE.size * TYPOGRAPHY_SUBTITLE.line_height;
+    let line = TYPOGRAPHY_MESSAGE.size * TYPOGRAPHY_MESSAGE.line_height;
     let refused = if m.refused { " refused" } else { "" };
     let reply = m.sort == Sort::Reply;
     let words = if reply {
-        TYPOGRAPHY_SUBTITLE
+        TYPOGRAPHY_MESSAGE_REPLY
     } else {
         TYPOGRAPHY_MESSAGE
     };
@@ -473,13 +541,13 @@ fn label(m: &Message, l: &Label, r: Rect) -> Vec<Item> {
     let mut x = r.x;
     if let Some(n) = &l.number {
         out.push(Item::Text {
-            class: format!("message-number{refused}"),
+            class: format!("message-number {}", line_class(m)),
             x,
-            y: r.y + font::baseline_in_line(&TYPOGRAPHY_LEGEND),
+            y: r.y + font::baseline_in_line(&TYPOGRAPHY_MESSAGE_NUMBER),
             anchor: Anchor::Start,
             text: n.clone(),
         });
-        x += font::text_width(n, &TYPOGRAPHY_LEGEND) + SPACING_LABEL_GAP;
+        x += font::text_width(n, &TYPOGRAPHY_MESSAGE_NUMBER) + SPACING_LABEL_GAP;
     }
     let sort = if reply { " reply" } else { "" };
     out.extend(l.lines.iter().enumerate().map(|(i, text)| {
@@ -549,8 +617,9 @@ fn dims(period: u32, full: &[(u32, u32)]) -> String {
 }
 
 /// A message's line drawn from its sender over its hop, at its own width,
-/// and its arrowhead in that colour from the moment the line reaches it;
-/// both held until `held`, then faded.
+/// with a point travelling it while it is drawn, and its arrowhead in that
+/// colour from the moment the line reaches it; all held until `held`, then
+/// faded.
 fn drawing(
     m: &Message,
     (d, shaft): (&edge::Drawn, &str),
@@ -571,6 +640,17 @@ fn drawing(
         .key(e.saturating_sub(1), "0")
         .key(e, "1")
         .key(period, "1");
+    // The point: at the line's start until it leaves, at its end as it
+    // arrives, seen only between.
+    let mut along = KeyTrack::new(period);
+    along.key(0, "0").key(s, "0").key(e, "1").key(period, "1");
+    let mut seen = KeyTrack::new(period);
+    seen.key(0, "0")
+        .key(s, "0")
+        .key(s, "1")
+        .key(e, "1")
+        .key(e, "0")
+        .key(period, "0");
     let held = held.max(e + hop_gap()).min(period);
     let filled = m.sort == Sort::Call && !m.refused;
     let chevron = d.chevron();
@@ -580,9 +660,12 @@ fn drawing(
         chevron
     };
     Item::Motion(format!(
-        r#"<g class="drawn {class}" opacity="0">{}<path class="shaft" d="{shaft}" pathLength="1000" stroke-dasharray="1000 1000"><animate attributeName="stroke-dashoffset" {}/></path><path class="head{}" d="{head_d}" opacity="0"><animate attributeName="opacity" {}/></path></g>"#,
+        r#"<g class="drawn {class}" opacity="0">{}<path class="shaft" d="{shaft}" pathLength="1000" stroke-dasharray="1000 1000"><animate attributeName="stroke-dashoffset" {}/></path><circle class="pulse {class}" r="{}" opacity="0"><animate attributeName="opacity" {}/><animateMotion calcMode="linear" path="{shaft}" {}/></circle><path class="head{}" d="{head_d}" opacity="0"><animate attributeName="opacity" {}/></path></g>"#,
         shown(period, s, held),
         drawn_in.attributes("values"),
+        num(PULSE_RADIUS),
+        seen.attributes("values"),
+        along.attributes("keyPoints"),
         if filled { " filled" } else { "" },
         lit_head.attributes("values"),
     ))
@@ -674,11 +757,11 @@ fn tint(
 /// The "or" after the pill `b` of an `alt`'s later way, shown from its
 /// rewind to its phase's end.
 fn or(b: Rect, period: u32, (from, until): (u32, u32)) -> Item {
-    let width = font::text_width("or", &TYPOGRAPHY_FRAME_LABEL) + 2.0 * SPACING_FRAGMENT_TAG_PAD;
+    let width = font::text_width("or", &TYPOGRAPHY_FRAGMENT) + 2.0 * SPACING_FRAGMENT_TAG_PAD;
     let h = SPACING_FRAGMENT_TAG;
     let x = b.right() + SPACING_LABEL_GAP;
     let y = b.centre_y() - h / 2.0;
-    let line = TYPOGRAPHY_FRAME_LABEL.size * TYPOGRAPHY_FRAME_LABEL.line_height;
+    let line = TYPOGRAPHY_FRAGMENT.size * TYPOGRAPHY_FRAGMENT.line_height;
     Item::Motion(format!(
         r#"<g class="motion" opacity="0">{}<rect class="fragment-or" x="{}" y="{}" width="{}" height="{}" rx="{}"/><text class="fragment-or-text" x="{}" y="{}" text-anchor="middle">or</text></g>"#,
         shown(period, from, until.max(from)),
@@ -688,7 +771,7 @@ fn or(b: Rect, period: u32, (from, until): (u32, u32)) -> Item {
         num(h),
         num(h / 2.0),
         num(x + width / 2.0),
-        num(y + (h - line) / 2.0 + font::baseline_in_line(&TYPOGRAPHY_FRAME_LABEL))
+        num(y + (h - line) / 2.0 + font::baseline_in_line(&TYPOGRAPHY_FRAGMENT))
     ))
 }
 
@@ -704,16 +787,20 @@ fn style(
     let (light, dark) = super::colors(&seq.palette, options);
     let refused = layout.messages.iter().any(|m| m.refused);
     let mut sheet = Sheet::default();
-    // The refusal colour is a signal's role, written only where it is used.
-    super::theme_vars(&mut sheet, options.mode, (&light, &dark), refused);
+    // The refusal colour is a signal's role, written only where it is used;
+    // the messages' own colours, a sequence's alone.
+    super::theme_vars(&mut sheet, options.mode, (&light, &dark), (refused, true));
     let runs = text_runs(layout, logos);
     if options.embed_font && super::embed_runs(&mut sheet, runs.into_iter()) {
         sheet.line(&format!(
-            "text {{ font-family: \"{}\", {FONT_SANS}; font-kerning: none; }}",
-            font::FAMILY
+            "text {{ font-family: \"{}\", {FONT_SANS}; font-kerning: none; --mono: \"{}\", {FONT_MONO}; }}",
+            font::FAMILY,
+            font::FAMILY_MONO
         ));
     } else {
-        sheet.line(&format!("text {{ font-family: {FONT_SANS}; }}"));
+        sheet.line(&format!(
+            "text {{ font-family: {FONT_SANS}; --mono: {FONT_MONO}; }}"
+        ));
     }
     sheet.rules(styles::shapes());
     super::brand_rules(&mut sheet, brands, (&light, &dark, options.mode));
@@ -725,13 +812,13 @@ fn style(
     // the tint; the "or". Under reduced motion, none of it, and every
     // message at full strength.
     sheet.line(&format!(
-        ".drawn path {{ fill: none; stroke: var(--text); stroke-linecap: butt; stroke-linejoin: round; }} .drawn .shaft {{ stroke-width: {}; }} .drawn.reply .shaft {{ stroke-width: {}; }} .drawn .head {{ stroke-width: {}; }} .drawn .head.filled {{ fill: var(--text); }}",
+        ".drawn path {{ fill: none; stroke: var(--message-call); stroke-linecap: butt; stroke-linejoin: round; }} .drawn .shaft {{ stroke-width: {}; }} .drawn .head {{ stroke-width: {}; }} .drawn .head.filled {{ fill: var(--message-call); }} .drawn.send path {{ stroke: var(--message-send); }} .drawn.reply path {{ stroke: var(--connector); }}",
         num(STROKE_MESSAGE),
-        num(STROKE_FRAME),
         num(STROKE_MESSAGE)
     ));
+    sheet.line(".pulse { fill: var(--message-call); } .pulse.send { fill: var(--message-send); } .pulse.reply { fill: var(--connector); }");
     if refused {
-        sheet.line(".drawn.refused path { stroke: var(--signal-refusal); }");
+        sheet.line(".drawn.refused path { stroke: var(--signal-refusal); } .pulse.refused { fill: var(--signal-refusal); }");
     }
     sheet.line(&format!(
         ".phase-tint {{ fill: var(--text); fill-opacity: {}; }}",
@@ -739,9 +826,9 @@ fn style(
     ));
     sheet.line(".fragment-or { fill: var(--text); }");
     sheet.line(&format!(
-        ".fragment-or-text {{ font-size: {}px; font-weight: {}; fill: var(--canvas); }}",
-        num(TYPOGRAPHY_FRAME_LABEL.size),
-        TYPOGRAPHY_FRAME_LABEL.weight
+        ".fragment-or-text {{ font-family: var(--mono); font-size: {}px; font-weight: {}; fill: var(--canvas); }}",
+        num(TYPOGRAPHY_FRAGMENT.size),
+        TYPOGRAPHY_FRAGMENT.weight
     ));
     sheet.line("@media (prefers-reduced-motion: reduce) { .motion, .drawn { display: none; } .dims { opacity: 1 !important; } }");
     if seq.credit {
@@ -754,25 +841,40 @@ fn style(
     sheet.0
 }
 
-/// Every text the drawing sets, with its weight: the heads', and each
-/// label, number, operator, guard and phase's name. For the font's subset,
-/// and for the characters it lacks.
+/// A face to embed or measure: its family and weight.
+type Face = (font::Family, u16);
+
+/// The face a style is set in.
+fn face(style: &crate::tokens::TextStyle) -> Face {
+    (style.family, style.weight)
+}
+
+/// Every text the drawing sets, with its face: the heads' and the key's in
+/// the sans face, and each label, number, operator, guard and phase's name
+/// in the mono one. For the fonts' subsets, and for the characters they
+/// lack.
 #[must_use]
-pub fn text_runs(layout: &Layout, logos: &dyn crate::logos::Logos) -> Vec<(u16, String)> {
-    let mut runs: Vec<(u16, String)> = crate::measure::text_runs_with(&layout.spec, logos)
+pub fn text_runs(layout: &Layout, logos: &dyn crate::logos::Logos) -> Vec<(Face, String)> {
+    let mut runs: Vec<(Face, String)> = crate::measure::text_runs_with(&layout.spec, logos)
         .into_iter()
-        .map(|(w, t)| (w, t.into_owned()))
+        .map(|(w, t)| ((font::Family::Sans, w), t.into_owned()))
         .collect();
+    runs.extend(
+        layout
+            .legend
+            .iter()
+            .map(|e| (face(&TYPOGRAPHY_LEGEND), e.text.to_owned())),
+    );
     for m in &layout.messages {
         let Some(l) = &m.label else { continue };
-        let weight = if m.sort == Sort::Reply {
-            TYPOGRAPHY_SUBTITLE.weight
+        let words = if m.sort == Sort::Reply {
+            face(&TYPOGRAPHY_MESSAGE_REPLY)
         } else {
-            TYPOGRAPHY_MESSAGE.weight
+            face(&TYPOGRAPHY_MESSAGE)
         };
-        runs.extend(l.lines.iter().map(|t| (weight, t.clone())));
+        runs.extend(l.lines.iter().map(|t| (words, t.clone())));
         if let Some(n) = &l.number {
-            runs.push((TYPOGRAPHY_LEGEND.weight, n.clone()));
+            runs.push((face(&TYPOGRAPHY_MESSAGE_NUMBER), n.clone()));
         }
     }
     for f in &layout.fragments {
@@ -780,14 +882,14 @@ pub fn text_runs(layout: &Layout, logos: &dyn crate::logos::Logos) -> Vec<(u16, 
             runs.extend(
                 lines
                     .iter()
-                    .map(|l| (TYPOGRAPHY_FRAME_LABEL.weight, l.clone())),
+                    .map(|l| (face(&TYPOGRAPHY_FRAGMENT), l.clone())),
             );
         }
     }
     for p in &layout.phases {
-        runs.push((TYPOGRAPHY_FRAME_LABEL.weight, p.name.to_uppercase()));
+        runs.push((face(&TYPOGRAPHY_PHASE), p.name.to_uppercase()));
     }
-    runs.push((TYPOGRAPHY_FRAME_LABEL.weight, "or".into()));
+    runs.push((face(&TYPOGRAPHY_FRAGMENT), "or".into()));
     runs
 }
 

@@ -53,6 +53,7 @@ Map by meaning, not by name. The roles, and what fills them:
 | `icon-core`, `icon-ai`, `icon-build`, `icon-client` | main text, to keep the diagram monochrome as archgram draws it; a category colour only when the user asks for one |
 | `signal-pass` | a success colour, green |
 | `signal-refusal` | a danger or error colour, red |
+| `message-call`, `message-send` | in a sequence, a call's and a send's colour: a primary or link colour, and an accent apart from it, both readable as text |
 
 A role the mapping leaves out keeps archgram's own colour. Map
 `signal-pass` and `signal-refusal` when the project has such colours: each

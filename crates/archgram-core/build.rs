@@ -150,7 +150,7 @@ fn main() {
     );
     let _ = writeln!(
         out,
-        "/// A type style (`typography.*`).\n#[derive(Debug, Clone, Copy, PartialEq)]\npub struct TextStyle {{\n    pub size: f64,\n    pub weight: u16,\n    pub line_height: f64,\n    pub letter_spacing: f64,\n}}\n"
+        "/// The face a type style is set in: `font.sans`, or `font.mono`.\n#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]\npub enum Family {{\n    Sans,\n    Mono,\n}}\n\n/// A type style (`typography.*`).\n#[derive(Debug, Clone, Copy, PartialEq)]\npub struct TextStyle {{\n    pub family: Family,\n    pub size: f64,\n    pub weight: u16,\n    pub line_height: f64,\n    pub letter_spacing: f64,\n}}\n"
     );
 
     // Foundation constants: the same in every palette and theme.
@@ -202,7 +202,13 @@ fn main() {
                 format!("pub const {name}: &str = \"{}\";\n", css.join(", "))
             }
             "typography" => format!(
-                "pub const {name}: TextStyle = TextStyle {{ size: {}, weight: {}, line_height: {}, letter_spacing: {} }};\n",
+                "pub const {name}: TextStyle = TextStyle {{ family: Family::{}, size: {}, weight: {}, line_height: {}, letter_spacing: {} }};\n",
+                match foundation[id].1["fontFamily"].as_str() {
+                    Some("{font.mono}") => "Mono",
+                    Some("{font.sans}") => "Sans",
+                    other =>
+                        panic!("{id}: fontFamily is {{font.sans}} or {{font.mono}}, not {other:?}"),
+                },
                 px(&value["fontSize"], id),
                 value["fontWeight"]
                     .as_u64()

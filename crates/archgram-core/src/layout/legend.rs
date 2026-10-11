@@ -17,6 +17,15 @@ pub enum Swatch {
     Multi,
     /// A system we do not own: a small dashed card.
     External,
+    /// A sequence's call that waits: a short line in its colour.
+    Call,
+    /// A sequence's send that does not wait.
+    Send,
+    /// A sequence's reply: a short dashed line.
+    Reply,
+    /// A sequence's refused message: a short dashed line in the refusal
+    /// colour.
+    Refused,
 }
 
 /// One entry: its swatch and its text, each in its box.
@@ -78,7 +87,7 @@ pub fn stack_step() -> f64 {
 /// copies' reach for several instances.
 fn swatch_size(s: Swatch) -> Size {
     match s {
-        Swatch::External => Size {
+        Swatch::External | Swatch::Call | Swatch::Send | Swatch::Reply | Swatch::Refused => Size {
             w: 1.5 * LEGEND_SWATCH,
             h: LEGEND_SWATCH,
         },
@@ -136,7 +145,7 @@ pub fn credit(size: Size) -> (Rect, Size) {
 /// line. Returns the entries, the flow lines and the drawing's new size.
 #[must_use]
 pub fn place(spec: &Spec, size: Size) -> (Vec<Entry>, Vec<FlowLine>, Size) {
-    let (entries, size, placed) = place_entries(spec, size);
+    let (entries, size, placed) = place_entries(&entries(spec), size);
     let texts = flow_texts(spec);
     if texts.is_empty() {
         return (entries, Vec::new(), size);
@@ -177,9 +186,34 @@ pub fn place(spec: &Spec, size: Size) -> (Vec<Entry>, Vec<FlowLine>, Size) {
     )
 }
 
+/// A sequence's legend: the variants its heads use, then the key to the
+/// kinds of message it draws (DESIGN.md, Components: Sequence, Key); none
+/// when the spec draws no legend. Returns the entries and the drawing's
+/// new size.
+#[must_use]
+pub fn place_sequence(spec: &Spec, kinds: &[Swatch], size: Size) -> (Vec<Entry>, Size) {
+    let mut list = entries(spec);
+    if spec.legend {
+        list.extend(kinds.iter().map(|&k| (k, key_text(k))));
+    }
+    let (entries, size, _) = place_entries(&list, size);
+    (entries, size)
+}
+
+/// A kind of message's name in the key.
+fn key_text(kind: Swatch) -> &'static str {
+    match kind {
+        Swatch::Call => "call, waits",
+        Swatch::Send => "send, no wait",
+        Swatch::Reply => "reply",
+        Swatch::Refused => "refused",
+        Swatch::Multi => "Several instances",
+        Swatch::External => "External",
+    }
+}
+
 /// The entries alone, and whether there were any.
-fn place_entries(spec: &Spec, size: Size) -> (Vec<Entry>, Size, bool) {
-    let list = entries(spec);
+fn place_entries(list: &[(Swatch, &'static str)], size: Size) -> (Vec<Entry>, Size, bool) {
     if list.is_empty() {
         return (Vec::new(), size, false);
     }
