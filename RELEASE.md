@@ -8,6 +8,37 @@ then staged on npm with provenance through trusted publishing. A staged
 package goes public when you approve it on npm with two-factor
 authentication.
 
+## When to release
+
+A release ships what `Unreleased` holds in [CHANGELOG.md](CHANGELOG.md),
+and its number says what kind of change that is
+([Semantic Versioning](https://semver.org/)).
+
+- **A fix that users need goes out the same day, as a patch**
+  (0.10.0 to 0.10.1): a release that is broken on npm, a version that
+  Anthropic's directory holds, a skill that stops or draws wrongly, or a
+  security fix ([SECURITY.md](SECURITY.md)). A release is tagged on
+  `main`, so when `Unreleased` already holds a feature, the release is a
+  minor one and carries both.
+- **Features gather in `Unreleased` and go out as a minor release**
+  (0.10.1 to 0.11.0): a new spec field, command or diagram kind, or
+  something new the skill does. A minor release goes out at most once a
+  week, Monday to Thursday: a release needs your approvals on npm, a
+  run of the skill (step 8) and a reviewer in Anthropic's directory, and
+  one that goes wrong still leaves a working day to fix it.
+- **Nothing is released while `Unreleased` is empty.** A change users do
+  not see adds no entry there: a test, CI, a refactor that draws the
+  same bytes, or a dependency update with no advisory that reaches them.
+  It goes out with the next release that has something to ship.
+- **A release is ready when `main` is tested as users will get it,
+  before its tag:** CI passed on the commit to tag; when the skill
+  changed since the last release, its evaluations pass against the
+  archgram this repository builds
+  ([evals/archgram/README.md](evals/archgram/README.md)); and
+  `claude plugin validate --strict skills/archgram` passes. CI checks
+  the skill's text; only the evaluations show what an agent does with
+  it, and they call a model, so they run by hand.
+
 ## Every release
 
 `main` takes changes only through a pull request whose CI passed, so the
