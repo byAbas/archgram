@@ -256,18 +256,20 @@ Then open the drawing for the user, once, with the system's own viewer:
 
 ## 7. Report
 
-Tell the user, briefly:
+Tell the user, briefly, all of the following, on an update too: what
+changed comes first there, and the rest still follows.
 
 - the reader contract, and how the drawing answers it;
 - where it is drawn to be shown (a README, or `shownWidth`), its size,
   and the direction written in the spec;
 - the style of architecture you recognised, by its name in
   `references/styles.md`, or that none fitted;
-- each part drawn, with the file (or the sentence) behind it, and each
-  edge with the line (or the sentence)
-  that makes it; for a sequence, each participant with its file, and
-  each message in order with the line (or the sentence) that makes it,
-  and what was split or left out past about 15 messages;
+- each part drawn, one line each, with the file (or the sentence) behind
+  it, or that no file backs it (a browser, a person), and each edge, one
+  line each, with the line (or the sentence) that makes it, those an
+  update left unchanged included; for a sequence, each participant with
+  its file, and each message in order with the line (or the sentence)
+  that makes it, and what was split or left out past about 15 messages;
 - on an update, what changed in the spec and why, starting with what
   `archgram check` said had lost its code;
 - where the colours came from, or that they are archgram's own and the
