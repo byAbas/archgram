@@ -6,6 +6,13 @@ follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- The `archgram` skill's frontmatter is plain YAML again: a colon in its
+  description made the line unreadable to a strict YAML parser, and
+  Anthropic's plugin directory held the version for it. A test now keeps
+  a plain value free of `: ` and ` #`.
+
 ## [0.10.0] - 2026-10-10
 
 ### Added

@@ -114,3 +114,34 @@ fn the_skill_preapproves_only_exact_commands_it_runs() {
         );
     }
 }
+
+/// The frontmatter is YAML that any parser reads: a value written without
+/// quotes holds no `: ` and no ` #`, which YAML reads as a new key and a
+/// comment. Claude Code reads such a line anyway, but Anthropic's plugin
+/// directory could not, and held the version (`REACH_UNKNOWN`).
+#[test]
+fn the_skill_frontmatter_is_plain_yaml() {
+    let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../skills/archgram/SKILL.md");
+    let text = std::fs::read_to_string(&path).unwrap();
+    let frontmatter = text
+        .strip_prefix("---\n")
+        .and_then(|rest| rest.split_once("\n---\n"))
+        .map(|(frontmatter, _)| frontmatter)
+        .expect("SKILL.md starts with a frontmatter between `---` lines");
+    for (n, line) in frontmatter.lines().enumerate() {
+        let at = format!("{}:{}", path.display(), n + 2);
+        let (key, value) = line
+            .split_once(": ")
+            .unwrap_or_else(|| panic!("{at} is not `key: value`: {line}"));
+        assert!(
+            !value.starts_with(['"', '\'', '|', '>']),
+            "{at}: `{key}` is quoted or a block; keep it plain"
+        );
+        for breaks in [": ", " #"] {
+            assert!(
+                !value.contains(breaks),
+                "{at}: `{key}` holds `{breaks}`, which ends a plain YAML value"
+            );
+        }
+    }
+}
