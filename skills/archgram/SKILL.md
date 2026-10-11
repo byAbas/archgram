@@ -24,6 +24,12 @@ those about a pnpm project's `.npmrc`, out of archgram's output, and
 changes nothing else. If `npx` is missing, or cannot find that version on
 npm, say so and stop.
 
+Run each command on its own, as it is written here: not joined to another
+with `&&`, `;` or a pipe, and not inside a loop. An agent may approve the
+exact commands this skill names, and a joined one asks the user or is
+refused. Read files by reading them, one at a time, and change the spec
+by editing it, not through the shell.
+
 ```
 Progress:
 - [ ] The kind of diagram
@@ -143,12 +149,14 @@ The spec lives at `docs/diagrams/<name>.archgram.yaml`, where `<name>` says
 what the diagram shows (`architecture`, `request-flow`). Create the folder
 when it is missing. When the file already exists, this is an update:
 change it rather than starting over, keep what still holds, and note what
-you changed for the report. Keep its `direction` as it is written; if it
-is `auto`, first draw the spec as it is (step 6) and write the direction
-`build` reports in its place, so the update cannot turn the drawing on
-its side. Start an update with `archgram check` on the spec as it is:
-whatever it says has lost its code, find where that code went, if
-anywhere, and move or remove the part or line. The check cannot see what
+you changed for the report. Keep its `direction` as it is written, and
+with none written, write none: the spec is then drawn left to right, as
+`right` would draw it. Only when it is `auto`, first draw the spec as it
+is (step 6) and write the direction `build` reports in its place, so the
+update cannot turn the drawing on its side. Start an update with
+`archgram check` on the spec as it is: whatever it says has lost its
+code, find where that code went, if anywhere, and move or remove the
+part or line. The check cannot see what
 the code gained, so step 2's walk still finds what is new.
 Change what the check and the walk found, and nothing more: a part or a
 flow the request did not ask for is the user's to add.
