@@ -16,6 +16,10 @@ follow [Semantic Versioning](https://semver.org/).
   as it is, drawn left to right; only a spec that says `direction: auto`
   gets the direction `build` chose written in its place. Before, it could
   add `direction: right` to a spec that needed none.
+- The `archgram` skill runs each command on its own, reads files one at
+  a time and edits the spec in place, so an agent that approves only the
+  skill's own commands no longer refuses a joined one.
+- The plugin's description names sequence diagrams, as the skill's does.
 
 ## [0.10.1] - 2026-10-11
 

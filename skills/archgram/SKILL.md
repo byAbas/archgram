@@ -24,6 +24,12 @@ those about a pnpm project's `.npmrc`, out of archgram's output, and
 changes nothing else. If `npx` is missing, or cannot find that version on
 npm, say so and stop.
 
+Run each command on its own, as it is written here: not joined to another
+with `&&`, `;` or a pipe, and not inside a loop. An agent may approve the
+exact commands this skill names, and a joined one asks the user or is
+refused. Read files by reading them, one at a time, and change the spec
+by editing it, not through the shell.
+
 ```
 Progress:
 - [ ] The kind of diagram
