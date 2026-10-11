@@ -55,6 +55,7 @@
         "docs/diagrams/architecture.svg is drawn, no wider than 1,300 px",
         "The spec's direction is as it was: no `direction` is added, so the drawing stays left to right",
         "The report says what changed",
+        "The report gives each part with its file, or says no file backs it (the reader), those left as they were included",
         "The report gives each edge with the file and line that makes it, and each cited line holds the code it quotes",
         "No browser was started and no screenshot taken",
         "The run tried to open the finished SVG with the system's viewer (`open`, `xdg-open` or `start`); the runner denies the command, so the attempt is what counts"
@@ -164,6 +165,8 @@
         "architecture.svg is drawn",
         "The spec's direction is as it was: no `direction` is added, so the drawing stays left to right",
         "The report says what changed in the spec",
+        "The report gives each part with its file, or says no file backs it (the reader), those left as they were included",
+        "The report gives each edge with the file and line that makes it, those left as they were included",
         "No browser was started and no screenshot taken"
       ]
     },

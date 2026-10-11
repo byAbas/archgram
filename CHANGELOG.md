@@ -6,6 +6,13 @@ follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- The `archgram` skill reports in full on an update too: each part with
+  its file, or that no file backs it, and each edge with its line, those
+  the update left as they were included, after what changed. Before, an
+  update could report only what changed.
+
 ## [0.10.1] - 2026-10-11
 
 ### Fixed
