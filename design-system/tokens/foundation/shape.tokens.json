@@ -62,10 +62,10 @@
     },
     "message": {
       "$value": {
-        "value": 1.5,
+        "value": 1,
         "unit": "px"
       },
-      "$description": "A sequence's call or send: stronger than a reply's line (`stroke.frame`), so the main path reads first."
+      "$description": "Every line of a sequence's messages: thin, as a blueprint's. Its kind is in its arrowhead, its dash and its colour."
     }
   },
   "dash": {
@@ -181,6 +181,13 @@
         "unit": "px"
       },
       "$description": "In a sequence, the room inside a pill (a message's label, a fragment's operator and guard) on either side of its words."
+    },
+    "patch-pad": {
+      "$value": {
+        "value": 3,
+        "unit": "px"
+      },
+      "$description": "In a sequence, how far a label's patch reaches beyond its text, so a lifeline stops short of its words."
     }
   },
   "legend": {
@@ -322,6 +329,40 @@
         "unit": "px"
       },
       "$description": "How far right a bar drawn over another on the same lifeline is moved, so both show (UML 2.5.1, Figure 17.2)."
+    }
+  },
+  "grid": {
+    "$type": "dimension",
+    "$description": "The faint grid of dots behind a sequence, a blueprint's.",
+    "spacing": {
+      "$value": {
+        "value": 16,
+        "unit": "px"
+      },
+      "$description": "Between two dots, across and down."
+    },
+    "dot": {
+      "$value": {
+        "value": 0.75,
+        "unit": "px"
+      },
+      "$description": "A dot's radius."
+    },
+    "opacity": {
+      "$type": "number",
+      "$value": 0.35,
+      "$description": "How strongly a dot shows its colour (`color.frame`): faint, behind everything."
+    }
+  },
+  "pulse": {
+    "$type": "dimension",
+    "$description": "The point that travels a sequence's message as its line is drawn.",
+    "radius": {
+      "$value": {
+        "value": 3,
+        "unit": "px"
+      },
+      "$description": "Its radius: a little wider than the line, readable at a glance."
     }
   },
   "spacing": {

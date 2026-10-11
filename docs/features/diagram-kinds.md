@@ -2,8 +2,8 @@
 
 | Field   | Value      |
 |---------|------------|
-| Version | 0.3        |
-| Date    | 2026-10-09 |
+| Version | 0.4        |
+| Date    | 2026-10-11 |
 | Status  | Draft      |
 | Release | Planned, sequence first |
 | Issue   | [#126](https://github.com/byAbas/archgram/issues/126) |
@@ -101,7 +101,9 @@ https://bdu.siu.edu.ar/bdu/Record/B-45-UBP01005); their text is not.
   `shownWidth`, one self-contained SVG, light and dark, SMIL animation, the
   still image and a screen reader's account.
 - Monochrome by archgram's rule: the shape tells the kind of a part, and
-  colour belongs to what happens (passing, refused) and to logos.
+  colour belongs to what happens (passing, refused) and to logos. A
+  sequence's messages also take a colour by their kind, repeating what
+  their shape already says ([sequence.md](sequence.md), Decided 14).
 - Where a standard has a symbol readers know, archgram draws that symbol
   in its own stroke and colours (DESIGN.md decides how); where it has none
   readers know, archgram's card (Decided, 5).
@@ -339,3 +341,4 @@ request above lost its order without a word.
 | 0.1     | 2026-10-09 | First draft, from #126: sequence and lifecycle from UML 2.5.1, workflow from BPMN 2.0.2, dataflow from structured analysis; a named subset of each, no conformance claimed; `diagram` names a spec's kind; a sequence is a spec of its own; sequence first; a refused message kept; the standard's symbols where readers know them. |
 | 0.2     | 2026-10-09 | Sequence has its own document, [sequence.md](sequence.md). |
 | 0.3     | 2026-10-09 | Sequence takes activation bars, in one of its two looks, and may draw its participants as avatars ([sequence.md](sequence.md), Decided 1 and 9). |
+| 0.4     | 2026-10-11 | A sequence's messages take a colour by their kind, repeating their shape ([sequence.md](sequence.md), Decided 14). |

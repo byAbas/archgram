@@ -374,12 +374,12 @@ pub fn uncovered_sequence_characters(
     uncovered(render::sequence::text_runs(&layout, logos))
 }
 
-/// The characters of `runs` the embedded font does not have, each in the
-/// weight it is set in, in order and without repeats.
-fn uncovered(runs: impl IntoIterator<Item = (u16, String)>) -> Vec<char> {
+/// The characters of `runs` the embedded fonts do not have, each in the
+/// face it is set in, in order and without repeats.
+fn uncovered(runs: impl IntoIterator<Item = ((font::Family, u16), String)>) -> Vec<char> {
     let mut out: Vec<char> = Vec::new();
-    for (weight, text) in runs {
-        for c in font::uncovered(&text, weight) {
+    for ((family, weight), text) in runs {
+        for c in font::uncovered(&text, family, weight) {
             if !out.contains(&c) {
                 out.push(c);
             }
@@ -395,6 +395,6 @@ pub fn uncovered_characters(spec: &Spec, logos: &dyn logos::Logos) -> Vec<char> 
     uncovered(
         measure::text_runs_with(spec, logos)
             .into_iter()
-            .map(|(w, t)| (w, t.into_owned())),
+            .map(|(w, t)| ((font::Family::Sans, w), t.into_owned())),
     )
 }

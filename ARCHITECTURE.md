@@ -126,9 +126,11 @@ is the first half of determinism.
 ### Measure
 
 Labels are measured with the advance widths of Geist, read with
-`skrifa`. The static Regular and Medium TTF files ship inside the binary
-under their OFL licence, so measurements do not depend on the fonts
-installed on a machine. A box's size comes from its kind's template (icon
+`skrifa`, and a sequence's words between its heads with Geist Mono's. The
+static Regular and Medium TTF files of each ship inside the binary under
+their OFL licence, so measurements do not depend on the fonts installed
+on a machine. A type style names its face (`font.sans` or `font.mono`),
+and every measure, subset and baseline reads that face. A box's size comes from its kind's template (icon
 area, padding) and its measured label. A node with several instances
 takes the footprint of its whole stack, the front card plus
 `card.multi-offset` twice in each direction, so the layout keeps the
@@ -138,9 +140,11 @@ Along the flow the front card takes its column's width like any other
 card, and the stack reaches past it into the gap (to the right when the
 flow runs right, up when it runs down).
 
-One list of text runs, each with its weight (node titles and notes, edge
-labels), feeds both the embedded font's subset and the warning for
-characters Geist lacks, so neither can miss a text the other covers.
+One list of text runs, each with its face, its family and weight (node
+titles and notes, edge labels; a sequence's labels, numbers, guards and
+phases' names in the mono face), feeds both the embedded fonts' subsets
+and the warning for characters they lack, so neither can miss a text the
+other covers.
 
 ### Layout
 
@@ -334,13 +338,15 @@ the nearest slugs suggested; with none given it is neither checked nor
 drawn.
 
 The text is drawn in the same font it was measured with. archgram's own
-subsetter cuts Geist down to the glyphs the diagram uses (keeping the
+subsetter cuts each face the diagram uses, Geist and in a sequence Geist
+Mono, down to the glyphs set in it (keeping the
 tables a renderer needs: `head`, `hhea`, `maxp`, `hmtx`, `cmap`, `loca`,
 `glyf`, `post`, `name`, `OS/2`, with composite glyphs followed to their
 parts) and embeds the result as a data URI in an `@font-face` rule, so
 the text looks the same on every machine. The subsetter handles static
 TrueType outlines only; variable fonts are out of scope. `--system-font`
-skips the embedding and falls back to the system font stack.
+skips the embedding and falls back to the system font stacks,
+`font.sans` and `font.mono`.
 
 A sequence is drawn by `render::sequence` into the same scene: the
 phases' bands, the lifelines, the fragments' frames, each message as one

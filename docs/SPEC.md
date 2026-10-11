@@ -330,8 +330,9 @@ A reply has `reply` in place of `from`:
 
 A call is drawn as a solid line with a filled arrowhead, a send that does
 not wait with an open one, and a reply as a dashed line, each with its
-label above it. A call's line and label are stronger than a reply's, so
-the main path reads first.
+label above it. A call's words are stronger than a reply's, so the main
+path reads first, and each kind has its colour (How a sequence is
+drawn).
 
 ### Fragments
 
@@ -399,7 +400,16 @@ archgram's.
 `archgram build` draws a sequence top to bottom, as time runs: the heads
 in a row, a thin dashed lifeline down from each, one row for each message
 in the list's order, each phase a band across the page, and each fragment
-framed round its messages.
+framed round its messages. It is drawn as a blueprint: a faint grid of
+dots behind it, thin lines, and the labels, numbers, guards and phases'
+names in a monospace face; a lifeline stops at a label or a phase's name
+rather than running through it.
+
+Each kind of message has its colour on its line, arrowhead and number, as
+its shape already tells it: a call that waits, a filled arrowhead, in
+blue; a send that does not, an open one, in violet; a reply, dashed, in
+grey; a refused message in the refusal colour, ending in a ✕. A key under
+the drawing names the kinds it uses.
 
 `look` picks one of two drawings of the same columns and rows:
 
@@ -414,24 +424,27 @@ itself; a send, and a refused call, start none; a call to a participant
 whose bar is already drawn, a call to itself among them, draws a second
 bar over the first, moved to its right.
 
-Each message is numbered by its order (`still: numbers`). An `alt`'s
-operands are alternatives, so each of its messages carries its operand's
-letter: `4a` to `7a` for the first way, `4b` for the next, each way
+Each message is numbered by its order (`still: numbers`), shown in
+brackets with two digits at least: `[01]`. An `alt`'s operands are
+alternatives, so each of its messages carries its operand's letter:
+`[04a]` to `[07a]` for the first way, `[04b]` for the next, each way
 starting again from the alt's first number; after the `alt`, the count
 goes on from its longest way. In nested `alt`s, each one's letter in
-turn (`5ab`).
+turn (`[05ab]`).
 
 Then the messages move, one phase at a time, and the drawing stays
 readable throughout. The phase that plays has its name darkened, and the
 others' messages dim, never below 60%. Each of its messages in turn has
-its line drawn from its sender, its arrowhead taking the line's colour as
-the line reaches it, while a faint tint grows across the phase's band
-between the two lifelines it joins. An `alt` plays its ways as
+its line drawn from its sender, a point travelling it, its arrowhead
+taking the line's colour as the line reaches it, while a faint tint grows
+across the phase's band between the two lifelines it joins. While a
+refused message plays, the head of the participant that refuses it takes
+the refusal colour on its edge. An `alt` plays its ways as
 alternatives: the first, then, dimmed back, the next from where the first
 began, an "or" by its pill. A `par`'s operands start together; an `opt`
-and a `loop` play once. Under reduced motion the drawing is still; a
-screen reader hears each phase's name and each message in words, in
-order, a guard before its messages.
+and a `loop` play once. Under reduced motion the drawing is still and no
+head is marked; a screen reader hears each phase's name and each message
+in words, in order, a guard before its messages.
 
 ### Sources in a sequence
 
@@ -591,9 +604,9 @@ project's resolver and which token fills each of archgram's colour roles.
 
 The roles are `badge`, `canvas`, `card`, `card-edge`, `connector`,
 `frame`, `icon-ai`, `icon-build`, `icon-client`, `icon-core`,
-`signal-core`, `signal-pass`, `signal-refusal`, `text` and `text-muted`
-(DESIGN.md, Colors). A role the file
-leaves out keeps the mono palette's colour. The file replaces the spec's
+`message-call`, `message-send`, `signal-core`, `signal-pass`,
+`signal-refusal`, `text` and `text-muted` (DESIGN.md, Colors). A role
+the file leaves out keeps the mono palette's colour. The file replaces the spec's
 `palette`.
 
 archgram reads the resolver's sets, modifiers (an input, else the

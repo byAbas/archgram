@@ -435,7 +435,7 @@ fn style(
     let (light, dark) = colors(&spec.palette, options);
     let animated = timeline.is_some();
     let mut sheet = Sheet::default();
-    theme_vars(&mut sheet, mode, (&light, &dark), animated);
+    theme_vars(&mut sheet, mode, (&light, &dark), (animated, false));
     if options.embed_font && embed_fonts(&mut sheet, spec, logos) {
         // No kerning: the subset carries none and the text was measured without it.
         sheet.line(&format!(
@@ -480,17 +480,17 @@ fn colors(palette: &str, options: Options) -> (Colors, Colors) {
 
 /// The theme's roles for `mode`: light, dark, or light switching to dark
 /// under `prefers-color-scheme: dark`.
-fn theme_vars(svg: &mut Sheet, mode: Mode, (light, dark): (&Colors, &Colors), animated: bool) {
+fn theme_vars(svg: &mut Sheet, mode: Mode, (light, dark): (&Colors, &Colors), roles: (bool, bool)) {
     match mode {
         Mode::Auto => {
-            svg.line(&format!(":root {{ {} }}", vars(light, animated)));
+            svg.line(&format!(":root {{ {} }}", vars(light, roles)));
             svg.line(&format!(
                 "@media (prefers-color-scheme: dark) {{ :root {{ {} }} }}",
-                vars(dark, animated)
+                vars(dark, roles)
             ));
         }
-        Mode::Light => svg.line(&format!(":root {{ {} }}", vars(light, animated))),
-        Mode::Dark => svg.line(&format!(":root {{ {} }}", vars(dark, animated))),
+        Mode::Light => svg.line(&format!(":root {{ {} }}", vars(light, roles))),
+        Mode::Dark => svg.line(&format!(":root {{ {} }}", vars(dark, roles))),
     }
 }
 
@@ -501,11 +501,13 @@ fn placement_has_legend(spec: &Spec) -> bool {
 }
 
 /// The theme's roles as custom properties; the signal's own only where
-/// something moves, so a still diagram's style is what it always was.
-fn vars(c: &Colors, animated: bool) -> String {
+/// something moves (`animated`), and a sequence's messages' only in a
+/// sequence, so every other diagram's style is what it always was.
+fn vars(c: &Colors, (animated, sequence): (bool, bool)) -> String {
     c.roles()
         .iter()
         .filter(|(name, _)| animated || !name.starts_with("signal-"))
+        .filter(|(name, _)| sequence || !name.starts_with("message-"))
         .map(|(name, value)| format!("--{name}: {value};"))
         .collect::<Vec<_>>()
         .join(" ")
@@ -523,24 +525,24 @@ fn embed_fonts(svg: &mut Sheet, spec: &Spec, logos: &dyn crate::logos::Logos) ->
         svg,
         crate::measure::text_runs_with(spec, logos)
             .into_iter()
-            .map(|(w, t)| (w, t.into_owned())),
+            .map(|(w, t)| ((font::Family::Sans, w), t.into_owned())),
     )
 }
 
 /// [`embed_fonts`], for the texts of any kind of diagram, each with its
-/// weight.
-fn embed_runs(svg: &mut Sheet, runs: impl Iterator<Item = (u16, String)>) -> bool {
-    let mut by_weight: std::collections::BTreeMap<u16, BTreeSet<char>> =
+/// face: its family and weight.
+fn embed_runs(svg: &mut Sheet, runs: impl Iterator<Item = ((font::Family, u16), String)>) -> bool {
+    let mut by_face: std::collections::BTreeMap<(font::Family, u16), BTreeSet<char>> =
         std::collections::BTreeMap::new();
-    for (weight, text) in runs {
-        by_weight.entry(weight).or_default().extend(text.chars());
+    for (face, text) in runs {
+        by_face.entry(face).or_default().extend(text.chars());
     }
     let mut faces = Vec::new();
-    for (weight, chars) in &by_weight {
-        match font::subset::subset(font::face(*weight), chars) {
+    for ((family, weight), chars) in &by_face {
+        match font::subset::subset(font::face(*family, *weight), chars) {
             Ok(bytes) => faces.push(format!(
                 "@font-face {{ font-family: \"{}\"; font-weight: {weight}; src: url(data:font/ttf;base64,{}) format(\"truetype\"); }}",
-                font::FAMILY,
+                font::family_name(*family),
                 font::base64(&bytes)
             )),
             Err(_) => return false,

@@ -44,7 +44,12 @@ fn main() -> ExitCode {
 
 fn fonts() -> ExitCode {
     let dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("../crates/archgram-core/fonts");
-    for name in ["Geist-Regular", "Geist-Medium"] {
+    for name in [
+        "Geist-Regular",
+        "Geist-Medium",
+        "GeistMono-Regular",
+        "GeistMono-Medium",
+    ] {
         let source = dir.join(format!("source/{name}.ttf"));
         let written = std::fs::read(&source)
             .map_err(|e| format!("{}: {e}", source.display()))
