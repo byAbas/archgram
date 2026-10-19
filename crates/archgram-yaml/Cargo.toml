@@ -8,7 +8,7 @@ license.workspace = true
 
 [dependencies]
 archgram-core = { path = "../archgram-core" }
-saphyr-parser = { version = "0.1", default-features = false }
+saphyr-parser = { version = "0.2", default-features = false }
 
 [lints]
 workspace = true
