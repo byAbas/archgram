@@ -20,6 +20,10 @@ follow [Semantic Versioning](https://semver.org/).
   refusing participant's head is marked only while its refusal plays,
   not at rest. Two colour roles, `message-call` and `message-send`, join
   the theme file's. Architecture diagrams draw the same bytes as before.
+- The `archgram` skill pre-approves no command: the three `archgram spec`
+  commands that only print now ask the user first, as every other
+  command does. Anthropic's plugin directory accepts a pre-approved
+  command only from a Verified organization, and refused the version.
 
 ### Fixed
 

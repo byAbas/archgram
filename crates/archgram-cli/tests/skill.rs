@@ -72,45 +72,24 @@ fn the_plugin_carries_the_version_it_is_released_with() {
     );
 }
 
-/// `allowed-tools` pre-approves only exact commands the skill runs, at its
-/// version, with no wildcard: Anthropic's plugin directory reads any npx
-/// rule that ends in a wildcard as "any npx command" (`ALLOWED_TOOLS_BROAD`).
-/// A command that writes, or takes a path, asks the user.
+/// The skill pre-approves no command: its frontmatter has no `allowed-tools`.
+/// Anthropic's plugin directory accepts an entry beyond Read, Grep, Glob and
+/// LS only from a Verified organization, and refused a version whose skill
+/// pre-approved its own `archgram spec` commands. Every command asks the user.
 #[test]
-fn the_skill_preapproves_only_exact_commands_it_runs() {
-    let skill = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../skills/archgram");
-    let mut files = Vec::new();
-    markdown(&skill, &mut files);
-    let prefix = format!("{NPX}@{} ", env!("CARGO_PKG_VERSION"));
-    let mut commands = Vec::new();
-    for file in &files {
-        for line in std::fs::read_to_string(file).unwrap().lines() {
-            if line.starts_with("allowed-tools:") {
-                continue;
-            }
-            for (i, _) in line.match_indices(&prefix) {
-                let rest = &line[i..];
-                let end = rest.find('`').unwrap_or(rest.len());
-                commands.push(rest[..end].trim_end().to_string());
-            }
-        }
-    }
-    assert!(!commands.is_empty(), "no `{prefix}…` command in the skill");
-
-    let manifest = std::fs::read_to_string(skill.join("SKILL.md")).unwrap();
-    let allowed = manifest
-        .lines()
-        .find_map(|line| line.strip_prefix("allowed-tools: "))
-        .expect("SKILL.md has allowed-tools");
-    for rule in allowed.split(") ") {
-        let rule = rule.trim_start_matches("Bash(").trim_end_matches(')');
+fn the_skill_preapproves_no_command() {
+    let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../skills/archgram/SKILL.md");
+    let text = std::fs::read_to_string(&path).unwrap();
+    let (frontmatter, _) = text
+        .strip_prefix("---\n")
+        .and_then(|rest| rest.split_once("\n---\n"))
+        .expect("SKILL.md starts with a frontmatter between `---` lines");
+    for (n, line) in frontmatter.lines().enumerate() {
         assert!(
-            !rule.contains('*'),
-            "allowed-tools rule `{rule}` has a wildcard; pre-approve exact commands only"
-        );
-        assert!(
-            commands.iter().any(|command| command == rule),
-            "allowed-tools rule `{rule}` is not a command the skill runs"
+            !line.starts_with("allowed-tools:") && !line.starts_with("allowedTools:"),
+            "{}:{} pre-approves commands; the directory refuses that",
+            path.display(),
+            n + 2
         );
     }
 }
