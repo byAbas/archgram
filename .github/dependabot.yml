@@ -3,6 +3,16 @@
 # message, and so each pull request's title, starts with one of the types
 # in CONTRIBUTING.md (How changes land): `ci` for the actions, `build` for
 # the crates.
+#
+# The updates that should break nothing come in one pull request for each
+# ecosystem, so CI runs once for them and not once for each; an update that
+# may break something keeps a pull request of its own, to be read alone
+# (GitHub docs, Dependabot options reference, `groups`). Dependabot reads
+# every version as major.minor.patch. For the actions the group is the
+# minor and the patch releases. For the crates it is the patch releases
+# alone: to Cargo 0.48 is not compatible with 0.47 (The Cargo Book,
+# Specifying Dependencies, Default requirements). A group holds version
+# updates only, so a security update keeps a pull request of its own too.
 version: 2
 updates:
   - package-ecosystem: github-actions
@@ -11,9 +21,17 @@ updates:
       interval: weekly
     commit-message:
       prefix: ci
+    groups:
+      actions:
+        patterns: ["*"]
+        update-types: [minor, patch]
   - package-ecosystem: cargo
     directory: /
     schedule:
       interval: weekly
     commit-message:
       prefix: build
+    groups:
+      crates:
+        patterns: ["*"]
+        update-types: [patch]

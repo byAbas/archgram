@@ -43,7 +43,8 @@ jobs:
           subjectPattern: ${{ github.event.pull_request.user.login == 'dependabot[bot]' && '^.+$' || '^[a-z].*$' }}
           subjectPatternError: |
             The subject "{subject}" in "{title}" should start with a lowercase letter, in the imperative: "fix: keep an edge label off its arrowhead".
-      # Dependabot names its branches dependabot/<ecosystem>/<dependency>
+      # Dependabot names its branches dependabot/<ecosystem>/<dependency>,
+      # or after the group for a grouped pull request (.github/dependabot.yml),
       # and writes its own description, which no setting changes. A branch
       # in a fork is the contributor's own; only the title and description
       # reach main.
