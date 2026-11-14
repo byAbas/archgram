@@ -2,7 +2,7 @@
 
 | Field   | Value      |
 |---------|------------|
-| Version | 0.1        |
+| Version | 0.2        |
 | Date    | 2026-11-14 |
 | Status  | Draft      |
 | Release | Planned    |
@@ -79,9 +79,18 @@ layout is computed and a change moves it (Evidence).
   A mark takes no room from the layout. So a change that only adds draws
   every card where `build` draws the new spec, and one that only removes
   where it drew the old.
-- Each added, removed and changed part carries a mark, and the legend
-  names each mark the drawing uses. A mark is told from the others
-  without its colour. A removed part is not drawn with the dashes that
+- Each added, removed and changed part carries a mark (Decided, 2): a
+  sign in a filled circle, `+` for added, `−` for removed, `~` for
+  changed. A card carries it on its top edge; a line carries it on a
+  straight stretch, clear of cards, labels and bends. The legend names
+  each mark the drawing uses.
+- A mark has a colour, green for added, red for removed, amber for
+  changed: the circle, the card's border, and a line with its arrowhead
+  take it. The colour repeats the sign and never stands for it, so a
+  mark is told from the others without its colour. Each colour holds 3:1
+  against the card and the canvas, in both themes.
+- A removed card's title is struck through; its text keeps its colour
+  and its contrast. A removed part is not drawn with the dashes that
   already mean a system we do not own, a boundary or a path taken only
   sometimes (DESIGN.md, Overview; docs/SPEC.md, Edges).
 - A changed part is drawn as the new spec has it. What it was is in the
@@ -146,12 +155,30 @@ layout is computed and a change moves it (Evidence).
    a way through a layout made without them. Before and after side by
    side was not taken either: the two layouts differ too much to compare
    by eye (Evidence).
+2. **The marks are signs in colour**, the look `signs` of three samples
+   ([docs/samples/diff/](../samples/diff/README.md)). The same signs
+   with no colour (`mono`) kept the drawing monochrome, but the changes
+   were harder to find at a glance. Words on the cards (`words`) need no
+   legend there, but a word does not fit a short line, so the lines
+   would carry signs anyway. In the dark theme the three colours are
+   nearly as light as one another (1.1 to 1.4 between them), so it is
+   the sign that tells them apart for a reader who sees no colour.
 
 ## Open questions
 
-- How each mark looks: its sign, its line and its colour roles, and how
-  a removed part reads as gone while its text keeps its contrast.
-  DESIGN.md decides, from samples.
+- The green of the light theme: the palette's holds 3.11 against the
+  card and 3.00 against the canvas, at the limit for a line. The marks'
+  colour roles and their values are set in the tokens as the feature is
+  built, and may need a darker green there.
+- Where an added and a removed line leave one card, they share a trunk
+  (DESIGN.md, Components: Connector), which took the colour of the line
+  drawn last in the samples. Whether a marked line keeps a port of its
+  own.
+- Whether a sign reads where the drawing is shown smaller: its circle is
+  16 px, about 11 px in a README that shows a 1,300 px drawing at
+  880 px. Not checked.
+- How a frame carries its mark. The samples have no added, removed or
+  changed frame.
 - What the command does when nothing differs, and its exit code: whether
   a difference is a failure a script can test for.
 - Whether the text is also printed as JSON, for a script or an agent.
@@ -168,3 +195,4 @@ layout is computed and a change moves it (Evidence).
 | Version | Date       | Change |
 |---------|------------|--------|
 | 0.1     | 2026-11-14 | First draft, from #47: `archgram diff` draws two architecture specs as one diagram, parts paired by id, each added, removed or changed part marked; one layout of both together, measured on 100 pairs; a still image, with the changes as text; the marks, the exit code and the Action left open. |
+| 0.2     | 2026-11-14 | The marks are decided, from three samples in `docs/samples/diff/`: a sign in a filled circle on a card's top edge and on a line, in green, red or amber, repeated by the card's border and the line; a removed card's title struck through. Open: the light theme's green, a trunk shared by an added and a removed line, the sign's size where the drawing is shown smaller, a frame's mark. |
