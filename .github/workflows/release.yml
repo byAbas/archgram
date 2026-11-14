@@ -45,16 +45,23 @@ jobs:
           for spec in examples/*.json; do
             target/${{ matrix.target }}/release/archgram${{ matrix.exe }} build "$spec" -o "drawings/$(basename "$spec" .json).svg"
           done
+      # An artifact carries files from one job of this run to the next and
+      # is not the release: the command ships on npm, the skill on the
+      # GitHub release. Each is kept 7 days, not the 90 an artifact gets
+      # by default, long enough to run a failed job again or to fetch the
+      # packages by hand (RELEASE.md, The first release, once).
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: binary-${{ matrix.key }}
           path: target/${{ matrix.target }}/release/archgram${{ matrix.exe }}
           if-no-files-found: error
+          retention-days: 7
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: drawings-${{ matrix.key }}
           path: drawings
           if-no-files-found: error
+          retention-days: 7
 
   package:
     name: npm packages
@@ -107,6 +114,7 @@ jobs:
           name: npm-packages
           path: dist/*.tgz
           if-no-files-found: error
+          retention-days: 7
 
   publish:
     name: Publish to npm
