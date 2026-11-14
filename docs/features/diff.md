@@ -2,7 +2,7 @@
 
 | Field   | Value      |
 |---------|------------|
-| Version | 0.2        |
+| Version | 0.3        |
 | Date    | 2026-11-14 |
 | Status  | Draft      |
 | Release | Planned    |
@@ -106,6 +106,13 @@ layout is computed and a change moves it (Evidence).
   spec's `shownWidth`.
 - The same two specs give the same bytes and the same text, on every
   machine.
+- It exits as archgram's other commands do (Decided, 4): 0 when it has
+  compared the specs and drawn them, whether or not anything differs; 1
+  for a problem in either spec; 2 for a file it cannot read or write, or
+  a wrong use of the command. A difference is not a failure.
+- When nothing differs it says so and still writes the drawing, with no
+  mark and no entry for one in the legend, so the file is there after
+  every exit of 0 (Decided, 5).
 - The `archgram` skill uses it on an update (Decided, 3). It keeps the
   spec as it was before it changes it, and once the new spec passes
   `check` and is drawn, runs `archgram diff` on the two. What changed in
@@ -141,10 +148,16 @@ layout is computed and a change moves it (Evidence).
 - Sequence diagrams and the kinds planned after them.
 - What changed in the flows.
 - Before and after as panels beside the diff.
+- A flag that makes a difference a failing exit, as `git diff
+  --exit-code` does. Should one come, a difference takes a code of its
+  own, since 1 and 2 are taken.
 
 ## Success criteria
 
-- A spec compared with itself reports no change.
+- A spec compared with itself reports no change and still writes its
+  drawing, with no mark in it.
+- Two specs that differ exit 0, as two that do not; a problem in either
+  spec exits 1 and names its file.
 - For a change that only adds, every card of the new spec is where
   `build` draws it; for one that only removes, every card of the old
   spec is where `build` drew it.
@@ -182,6 +195,23 @@ layout is computed and a change moves it (Evidence).
    this feature's problem is greatest, gets its list without anyone
    asking. Leaving the skill as it is would have cost nothing, and left
    `diff` to people and scripts alone.
+4. **A difference exits 0.** In archgram 1 already means a problem in
+   the spec and 2 a file or a wrong use (`crates/archgram-cli`), and a
+   warning never fails a command: `build` draws a drawing too wide and
+   says so ([where a diagram is shown](shown-width.md#limits)). A
+   difference is what the command is run to find, so the skill, a
+   script under `set -e` and a CI step see it succeed. POSIX `diff`
+   exits 1 when the files differ
+   (https://pubs.opengroup.org/onlinepubs/9699919799/utilities/diff.html),
+   which here would give 1 two meanings, and `git diff` does so only
+   when asked, with `--exit-code` (https://git-scm.com/docs/git-diff).
+   A script that must stop on a change reads the text the command
+   prints.
+5. **With nothing to mark, the drawing is still written.** A script, or
+   the skill, then finds the file after every run that exits 0 and has
+   no case of its own for an unchanged spec. Writing no file would have
+   said the same thing twice, in the text and in the missing file, and
+   left an older drawing at that path looking current.
 
 ## Open questions
 
@@ -205,8 +235,6 @@ layout is computed and a change moves it (Evidence).
   today.
 - Whether the skill, asked about a pull request, compares with the base
   branch's spec rather than the spec as it found it.
-- What the command does when nothing differs, and its exit code: whether
-  a difference is a failure a script can test for.
 - Whether the text is also printed as JSON, for a script or an agent.
 - Whether the description's change, a spec's `title` or `description`,
   is reported.
@@ -222,3 +250,4 @@ layout is computed and a change moves it (Evidence).
 |---------|------------|--------|
 | 0.1     | 2026-11-14 | First draft, from #47: `archgram diff` draws two architecture specs as one diagram, parts paired by id, each added, removed or changed part marked; one layout of both together, measured on 100 pairs; a still image, with the changes as text; the marks, the exit code and the Action left open. |
 | 0.2     | 2026-11-14 | The marks are decided, from three samples in `docs/samples/diff/`: a sign in a filled circle on a card's top edge and on a line, in green, red or amber, repeated by the card's border and the line; a removed card's title struck through. Open: the light theme's green, a trunk shared by an added and a removed line, the sign's size where the drawing is shown smaller, a frame's mark. The `archgram` skill uses `diff` on an update, and its report of what changed is the command's; where it writes the drawing and what it does with an older archgram are open. |
+| 0.3     | 2026-11-14 | A difference exits 0: the command's exit codes are archgram's own, 1 for a problem in a spec and 2 for a file or a wrong use; a flag that makes a difference fail is not in this. When nothing differs the command says so and still writes the drawing, with no mark. |
