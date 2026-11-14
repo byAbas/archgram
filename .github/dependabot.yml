@@ -35,3 +35,13 @@ updates:
       crates:
         patterns: ["*"]
         update-types: [patch]
+    # skrifa stays at 0.47, and only its patch releases are proposed.
+    # skrifa 0.50 brings eight crates archgram does not have, one of them,
+    # foldhash, under the Zlib licence, which deny.toml does not allow;
+    # archgram reads only the four fonts it ships, and no advisory names
+    # 0.47. An ignored update is not opened as a security update either
+    # (GitHub docs, Controlling which dependencies are updated by
+    # Dependabot), so advisories.yml is what says when 0.47 gets one.
+    ignore:
+      - dependency-name: skrifa
+        update-types: ["version-update:semver-minor"]
