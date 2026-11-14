@@ -39,6 +39,11 @@ follow [Semantic Versioning](https://semver.org/).
   a time and edits the spec in place, so an agent that approves only the
   skill's own commands no longer refuses a joined one.
 - The plugin's description names sequence diagrams, as the skill's does.
+- The plugin's icon is at the plugin's root, `icon.png`, not in
+  `.claude-plugin/`, which Anthropic's plugin reference keeps for the
+  manifest alone. A test now keeps that folder to the manifest. Its
+  corners are transparent, where they were white, so it sits on a dark
+  page as it does on a light one.
 
 ## [0.10.1] - 2026-10-11
 

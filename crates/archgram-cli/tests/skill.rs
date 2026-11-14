@@ -72,6 +72,38 @@ fn the_plugin_carries_the_version_it_is_released_with() {
     );
 }
 
+/// `.claude-plugin/` holds the manifest and nothing else: Claude Code's
+/// plugin manifest reference puts every other file of a plugin at its root,
+/// so the icon the manifest names for the directory's listing is there too.
+/// Finder's `.DS_Store` is ignored by git, so it is never submitted.
+#[test]
+fn the_plugin_keeps_only_its_manifest_in_the_manifest_folder() {
+    let plugin = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../skills/archgram");
+    let folder = plugin.join(".claude-plugin");
+    for entry in std::fs::read_dir(&folder).unwrap_or_else(|e| panic!("{}: {e}", folder.display()))
+    {
+        let name = entry.unwrap().file_name();
+        let name = name.to_string_lossy();
+        assert!(
+            name == "plugin.json" || name == ".DS_Store",
+            "{} holds {name}; keep it at the plugin's root",
+            folder.display()
+        );
+    }
+
+    let manifest = std::fs::read_to_string(folder.join("plugin.json")).unwrap();
+    let icon = manifest
+        .lines()
+        .find_map(|line| line.trim().strip_prefix("\"icon\": \"./"))
+        .and_then(|rest| rest.split('"').next())
+        .expect("plugin.json names an icon as `./<path>`");
+    assert!(
+        plugin.join(icon).is_file(),
+        "plugin.json names the icon ./{icon}, which is not in {}",
+        plugin.display()
+    );
+}
+
 /// The skill pre-approves no command: its frontmatter has no `allowed-tools`.
 /// Anthropic's plugin directory accepts an entry beyond Read, Grep, Glob and
 /// LS only from a Verified organization, and refused a version whose skill
