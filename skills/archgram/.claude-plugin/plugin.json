@@ -11,7 +11,7 @@
   "repository": "https://github.com/byAbas/archgram",
   "license": "MIT",
   "keywords": ["architecture", "diagram", "svg", "readme", "documentation"],
-  "icon": "./.claude-plugin/icon.png",
+  "icon": "./icon.png",
   "documentationUrl": "https://github.com/byAbas/archgram#draw-with-your-coding-agent",
   "supportUrl": "https://github.com/byAbas/archgram/issues",
   "privacyPolicyUrl": "https://github.com/byAbas/archgram/blob/main/skills/archgram/README.md#privacy",
