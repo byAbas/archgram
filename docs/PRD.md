@@ -309,7 +309,10 @@ same file every time.
   plugin directory asks of a package a plugin runs. Each release sets that
   version in the skill, and a test holds the two equal. The spec is kept,
   so a later call changes it and draws again, and says what changed,
-  starting from what `archgram check` says has lost its code.
+  starting from what `archgram check` says has lost its code. Once
+  `archgram diff` is there, what changed is what it prints for the spec
+  before and after the update
+  ([docs/features/diff.md](features/diff.md)).
 - It learns the spec format from that same command (`archgram spec`), so
   the format it writes always matches the command that draws it; it keeps
   no copy of the format that could fall behind, nor of how to fill it.
@@ -469,4 +472,4 @@ None.
 | 0.31    | 2026-10-09 | Four more kinds of diagram, each taking its meaning from its standard: sequence and lifecycle from UML 2.5.1, workflow from BPMN 2.0.2, dataflow from structured analysis; a spec names its kind with `diagram`, architecture when it does not; sequence first, then dataflow, workflow, lifecycle; sequence leaves the non-goals (§1, §4, §5, §6.1, §6.2, §6.4, §6.6, §7, §8, §9, `docs/features/diagram-kinds.md`, #126). |
 | 0.32    | 2026-10-11 | A sequence's messages take a colour by their kind, repeating their shape; a sequence is drawn as a blueprint (§6.3, `docs/features/sequence.md`). |
 | 0.33    | 2026-11-14 | Planned: `archgram diff` draws a change's before and after, two architecture specs, as one diagram, with what was added, removed and changed marked and listed as text; one layout of both together; the reviewer of a pull request is a user (§1, §2, §5, §6.5, §8, `docs/features/diff.md`, #47). |
-| 0.34    | 2026-11-14 | A diff's marks take a colour by what the change did, repeating their signs (§6.3, `docs/features/diff.md`). |
+| 0.34    | 2026-11-14 | A diff's marks take a colour by what the change did, repeating their signs; on an update, the skill's report of what changed is `archgram diff`'s (§6.3, §6.6, `docs/features/diff.md`). |
