@@ -1,0 +1,26 @@
+{
+  "archgram": 1,
+  "title": "linkshort: clicks counted in ClickHouse",
+  "description": "A change to linkshort, old and new drawn together. The worker that drained the click stream into Postgres is removed; ClickHouse is added and reads the click stream, and the API reads stats from it. The URL cache's TTL and the label of the API's read from Postgres changed.",
+  "credit": false,
+  "nodes": [
+    { "id": "browser", "kind": "browser", "label": "Visitor" },
+    { "id": "api", "kind": "service", "label": "API", "note": "FastAPI, port 8000", "tech": "fastapi" },
+    { "id": "cache", "kind": "cache", "label": "URL cache", "note": "1-hour TTL", "tech": "redis", "frame": "redis" },
+    { "id": "clicks", "kind": "queue", "label": "Click stream", "tech": "redis", "frame": "redis" },
+    { "id": "worker", "kind": "service", "label": "Worker", "note": "up to 500 per read" },
+    { "id": "postgres", "kind": "database", "label": "links", "note": "source of truth", "tech": "postgresql" },
+    { "id": "analytics", "kind": "database", "label": "Click counts", "note": "per link, per day", "tech": "clickhouse" }
+  ],
+  "frames": [ { "id": "redis", "label": "Redis" } ],
+  "edges": [
+    { "from": "browser", "to": "api" },
+    { "from": "api", "to": "cache" },
+    { "from": "api", "to": "postgres", "label": "on a miss, then cached", "style": "dashed" },
+    { "from": "api", "to": "clicks" },
+    { "from": "clicks", "to": "worker" },
+    { "from": "worker", "to": "postgres" },
+    { "from": "clicks", "to": "analytics" },
+    { "from": "api", "to": "analytics", "label": "stats" }
+  ]
+}
