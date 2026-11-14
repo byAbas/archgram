@@ -2,8 +2,8 @@
 
 | Field   | Value      |
 |---------|------------|
-| Version | 0.32       |
-| Date    | 2026-10-11 |
+| Version | 0.33       |
+| Date    | 2026-11-14 |
 | Status  | Draft      |
 | Owner   | Abas Turabli |
 
@@ -38,6 +38,12 @@ notice. The same holds for a diagram drawn from a document rather than
 from code, a pattern on a docs site or a system in a design doc or an
 engineering blog post: nothing says when the text beside it changes.
 
+When the diagram does change with the code, a pull request shows it as
+changed lines of a spec, and the code as thousands more. What the change
+does to the architecture, a new service, a call no longer made, is left
+for the reviewer to work out, more and more often for a change an agent
+wrote.
+
 A system is not only its parts. Readers also need the order of the calls
 between them, the states a thing goes through, the steps a process takes
 across people, and where data goes. Each has a diagram whose meaning
@@ -70,6 +76,7 @@ skill, the same agent passed 64 of 71, in 56 seconds on average against
 | A developer documenting a system | Writes or edits a spec next to the code and regenerates the diagram when the system changes |
 | An AI coding agent | Reads the code, writes the spec, runs archgram, checks the result; archgram removes the layout work |
 | A writer of docs, a design doc or an engineering blog | Draws what a document describes, each part backed by the sentence that states it, and is told when the text no longer says so |
+| The reviewer of a pull request | Sees what a change adds to the architecture, removes from it and changes in it, in one drawing |
 | The reader of the diagram | Never touches archgram. Everything is judged by what they understand in thirty seconds |
 
 ## 3. Product promise
@@ -122,6 +129,7 @@ same file every time.
 | 0.8 | archgram chooses the direction that fits a README, and `build` says the size it drew; `archgram spec` prints a short part of the format, or one section |
 | 0.9 | A spec says how wide it is shown; `build` and `direction: auto` measure against it; the skill keeps a drawing's direction once chosen ([docs/features/shown-width.md](features/shown-width.md)) |
 | Planned | Four more kinds of diagram, each from its standard, in this order: sequence, with the `diagram` field that names a spec's kind; dataflow; workflow; lifecycle ([docs/features/diagram-kinds.md](features/diagram-kinds.md)) |
+| Planned | `archgram diff`: two architecture specs drawn as one diagram, with what the change added, removed and changed marked ([docs/features/diff.md](features/diff.md)) |
 | Later | The WASM package, for the browser; the PNG module, drawn from the same scene as the SVG by archgram's own rasterizer |
 
 ## 6. Functional requirements
@@ -231,6 +239,10 @@ same file every time.
 - `archgram build` says the size it drew and the direction, and warns,
   still drawing, when it is wider than keeps its text readable where it
   is shown (§6.2).
+- `archgram diff` draws two architecture specs, a change's before and
+  after, as one diagram: each part the change added, removed or changed
+  carries a mark, in one layout of both, and the command prints the same
+  changes as text ([docs/features/diff.md](features/diff.md)).
 - A library, usable from Rust and, later through WASM, from the browser
   (§5).
 - PNG, one file per theme, through the optional module (later, §5).
@@ -394,7 +406,8 @@ docs/SPEC.md once built.
 - Each feature with a document of its own meets the criteria there:
   [what backs a diagram](features/sources.md#success-criteria),
   [where a diagram is shown](features/shown-width.md#success-criteria),
-  [more kinds of diagram](features/diagram-kinds.md#success-criteria).
+  [more kinds of diagram](features/diagram-kinds.md#success-criteria),
+  [what a change does to the architecture](features/diff.md#success-criteria).
 
 ## 9. Non-goals
 
@@ -452,3 +465,4 @@ None.
 | 0.30    | 2026-10-08 | A diagram may be drawn from a document the user names rather than from code: the skill takes its facts from the text, in its own words, and each part and line takes the sentence that states it as its source, which `check` holds to the text as it does to code (§1, §2, §6.1, §6.6, §8, `docs/features/sources.md`, #122). |
 | 0.31    | 2026-10-09 | Four more kinds of diagram, each taking its meaning from its standard: sequence and lifecycle from UML 2.5.1, workflow from BPMN 2.0.2, dataflow from structured analysis; a spec names its kind with `diagram`, architecture when it does not; sequence first, then dataflow, workflow, lifecycle; sequence leaves the non-goals (§1, §4, §5, §6.1, §6.2, §6.4, §6.6, §7, §8, §9, `docs/features/diagram-kinds.md`, #126). |
 | 0.32    | 2026-10-11 | A sequence's messages take a colour by their kind, repeating their shape; a sequence is drawn as a blueprint (§6.3, `docs/features/sequence.md`). |
+| 0.33    | 2026-11-14 | Planned: `archgram diff` draws a change's before and after, two architecture specs, as one diagram, with what was added, removed and changed marked and listed as text; one layout of both together; the reviewer of a pull request is a user (§1, §2, §5, §6.5, §8, `docs/features/diff.md`, #47). |
