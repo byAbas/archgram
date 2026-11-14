@@ -9,6 +9,15 @@ on:
     branches: [main]
   pull_request:
 
+# A push to a pull request cancels the run its last push started, which
+# nobody waits for any more. A push to main cancels nothing: a release is
+# tagged on a commit there that CI passed (RELEASE.md), so each run on
+# main is a group of its own, named by its run ID (GitHub docs, Control
+# the concurrency of workflows and jobs, Using a fallback value).
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
@@ -115,7 +124,9 @@ jobs:
   # The one check main's ruleset requires, as uv's "all required jobs
   # passed": it passes only when every job above passed. `always()` runs it
   # when one failed too, since a skipped job reports success (GitHub docs,
-  # Troubleshooting required status checks).
+  # Troubleshooting required status checks). It runs in a cancelled run
+  # as well, and fails there, on a commit the pull request has left behind
+  # (GitHub docs, Workflow cancellation reference).
   passed:
     name: CI passed
     if: always()
