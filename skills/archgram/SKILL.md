@@ -14,10 +14,10 @@ a spec. If the user said what to draw (a flow, a part of the system, a
 direction), draw that.
 
 Every command below runs archgram through npx, so it needs Node 22 or
-later. It names `archgram@0.10.1`, the version released with this skill,
+later. It names `archgram@0.11.0`, the version released with this skill,
 never the latest. When the project's `package.json` lists archgram, run
 the project's own instead: write each command with `archgram` where it
-says `archgram@0.10.1`, and the project's lockfile decides the version.
+says `archgram@0.11.0`, and the project's lockfile decides the version.
 Keep `--loglevel=error` either way: it keeps npm's own warnings, such as
 those about a pnpm project's `.npmrc`, out of archgram's output, and
 changes nothing else. If `npx` is missing, or cannot find that version on
@@ -117,7 +117,7 @@ you found and what you need to know. Everything else you decide yourself.
 ## 3. Learn the spec format from archgram
 
 ```bash
-npx --yes --loglevel=error archgram@0.10.1 spec --brief
+npx --yes --loglevel=error archgram@0.11.0 spec --brief
 ```
 
 This prints the short part of the format the very archgram you run reads:
@@ -128,13 +128,13 @@ brief gives it: the theme file in step 5, or the section a problem from
 `archgram check` points to.
 
 ```bash
-npx --yes --loglevel=error archgram@0.10.1 spec --section <name>
+npx --yes --loglevel=error archgram@0.11.0 spec --section <name>
 ```
 
 For a sequence, print its section too, before writing:
 
 ```bash
-npx --yes --loglevel=error archgram@0.10.1 spec --section sequence
+npx --yes --loglevel=error archgram@0.11.0 spec --section sequence
 ```
 
 A field the format does not list is an error. Besides the fields, it says
@@ -200,7 +200,7 @@ cannot tie to a flow.
 Then check it, and repeat until it passes:
 
 ```bash
-npx --yes --loglevel=error archgram@0.10.1 check docs/diagrams/<name>.archgram.yaml
+npx --yes --loglevel=error archgram@0.11.0 check docs/diagrams/<name>.archgram.yaml
 ```
 
 Check again after every change to the spec, the last one included, before
@@ -230,7 +230,7 @@ before: keep drawing with it.
 ## 6. Draw, critique, open
 
 ```bash
-npx --yes --loglevel=error archgram@0.10.1 build docs/diagrams/<name>.archgram.yaml
+npx --yes --loglevel=error archgram@0.11.0 build docs/diagrams/<name>.archgram.yaml
 ```
 
 Add `--theme-file archgram.theme.json` when the project's root has one.
