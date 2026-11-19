@@ -15,8 +15,9 @@ line. This says how they become the spec; the fields are in
 
 ## The facts in the format
 
-Participants, messages in the order the code runs, fragments for its
-branches, phases for its steps. A sequence has no `direction` and no
+From the diagram's layer of the facts document (`references/facts.md`):
+its Participants, its Messages in the order the code runs, its Branches
+as fragments, and phases for its steps. A sequence has no `direction` and no
 `flows`: it is drawn top to bottom, numbers its messages and moves on its
 own, one phase at a time, so leave `still` out too.
 

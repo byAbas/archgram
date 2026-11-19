@@ -18,15 +18,17 @@ update. The fields are in the format's short part, `spec --brief`
 
 ## The facts in the format
 
-Each part a node of the kind that fits it, with its technology's logo
-(`tech`) when the part is built on one; each call or data movement an
-edge; a boundary (a service, a trust zone, the plugin versus the project)
-a frame; the path the contract's questions follow a flow, so it animates.
-Keep labels to the words a reader needs: an edge's label is a few words,
-two or three, naming the call or the data (`POST /orders`, `enqueue`,
-`read-through`); what the reader needs beyond that goes in a node's
-`note` or the report, not onto the line, since a long label pushes the
-cards apart.
+From the diagram's layer of the facts document (`references/facts.md`),
+and the core's parts it names: each part a node of the kind that fits
+it, with its technology's logo (`tech`) when the part is built on one;
+each relation, a call or a data movement, an edge; a boundary (a
+service, a trust zone, the plugin versus the project) a frame; each of
+the layer's flows, the path the contract's questions follow, a flow, so
+it animates. Keep labels to the words a reader needs: an edge's label is
+a few words, two or three, naming the call or the data (`POST /orders`,
+`enqueue`, `read-through`); what the reader needs beyond that goes in a
+node's `note` or the report, not onto the line, since a long label
+pushes the cards apart.
 
 ## Same relations, one node
 

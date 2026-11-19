@@ -15,6 +15,7 @@ draw, is in `references/kinds/architecture/spec.md`.
 - Every line has a call site
 - What is easy to miss
 - Styles of architecture
+- In the facts document
 
 ## In order
 
@@ -110,3 +111,19 @@ questions: the table in `references/kinds/architecture/styles.md` says
 how to recognise each in the code and which file describes it. Read the
 file for the style you recognise; when none fits, the rules above are
 enough.
+
+## In the facts document
+
+The parts go into the document's core (`references/facts.md`). The
+diagram's layer, `## Architecture: <name>`, holds besides its reader and
+what was expected and not found:
+
+- **Style and level**: one line each, the style by its name in
+  `references/kinds/architecture/styles.md`, or that none fitted, and
+  the level, from One level per diagram above;
+- **Relations**: `| From | To | What | Source | Evidence |`, one row an
+  edge, `From` and `To` named as the core's parts, `What` the call or
+  the data in two or three words, `Source` the line that makes it;
+- **Flows**: `| Flow | Steps |`, the path each of the contract's
+  questions follows, its steps the parts in order, a branch written
+  `[Worker, Mailer]`.

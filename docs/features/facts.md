@@ -2,7 +2,7 @@
 
 | Field   | Value      |
 |---------|------------|
-| Version | 0.1        |
+| Version | 0.2        |
 | Date    | 2026-11-19 |
 | Status  | Draft      |
 | Release | Planned    |
@@ -257,6 +257,15 @@ that is not generated.
 8. **Size before the scan,** of the scope, as a plan the user sees.
 9. **`archgram spec --kinds`,** built from `DiagramKind`; the skill
    reads the kinds from it.
+10. **One document for the project, `docs/diagrams/facts.md`,** beside
+    the specs: its core once, and a layer for each diagram drawn from
+    it, `## <Kind>: <name>`, so a second diagram starts from the parts
+    the first found. A document per diagram would repeat the core.
+11. **The skill stops for the user's approval of the document** before
+    it writes a spec, unless the request says to go on without it, and
+    the report says the facts were not approved. An open question stops
+    it either way. The skill's evaluations that draw say so in their
+    prompts; `stops-for-the-facts` does not, and expects the stop.
 
 ## Open questions
 
@@ -273,10 +282,8 @@ that is not generated.
   for one scanner.
 - How a user changes what is not read: a file in the project, or their
   request.
-- Where the document lives in a project, what it is called, and how the
-  skill knows the core layer has gone stale.
-- Whether `docs/PRD.md` changes, and where: its skill section says the
-  plugin is that one skill (6.5) and how the skill gathers facts (6.6).
+- How the skill knows the core layer has gone stale between two
+  diagrams, beyond what `archgram check` says of each spec's sources.
 - Not yet tried:
   - a skill that names a plugin agent, `archgram:scanner`, and has
     Claude Code use it;
@@ -292,3 +299,4 @@ that is not generated.
 | Version | Date       | Change |
 |---------|------------|--------|
 | 0.1     | 2026-11-19 | First draft, from #165: one skill that takes the kind first, measures the scope, scans it with read-only sub-agents in clean contexts, verifies every cited line and writes the facts as a document the user approves before the spec; a core layer and a layer per kind, with evidence levels; what is not read, in three layers; `archgram spec --kinds`, built from `DiagramKind`. Open: the verifier, the models, where sizing lives, its limits, the document's place, the PRD. |
+| 0.2     | 2026-11-19 | The document is one for the project, `docs/diagrams/facts.md`, its core once and a layer per diagram; the skill stops for the user's approval of it before a spec, unless the request says to go on (Decided, 10 and 11). The PRD points here (§6.6). |

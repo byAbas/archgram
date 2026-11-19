@@ -21,6 +21,15 @@ follow [Semantic Versioning](https://semver.org/).
   architecture, `--section sequence` for a sequence) and the question it
   answers. Whoever writes a spec, a person or the skill, learns the kinds
   from the command that draws them.
+- The `archgram` skill writes the facts it found in one document,
+  `docs/diagrams/facts.md`, before any spec: the project's parts with
+  their files, the folders it read and those it left out (vendored,
+  generated and ignored code), and for each diagram its relations, each
+  with its source and the evidence behind it, a line of code, a
+  configuration, a name or only a document. It stops for you to approve
+  the document, unless you said to go on without it, and draws only
+  facts a line of code or a configuration backs. A second diagram of the
+  project starts from the same document.
 
 ### Changed
 

@@ -2,7 +2,7 @@
 
 | Field   | Value      |
 |---------|------------|
-| Version | 0.38       |
+| Version | 0.39       |
 | Date    | 2026-11-19 |
 | Status  | Draft      |
 | Owner   | Abas Turabli |
@@ -298,8 +298,15 @@ same file every time.
   by walking from the project's entry points, keeps one level of detail
   per diagram, and names each part after the file that decides, found by
   following the imports. Where the code and the documentation disagree,
-  or the architecture is unclear, it asks the user; it asks for no other
-  approval.
+  or the architecture is unclear, it asks the user.
+- It writes what it found in one document, `docs/diagrams/facts.md`,
+  before any spec: the project's parts with their files, what it read
+  and what it left out (vendored, generated and ignored files), and for
+  each diagram its relations, each with its source and the evidence
+  behind it. It stops and asks the user to approve the document, unless
+  the request says to go on without; the spec is written from the
+  approved document, only its facts that a line of code or a
+  configuration backs ([docs/features/facts.md](features/facts.md)).
 - It draws what a document describes when the user names the document:
   a pattern on a docs page, a system in a design doc or an article.
   Without a named document it draws from the code. From a document, a
@@ -506,3 +513,4 @@ None.
 | 0.36    | 2026-11-19 | `archgram spec --kinds` lists the kinds of diagram a version draws, each with its section of the format and the question it answers (§6.5, `docs/features/facts.md`). |
 | 0.37    | 2026-11-19 | The skill draws the kinds `archgram spec --kinds` lists and it has a pack for, each pack how to find that kind's facts and how they become its spec (§6.6, `docs/features/facts.md`). |
 | 0.38    | 2026-11-19 | The skill downloads nothing the user has not agreed to: it looks for archgram without the network first, and when it finds none, it asks, offering to install the skill's version into the project or to let npx download it once; an agent's npx never asks on its own. A project's own archgram older than the skill's is drawn with, and the report says so and how to upgrade (§6.6). |
+| 0.39    | 2026-11-19 | The skill writes the facts it found in `docs/diagrams/facts.md`, with what it read and left out and the evidence behind each fact, and stops for the user's approval before it writes a spec, unless the request says to go on (§6.6, `docs/features/facts.md`). |

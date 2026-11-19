@@ -4,7 +4,7 @@
     {
       "id": 1,
       "name": "draws-a-project",
-      "prompt": "Draw the architecture of this project for the README.",
+      "prompt": "Draw the architecture of this project for the README. You don't need to check the facts with me first.",
       "expected_output": "docs/diagrams/<name>.archgram.yaml passes `archgram check`, and <name>.svg is drawn beside it. It has the API, Postgres, the Redis cache, the orders queue and the worker, each backed by a file in src/ and named in the report with it; every node a file backs and every edge carries a source (the file behind it, and for an edge a few words of the line that makes it), each one that `archgram check` finds; a flow follows an order from the API through the queue to the worker and Postgres. The prompt asks for no colours, so the drawing keeps archgram's own, though src/styles.css has colours of its own: no theme is written and the report says the project's colours can be asked for. The skill did not ask any question. Each edge in the report has the file and line that makes it, the drawing is no wider than 1,300 px, its spec names the direction archgram chose rather than `auto`, and no browser was started and no screenshot taken: the only thing it tried to open was the finished SVG, with the system's viewer.",
       "files": ["files/shop"],
       "expectations": [
@@ -24,7 +24,8 @@
         "The report gives each edge with the file and line that makes it, and each cited line holds the code it quotes",
         "No browser was started and no screenshot taken",
         "The run tried to open the finished SVG with the system's viewer (`open`, `xdg-open` or `start`); the runner denies the command, so the attempt is what counts",
-        "README.md is left unchanged, and the report offers the line that shows the drawing in it"
+        "README.md is left unchanged, and the report offers the line that shows the drawing in it",
+        "docs/diagrams/facts.md exists, and every source in the spec is one the document gives, beside a fact at evidence 1 or 2"
       ]
     },
     {
@@ -43,7 +44,7 @@
     {
       "id": 3,
       "name": "updates-an-existing-diagram",
-      "prompt": "The code changed, update the architecture diagram.",
+      "prompt": "The code changed, update the architecture diagram. You don't need to check the facts with me first.",
       "expected_output": "The skill changes docs/diagrams/architecture.archgram.yaml rather than starting a new spec: it keeps the reader, the API and Postgres, adds Elasticsearch and the search call backed by src/api.ts, gives every node a file backs (not the reader) and every edge a source, the new ones and the ones already there, which `archgram check` finds, draws architecture.svg, and says in the report what changed. Each edge in the report has the file and line that makes it, the drawing is no wider than 1,300 px and keeps the direction the spec had, and no browser was started and no screenshot taken: the only thing it tried to open was the finished SVG, with the system's viewer.",
       "files": ["files/search"],
       "expectations": [
@@ -76,7 +77,7 @@
     {
       "id": 5,
       "name": "draws-a-pipeline",
-      "prompt": "Draw how the nightly sales data moves, for the README.",
+      "prompt": "Draw how the nightly sales data moves, for the README. You don't need to check the facts with me first.",
       "expected_output": "The skill recognises a data pipeline and says so in the report. The drawing starts from the Airflow DAG in dags/nightly_sales.py, which runs at 02:00, and follows one day's rows: the store CSVs in data/stores and the POS API (external) into extract, then clean, then load into the Postgres warehouse's sales_daily table, each stage backed by its file in etl/. It shows where bad rows go (quarantine/bad_rows.parquet), since that is where the data is checked. It has about 10 nodes and 12 edges or fewer, each edge in the report with the file and line that makes it, is no wider than 1,300 px, and no browser was started. Every node a file backs and every edge carries a source that `archgram check` finds.",
       "files": ["files/pipeline"],
       "expectations": [
@@ -100,7 +101,7 @@
     {
       "id": 6,
       "name": "draws-ports-and-adapters",
-      "prompt": "Draw this service's architecture for the README.",
+      "prompt": "Draw this service's architecture for the README. You don't need to check the facts with me first.",
       "expected_output": "The skill recognises ports and adapters and says so in the report. The core (the billInvoice use case in src/app and the rules in src/domain) sits between what drives it (the POST /invoices route and the rebill CLI) and what it drives (the Postgres repository, Stripe and Postmark adapters, Stripe with its logo; archgram has none for Postmark). No edge leaves src/domain for an adapter; the one idea, that the rules depend on nothing outside the ports, is visible and said in the report, with src/wiring.ts named as where the adapters are plugged in. A flow follows one invoice from the route through the core to the three adapters. Each edge has its file and line, the drawing is no wider than 1,300 px, and no browser was started. Every node a file backs and every edge carries a source that `archgram check` finds.",
       "files": ["files/billing"],
       "expectations": [
@@ -124,7 +125,7 @@
     {
       "id": 7,
       "name": "merges-parts-with-the-same-relations",
-      "prompt": "Draw what each lintkit command reads and writes.",
+      "prompt": "Draw what each lintkit command reads and writes. You don't need to check the facts with me first.",
       "expected_output": "The skill recognises a plugin host and says so in the report. The four commands (init, check, fix, report) are nodes. Parts the reader need not tell apart are merged, each merged node naming its parts in its note: the rule plugins in plugins/ with their registry, and lintkit.config.json with .lintkit/rules.json, which init writes and check reads. .lintkit/results.json joins check, fix and report; the source files are read by check and changed by fix; report writes .lintkit/report.html. The drawing has about 10 nodes and 12 edges or fewer, and every edge moves data: fix running check again is a note or the flow's order, not an edge among the reads and writes. Each edge has its file and line, the drawing is no wider than 1,300 px, and no browser was started. Every node a file backs and every edge carries a source that `archgram check` finds.",
       "files": ["files/lintkit"],
       "expectations": [
@@ -149,7 +150,7 @@
     {
       "id": 8,
       "name": "repairs-what-lost-its-code",
-      "prompt": "CI says the architecture diagram no longer matches the code. Fix it.",
+      "prompt": "CI says the architecture diagram no longer matches the code. Fix it. You don't need to check the facts with me first.",
       "expected_output": "The skill runs `archgram check` on docs/diagrams/architecture.archgram.yaml first, which names the Note cache (src/cache.ts no longer exists) and the API's call to it (src/api.ts no longer holds `cached(`). It changes that spec where it stands, keeping the author's comment, rather than starting a new one: it removes the cache and its edge, and does not draw them again under another name; the flow now goes from the reader through the API to Postgres; the API's edge to Postgres is no longer dashed or labelled 'on a miss', since every read now goes there; the description no longer mentions Redis. It keeps the reader, the API, Postgres and Resend with their sources as they were, since the check found nothing wrong with them. `archgram check` passes, architecture.svg is drawn in the direction the spec had, and the report says what the check found and what changed. No browser was started and no screenshot taken.",
       "files": ["files/notes"],
       "expectations": [
@@ -173,7 +174,7 @@
     {
       "id": 9,
       "name": "draws-in-the-project-colours",
-      "prompt": "Draw the architecture of this project for the README, in our own colours.",
+      "prompt": "Draw the architecture of this project for the README, in our own colours. You don't need to check the facts with me first.",
       "expected_output": "docs/diagrams/<name>.archgram.yaml passes `archgram check`, and <name>.svg is drawn beside it in the colours of src/styles.css, light and dark: the skill writes them as DTCG tokens in docs/diagrams/theme/archgram.resolver.json, maps archgram's roles to them in archgram.theme.json at the project's root, checks the mapping with `archgram theme check`, and builds with --theme-file. The icons stay in the text colour. The report says the colours came from src/styles.css. The skill did not ask any question.",
       "files": ["files/shop"],
       "expectations": [
@@ -189,7 +190,7 @@
     {
       "id": 10,
       "name": "draws-from-a-document",
-      "prompt": "Draw the example architecture that docs/patterns/backends-for-frontends.md describes, for the README.",
+      "prompt": "Draw the example architecture that docs/patterns/backends-for-frontends.md describes, for the README. You don't need to check the facts with me first.",
       "expected_output": "The project has no code, and the user names a document, so the skill draws from it. docs/diagrams/<name>.archgram.yaml passes `archgram check`, and <name>.svg is drawn beside it. It has the example's parts: the mobile client and the desktop client, API Management, Microsoft Entra ID, Azure Monitor, the mobile BFF service and the desktop BFF service, and the microservices; each client reaches API Management, API Management reaches Microsoft Entra ID, Azure Monitor and each BFF service, and each BFF service reaches the microservices. Every node and edge carries a source in docs/patterns/backends-for-frontends.md with a few words from one line of the sentence that states it, and nothing the document does not state is drawn. Labels use the document's own words. The report lists each part and edge with its sentence and what the document leaves out. The skill did not ask any question; no browser was started and no screenshot taken: the only thing it tried to open was the finished SVG, with the system's viewer.",
       "files": ["files/bff-pattern"],
       "expectations": [
@@ -211,7 +212,7 @@
     {
       "id": 11,
       "name": "draws-a-sequence",
-      "prompt": "Draw what happens when someone signs in, step by step, for the README.",
+      "prompt": "Draw what happens when someone signs in, step by step, for the README. You don't need to check the facts with me first.",
       "expected_output": "The request asks for the order of the calls of one request, so the skill draws a sequence, not architecture: docs/diagrams/<name>.archgram.yaml has `diagram: sequence`, passes `archgram check`, and <name>.svg is drawn beside it. Its participants are the browser, the API (src/routes/login.ts), the auth service, external (src/auth.ts), the users in Postgres (src/db.ts) and the audit stream in Redis (src/audit.ts), left to right in the order the request reaches them. Its messages follow src/routes/login.ts in the order the code runs: POST /login, verify session and the claims back, find user and the user back, then an `alt` on the password, whose first way records the sign-in in the audit stream as a send that does not wait (`async: true`) and replies with the session, and whose `else` replies 401 with `refused: true`. Each call carries a source with a few words of the line that makes it, which `archgram check` finds. Two to four phases divide the story, each a few words. It has no `direction`, no `flows` and no `still`. The report gives the reader contract, each participant with its file and each message in order with its line. The skill asked no question, started no browser, took no screenshot, and tried to open only the finished SVG, with the system's viewer.",
       "files": ["files/signin"],
       "expectations": [
@@ -257,6 +258,20 @@
         "The reply asks the user before anything is downloaded, and names the npm package archgram at the skill's exact version, the npm registry, and that a native program for this system comes with it",
         "The reply offers both ways: installing that version into the project, pinned by its lockfile, and letting npx download it once",
         "No SVG is written"
+      ]
+    },
+    {
+      "id": 14,
+      "name": "stops-for-the-facts",
+      "prompt": "Draw the architecture of this project for the README.",
+      "expected_output": "The skill finds the facts and writes them in docs/diagrams/facts.md: the project's parts, each with its file, the folders it read and those it left out, with why, and the diagram's relations, each with its source (the file and a few words of the line that makes it) and its evidence level. Then it stops and asks the user to approve the document, naming its path, before any spec is written: the prompt does not say to go on without asking. No spec and no SVG is written.",
+      "files": ["files/shop"],
+      "expectations": [
+        "docs/diagrams/facts.md exists, with the project's parts, each with its file",
+        "The document's relations each have a source, a file and a few words copied from one of its lines, that the file holds, and an evidence level",
+        "The document lists the project's folders it read and any it left out, with why",
+        "The reply asks the user to approve the facts document before anything is drawn, and names its path",
+        "No archgram spec and no SVG is written"
       ]
     }
   ]
