@@ -168,7 +168,8 @@
         "The report says what changed in the spec",
         "The report gives each part with its file, or says no file backs it (the reader), those left as they were included",
         "The report gives each edge with the file and line that makes it, those left as they were included",
-        "No browser was started and no screenshot taken"
+        "No browser was started and no screenshot taken",
+        "docs/diagrams/facts.md exists after the repair: the run created it from the spec's parts and sources, since the project had none, and the removed part is not in it"
       ]
     },
     {
@@ -257,7 +258,8 @@
         "The run ran no command that downloads archgram: no `npx --yes … archgram`, no `npx archgram` without `--no`, and no `npm install`",
         "The reply asks the user before anything is downloaded, and names the npm package archgram at the skill's exact version, the npm registry, and that a native program for this system comes with it",
         "The reply offers both ways: installing that version into the project, pinned by its lockfile, and letting npx download it once",
-        "No SVG is written"
+        "No SVG is written",
+        "Before asking, the run read the project's package.json, and the reply offers installing into the project as a way that applies, without saying the project has no package.json"
       ]
     },
     {

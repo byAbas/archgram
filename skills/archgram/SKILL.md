@@ -38,7 +38,10 @@ Every command below runs archgram through npx, which needs Node 22 or
 later. npx downloads a package it does not find, and with no terminal
 attached it does so without asking. So this skill runs archgram from
 where it already is, and downloads it only when the user says so. Do
-this once, before the first command.
+this once, before the first command. First read the project's root:
+whether it has a `package.json`, and whether that lists archgram in its
+dependencies or dev dependencies. What follows, the question included,
+goes by what you read there, never by a guess.
 
 - **The project's own.** When the project's `package.json` lists
   archgram, run that one: write each command below with `archgram`
@@ -65,8 +68,8 @@ this once, before the first command.
   and the native archgram program for this system, a few megabytes, from
   the npm registry. Offer two ways, and run neither until the user picks
   one; with no answer, draw nothing:
-  - install it into the project, when it has a `package.json`, with the
-    project's own package manager, such as
+  - install it into the project, when the `package.json` you read is
+    there, with the project's own package manager, such as
     `npm install --save-dev archgram@0.11.0`: its lockfile then pins it,
     and the commands run as for the project's own;
   - let npx download it once, now: the commands below then run as they
@@ -153,7 +156,10 @@ Then read the code and the docs the diagram describes, leaving out what
 says. When the facts document
 (`docs/diagrams/facts.md`) or a spec beside it is already there, this is
 an update: start from them, as `references/facts.md` says (On an
-update).
+update). An update, a repair included, writes the facts document too:
+when a spec is there and the document is not, create the document from
+the spec's own parts and sources first, then change it as the check and
+the walk find, and only then change the spec from it.
 
 Whatever the kind, a part is a fact only when a file backs it: a module,
 a route, a script, a store. Name it after the file that decides, found by
