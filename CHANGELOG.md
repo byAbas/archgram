@@ -30,6 +30,16 @@ follow [Semantic Versioning](https://semver.org/).
   a pack, `references/kinds/<kind>/`: `find.md`, how to find its facts in
   the code, and `spec.md`, how they become its spec. Architecture and
   sequence are drawn as before; a new kind adds a pack.
+- The `archgram` skill downloads nothing you have not agreed to. npx
+  installs a missing package without asking when no terminal is
+  attached, as in a coding agent, so the skill now looks first, with no
+  network: the archgram the project lists, or its own version already on
+  the machine (`npx --no --offline … --version`). When it finds none, it
+  stops and asks, naming the package, the version, the native program
+  and the npm registry, and offers to install that version into the
+  project or to let npx download it once. When the project's own
+  archgram is older than the skill's version, the report says so, with
+  the command to upgrade it, which it runs only when you say so.
 
 ## [0.11.0] - 2026-11-17
 

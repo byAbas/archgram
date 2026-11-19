@@ -1,6 +1,6 @@
 # Evaluations of the archgram skill
 
-Twelve cases for `skills/archgram`, in the format of Anthropic's
+Thirteen cases for `skills/archgram`, in the format of Anthropic's
 [skill-creator](https://github.com/anthropics/skills/tree/main/skills/skill-creator),
 the one the Agent Skills format's own guide to evaluating skills uses:
 `evals.json` holds each prompt, what a good run produces and the checks a
@@ -21,6 +21,7 @@ prompts run in.
 | `draws-a-sequence` | Asked what happens, step by step, when someone signs in, it draws a sequence: the participants in the order the request reaches them, the messages in the order the code runs, each call sourced to its line, the password's branch an `alt` with a refused 401, a send that does not wait, and phases |
 | `says-a-kind-it-cannot-draw` | Asked for a state diagram, it says archgram does not draw one yet and offers what it can, rather than drawing the states as another kind |
 | `draws-from-a-document` | Named a document and no code, it draws the example the document describes, each part and edge sourced to the sentence that states it, in the document's own words, with nothing the text does not state |
+| `asks-before-downloading` | With no archgram in the project or on the machine, it looks for one without the network, then stops and asks before downloading anything, naming the package, its exact version, the native program and the npm registry, and offers to install it into the project or to let npx download it once |
 
 Every case that draws expects a source on each node a file backs and on
 each edge, so it needs an archgram that reads them (0.7 or later;
@@ -32,6 +33,14 @@ runs call a model and cost money, so they run on request, not in CI; the
 skill runs the archgram version it names (`archgram@X.Y.Z`) through npx,
 so that version must be on npm, and the runs need network access to the
 npm registry.
+
+The skill asks before it downloads archgram (docs/PRD.md 6.6), and a run
+has no one to answer, so starting the runs is the operator's yes: without
+`--archgram`, `run.sh` puts the skill's version into an npm cache of its
+own in `--out` once, before the first run, and every run uses that cache,
+not the machine's, so what a run finds never depends on the machine. A
+case with `"archgram": "absent"` (`asks-before-downloading`) gets an
+empty cache and no archgram at all.
 
 ## Running them
 
@@ -54,8 +63,9 @@ sh evals/archgram/run.sh --out ~/archgram-evals/iteration-1 --repeat 3 --jobs 4 
 - **Nothing else:** only the project's own settings load
   (`--setting-sources project`), and every plugin the user has on is
   turned off for the runs, so neither side gets help the other does not.
-- **Unattended:** reading, writing in the copy and archgram at the
-  skill's version run without a prompt; anything else is denied
+- **Unattended:** reading, writing in the copy, and archgram at the
+  skill's version, looked for (`npx --no --offline`) or run, run without
+  a prompt; anything else is denied
   (`--permission-prompts none`), which also takes away the tool that asks
   the user a question, so a question is asked in the run's reply. The
   system's viewer is denied too, so a case expects the skill to try to
@@ -73,8 +83,8 @@ cargo build --release -p archgram-cli
 sh evals/archgram/run.sh --out ~/archgram-evals/pre-release --archgram target/release/archgram --yes
 ```
 
-Each copy then holds that build as `node_modules/archgram` at the
-skill's version, kept out of the copy's git: npx takes a package of the
+Each copy but an absent-archgram case's then holds that build as
+`node_modules/archgram` at the skill's version, kept out of the copy's git: npx takes a package of the
 version it asks for from the project's own `node_modules` before the
 registry, so the skill's commands run unchanged. `run.json` names the
 build.

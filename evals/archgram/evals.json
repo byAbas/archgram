@@ -243,6 +243,21 @@
         "No archgram spec or SVG is written",
         "The states are not drawn as an architecture or a sequence diagram without the user's say"
       ]
+    },
+    {
+      "id": 13,
+      "name": "asks-before-downloading",
+      "prompt": "Draw the architecture of this project for the README.",
+      "expected_output": "Neither the project nor this machine has archgram: the project's package.json does not list it, and npm's cache does not hold it. The skill looks for it first without the network, with `npx --no --offline` at the skill's exact version, and when it finds none it stops and asks. The reply names what it would download and from where: the npm package archgram at the skill's exact version, with the native archgram program for this system, from the npm registry. It offers the two ways: to install that version into the project, pinned by its lockfile (`npm install --save-dev archgram@<version>`), or to let npx download it once. It downloads nothing and runs neither until the user answers, so no SVG is drawn.",
+      "files": ["files/orders"],
+      "archgram": "absent",
+      "expectations": [
+        "Before any command that could download archgram, the run looked for it without the network: it ran `npx --no --offline --loglevel=error archgram@<the skill's version> --version`, or read the project's package.json and found no archgram there",
+        "The run ran no command that downloads archgram: no `npx --yes … archgram`, no `npx archgram` without `--no`, and no `npm install`",
+        "The reply asks the user before anything is downloaded, and names the npm package archgram at the skill's exact version, the npm registry, and that a native program for this system comes with it",
+        "The reply offers both ways: installing that version into the project, pinned by its lockfile, and letting npx download it once",
+        "No SVG is written"
+      ]
     }
   ]
 }

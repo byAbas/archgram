@@ -148,7 +148,10 @@ The `archgram` skill lets a coding agent draw a project's architecture from
 its code, or the sequence of one request: it reads the code and the docs, writes the spec in
 `docs/diagrams/`, checks and draws it with `npx archgram`, in archgram's
 colours or, when you ask, your project's own, and lists each part it drew
-with the file behind it. It is
+with the file behind it. It asks before it downloads anything: it runs
+the archgram your project lists, or the skill's version already on your
+machine, and otherwise asks whether to install that version into your
+project or to let npx download it once. It is
 written to the open [Agent Skills](https://agentskills.io) format, so any
 agent that reads skills can use it: Claude Code, Codex, Cursor, GitHub
 Copilot, Gemini CLI and others. Install it with the
