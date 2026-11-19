@@ -2,7 +2,7 @@
 
 | Field   | Value      |
 |---------|------------|
-| Version | 0.39       |
+| Version | 0.40       |
 | Date    | 2026-11-19 |
 | Status  | Draft      |
 | Owner   | Abas Turabli |
@@ -299,6 +299,13 @@ same file every time.
   per diagram, and names each part after the file that decides, found by
   following the imports. Where the code and the documentation disagree,
   or the architecture is unclear, it asks the user.
+- Before it reads the code, it measures what it would read with a
+  script of its own, `scripts/size.mjs`, run with Node: the files git
+  tracks, less what is never the project's own, in areas no larger than
+  one reader takes in, as small, medium or large. It reads no file
+  outside the project, follows no link and uses no network. It tells the
+  user the size and the areas, asks whether to narrow a large scope, and
+  reads area by area.
 - It writes what it found in one document, `docs/diagrams/facts.md`,
   before any spec: the project's parts with their files, what it read
   and what it left out (vendored, generated and ignored files), and for
@@ -514,3 +521,4 @@ None.
 | 0.37    | 2026-11-19 | The skill draws the kinds `archgram spec --kinds` lists and it has a pack for, each pack how to find that kind's facts and how they become its spec (§6.6, `docs/features/facts.md`). |
 | 0.38    | 2026-11-19 | The skill downloads nothing the user has not agreed to: it looks for archgram without the network first, and when it finds none, it asks, offering to install the skill's version into the project or to let npx download it once; an agent's npx never asks on its own. A project's own archgram older than the skill's is drawn with, and the report says so and how to upgrade (§6.6). |
 | 0.39    | 2026-11-19 | The skill writes the facts it found in `docs/diagrams/facts.md`, with what it read and left out and the evidence behind each fact, and stops for the user's approval before it writes a spec, unless the request says to go on (§6.6, `docs/features/facts.md`). |
+| 0.40    | 2026-11-19 | Before it reads the code, the skill measures what it would read with its own script, `scripts/size.mjs`: the files git tracks, less what is never the project's own, in areas one reader takes in; it tells the user the size, asks whether to narrow a large scope, and reads area by area (§6.6, `docs/features/facts.md`). |

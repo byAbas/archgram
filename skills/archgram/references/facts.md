@@ -45,7 +45,9 @@ under `## The project`:
   Start from the entry points).
 - **Coverage**: `| Folder | Read | Why |`: every top-level folder, and any
   folder below it left out, with `yes` or `no`, and why: the reason
-  `references/ignore.md` gives, or that the diagram did not need it.
+  `references/ignore.md` gives, or that the diagram did not need it. The
+  areas and the left-out rows `scripts/size.mjs` prints (SKILL.md,
+  step 2) are where it starts.
 
 ## A diagram's layer
 

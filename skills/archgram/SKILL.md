@@ -126,9 +126,31 @@ layer (step 2).
 ## 2. Find the facts, and have them approved
 
 Read `references/facts.md`, `references/ignore.md` and the kind's
-`find.md` (`references/kinds/<kind>/find.md`), then the code and the docs
-the diagram describes, leaving out what `references/ignore.md` says, and
-find the facts as the kind's `find.md` says. When the facts document
+`find.md` (`references/kinds/<kind>/find.md`).
+
+Before reading the code, measure what you would read, with the skill's
+own `scripts/size.mjs` (the skill's folder is the one this SKILL.md is
+in), run with Node from the project's root:
+
+```bash
+node <the skill's folder>/scripts/size.mjs
+```
+
+It reads the files git tracks, leaves out what `references/ignore.md`
+says, and prints, with no network and no file's contents, the size of
+what is left (small, medium or large against one reader's budget), its
+areas, what it left out and why, and the manifests it saw. When the
+scope is narrower than the project, one entry point or one service, run
+it again with those folders after it. Tell the user, in a line, the size
+and the areas you will read. For a large scope, ask whether to narrow it
+before reading it all. Read area by area, and write each area's facts
+into the document before the next, so they are kept there rather than
+in your memory of them. What it left out goes into the document's
+coverage.
+
+Then read the code and the docs the diagram describes, leaving out what
+`references/ignore.md` says, and find the facts as the kind's `find.md`
+says. When the facts document
 (`docs/diagrams/facts.md`) or a spec beside it is already there, this is
 an update: start from them, as `references/facts.md` says (On an
 update).

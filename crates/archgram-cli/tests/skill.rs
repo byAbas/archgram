@@ -190,8 +190,9 @@ fn the_skill_frontmatter_is_plain_yaml() {
 }
 
 /// Every file the skill names by its path from the skill's root, as the
-/// Agent Skills format asks (`references/kinds/architecture/find.md`), is
-/// there, so moving a file cannot leave the skill pointing at nothing. A
+/// Agent Skills format asks (`references/kinds/architecture/find.md`,
+/// `scripts/size.mjs`), is there, so moving a file cannot leave the skill
+/// pointing at nothing. A
 /// path with a placeholder (`references/kinds/<kind>/find.md`) names no
 /// one file.
 #[test]
@@ -203,10 +204,13 @@ fn every_file_the_skill_names_is_there() {
     for file in &files {
         let text = std::fs::read_to_string(file).unwrap();
         for (n, line) in text.lines().enumerate() {
-            for (i, _) in line.match_indices("`references/") {
+            let named_here = line
+                .match_indices("`references/")
+                .chain(line.match_indices("`scripts/"));
+            for (i, _) in named_here {
                 let path = line[i + 1..].split('`').next().unwrap_or_default();
-                let markdown = Path::new(path).extension().is_some_and(|e| e == "md");
-                if path.contains('<') || !markdown {
+                let file_like = Path::new(path).extension().is_some();
+                if path.contains('<') || !file_like {
                     continue;
                 }
                 assert!(
