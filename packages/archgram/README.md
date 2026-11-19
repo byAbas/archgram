@@ -121,7 +121,9 @@ npx archgram check docs/diagrams/linkshort.archgram.yaml
 Prints the spec format this archgram reads: every field, node kind and
 rule. `--brief` prints its short part, one complete spec and what each
 other section covers; `--section <name>` prints one section, such as
-`theme-file`.
+`theme-file`. `--kinds` lists the kinds of diagram it draws, one a line:
+the value a spec's `diagram` takes, the section that holds its fields and
+the question it answers.
 
 ```sh
 npx archgram spec --brief

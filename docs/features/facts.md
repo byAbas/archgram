@@ -177,9 +177,9 @@ that is not generated.
 ### The engine
 
 - `archgram spec --kinds` prints, one line each, every kind this
-  archgram draws: the value `diagram:` takes, the question it answers and
-  the `--section` that describes its format. It prints only the kinds it
-  draws, not the planned ones.
+  archgram draws: the value `diagram:` takes, the `--section` that
+  describes its format, and the question it answers. It prints only the
+  kinds it draws, not the planned ones.
 - The list is built from `DiagramKind` (`crates/archgram-core/src/spec.rs`),
   so a new kind cannot be drawn without being listed. A test holds every
   listed kind to a section of `docs/SPEC.md`.

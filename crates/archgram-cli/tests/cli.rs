@@ -952,6 +952,41 @@ messages:
     assert!(svg.contains(r#"class="lifeline""#));
 }
 
+/// `spec --kinds` prints every kind this archgram draws, one a line: the
+/// value `diagram` takes, the section that holds its format and the
+/// question it answers. Each section is one `--section` prints, and names
+/// its kind, so the list cannot point at a section that is gone.
+#[test]
+fn spec_kinds_lists_each_kind_with_its_section() {
+    let run = archgram(&["spec", "--kinds"]);
+    assert!(run.status.success(), "{}", stderr(&run));
+    let out = stdout(&run);
+    let mut kinds = Vec::new();
+    for line in out.lines() {
+        let mut words = line.split_whitespace();
+        let kind = words
+            .next()
+            .unwrap_or_else(|| panic!("an empty line: {out}"));
+        assert_eq!(words.next(), Some("--section"), "{line}");
+        let section = words.next().unwrap_or_else(|| panic!("no section: {line}"));
+        let question = words.collect::<Vec<_>>().join(" ");
+        assert!(question.ends_with('?'), "no question: {line}");
+
+        let run = archgram(&["spec", "--section", section]);
+        assert!(run.status.success(), "{kind}: {}", stderr(&run));
+        assert!(
+            stdout(&run).contains(&format!("`{kind}`")),
+            "--section {section} does not name `{kind}`"
+        );
+        kinds.push(kind.to_owned());
+    }
+    let all: Vec<&str> = archgram_core::spec::DiagramKind::ALL
+        .iter()
+        .map(|k| k.name())
+        .collect();
+    assert_eq!(kinds, all, "{out}");
+}
+
 /// `spec --section sequence` prints the sequence's part of the format.
 #[test]
 fn spec_has_a_sequence_section() {
