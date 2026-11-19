@@ -2,7 +2,8 @@
 //! each rule in docs/SPEC.md (Validation) reports its problem where it is.
 
 use archgram_core::spec::{
-    BorderStyle, CardStyle, Category, Direction, Kind, SignalStyle, Still, Variant, Wait,
+    BorderStyle, CardStyle, Category, DiagramKind, Direction, Kind, SignalStyle, Still, Variant,
+    Wait,
 };
 use archgram_core::{Location, SpecError, parse_spec};
 
@@ -90,6 +91,50 @@ fn every_kind() -> Vec<Kind> {
         }
     }
     all.to_vec()
+}
+
+/// `DiagramKind::ALL`, which `archgram spec --kinds` prints, is every kind a
+/// spec may name, in the enum's order: serde lists the enum's own variants
+/// when it refuses an unknown one, so a kind added to the enum and not to
+/// the list fails here. docs/SPEC.md (Top level) names the same kinds as
+/// the values `diagram` takes.
+#[test]
+fn every_diagram_kind_is_listed() {
+    let listed: Vec<&str> = DiagramKind::ALL.iter().map(|k| k.name()).collect();
+
+    let refused = serde_json::from_str::<DiagramKind>("\"no-such-kind\"")
+        .expect_err("an unknown kind is refused")
+        .to_string();
+    let expected: Vec<&str> = refused
+        .split("expected")
+        .nth(1)
+        .unwrap_or_else(|| panic!("serde names the kinds it expects: {refused}"))
+        .split('`')
+        .skip(1)
+        .step_by(2)
+        .collect();
+    assert_eq!(listed, expected, "{refused}");
+
+    for kind in DiagramKind::ALL {
+        let named: DiagramKind = serde_json::from_str(&format!("\"{}\"", kind.name()))
+            .unwrap_or_else(|e| panic!("{}: {e}", kind.name()));
+        assert_eq!(named, kind);
+    }
+
+    let path = format!("{}/../../docs/SPEC.md", env!("CARGO_MANIFEST_DIR"));
+    let doc = std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("{path}: {e}"));
+    let row = doc
+        .lines()
+        .find(|line| line.starts_with("| `diagram` | no |"))
+        .expect("docs/SPEC.md (Top level) has a row for `diagram`");
+    let values: Vec<&str> = row
+        .split('|')
+        .nth(3)
+        .expect("the row has a Values cell")
+        .split(',')
+        .map(|v| v.trim().trim_matches('`'))
+        .collect();
+    assert_eq!(values, listed, "docs/SPEC.md: {row}");
 }
 
 /// docs/SPEC.md (Nodes) is the one list of kinds, and what `archgram spec`

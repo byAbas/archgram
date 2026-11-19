@@ -11,7 +11,7 @@ use std::process::ExitCode;
 
 use archgram_core::render::{Mode, Options};
 use archgram_core::sources::Found;
-use archgram_core::spec::Direction;
+use archgram_core::spec::{DiagramKind, Direction};
 use archgram_core::tokens::Role;
 use archgram_core::{Diagram, Spec, SpecError};
 use archgram_icons::Icons;
@@ -26,9 +26,10 @@ Usage:
                                Draw the diagram (default output: the spec's name with .svg)
   archgram check <spec>        Check a spec and list every problem, a source the code
                                no longer has among them
-  archgram spec [--brief | --section <name>]
+  archgram spec [--brief | --section <name> | --kinds]
                                Print the spec format this archgram reads (docs/SPEC.md): all
-                               of it, its short part, or one section, such as theme-file
+                               of it, its short part, one section, such as theme-file, or the
+                               kinds of diagram it draws, each with its section
   archgram theme check <archgram.theme.json>
                                Read a project's design tokens as the theme and show each role's colour
   archgram --version           Print the version
@@ -86,6 +87,7 @@ fn main() -> ExitCode {
         }
         ["spec", "--brief"] => print_section("in-brief"),
         ["spec", "--section", name] => print_section(name),
+        ["spec", "--kinds"] => print_kinds(),
         ["theme", "check", path] => theme_check(path),
         ["build", path, rest @ ..] => match build_options(rest) {
             Ok(b) => build(path, b),
@@ -123,6 +125,25 @@ fn print_section(name: &str) -> ExitCode {
                 .join(", ")
         )),
     }
+}
+
+/// The kinds of diagram this archgram draws, one a line: the value a
+/// spec's `diagram` takes, the section of the format that describes it, and
+/// the question it answers (docs/features/facts.md, The engine). The first
+/// two are columns, so a reader or an agent takes them by position.
+fn print_kinds() -> ExitCode {
+    let kinds = DiagramKind::ALL;
+    let name = kinds.iter().map(|k| k.name().len()).max().unwrap_or(0);
+    let section = kinds.iter().map(|k| k.section().len()).max().unwrap_or(0);
+    for kind in kinds {
+        println!(
+            "{:name$}  --section {:section$}  {}",
+            kind.name(),
+            kind.section(),
+            kind.question()
+        );
+    }
+    ExitCode::SUCCESS
 }
 
 /// The spec format's sections, each with its short name and its text.

@@ -2,7 +2,7 @@
 
 | Field   | Value      |
 |---------|------------|
-| Version | 0.35       |
+| Version | 0.36       |
 | Date    | 2026-11-19 |
 | Status  | Draft      |
 | Owner   | Abas Turabli |
@@ -238,7 +238,10 @@ same file every time.
   with a short part, one complete spec that uses each common field and a
   line for each other section, which `archgram spec --brief` prints alone;
   `--section` prints one section. Both are parts of the same document, not
-  a copy of it.
+  a copy of it. `--kinds` lists the kinds of diagram this version draws,
+  each with the section that holds its format and the question it
+  answers, so whoever writes a spec learns from the command which kinds
+  it may name.
 - `archgram build` says the size it drew and the direction, and warns,
   still drawing, when it is wider than keeps its text readable where it
   is shown (§6.2).
@@ -479,3 +482,4 @@ None.
 | 0.33    | 2026-11-14 | Planned: `archgram diff` draws a change's before and after, two architecture specs, as one diagram, with what was added, removed and changed marked and listed as text; one layout of both together; the reviewer of a pull request is a user (§1, §2, §5, §6.5, §8, `docs/features/diff.md`, #47). |
 | 0.34    | 2026-11-14 | A diff's marks take a colour by what the change did, repeating their signs; on an update, the skill's report of what changed is `archgram diff`'s (§6.3, §6.6, `docs/features/diff.md`). |
 | 0.35    | 2026-11-19 | The repository is also a Claude Code marketplace of the skill's plugin, so Claude Code installs and updates it without a claude.ai account (§6.5). |
+| 0.36    | 2026-11-19 | `archgram spec --kinds` lists the kinds of diagram a version draws, each with its section of the format and the question it answers (§6.5, `docs/features/facts.md`). |

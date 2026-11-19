@@ -118,6 +118,45 @@ pub enum DiagramKind {
     Sequence,
 }
 
+impl DiagramKind {
+    /// Every kind this archgram draws, in the order `archgram spec --kinds`
+    /// prints them. A test holds it to the kinds a spec may name, so a kind
+    /// cannot be drawn without being listed.
+    pub const ALL: [DiagramKind; 2] = [DiagramKind::Architecture, DiagramKind::Sequence];
+
+    /// The value a spec's `diagram` takes for this kind.
+    #[must_use]
+    pub fn name(self) -> &'static str {
+        match self {
+            DiagramKind::Architecture => "architecture",
+            DiagramKind::Sequence => "sequence",
+        }
+    }
+
+    /// The question a reader asks that this kind answers
+    /// (docs/features/diagram-kinds.md, Choosing the kind).
+    #[must_use]
+    pub fn question(self) -> &'static str {
+        match self {
+            DiagramKind::Architecture => "What is it made of, and what calls what?",
+            DiagramKind::Sequence => {
+                "In what order do the parts call each other for one request, and what comes back?"
+            }
+        }
+    }
+
+    /// The section of docs/SPEC.md that holds this kind's format, by the
+    /// name `archgram spec --section` takes. An architecture's fields begin
+    /// in Top level and go on through Hints.
+    #[must_use]
+    pub fn section(self) -> &'static str {
+        match self {
+            DiagramKind::Architecture => "top-level",
+            DiagramKind::Sequence => "sequence",
+        }
+    }
+}
+
 /// The direction the flow runs.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Deserialize)]
 #[serde(rename_all = "kebab-case")]

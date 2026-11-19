@@ -106,7 +106,7 @@ drawing keeps a plain name; any other spec draws its own name with `.svg`.
 | Field | Required | Values | Default | Meaning |
 |---|---|---|---|---|
 | `archgram` | yes | `1` | | The spec format's version |
-| `diagram` | no | `architecture`, `sequence` | `architecture` | The kind of diagram. Without it, a spec is an architecture diagram, and every field in this section and the sections up to Sequence is its. A sequence takes the fields in Sequence, below |
+| `diagram` | no | `architecture`, `sequence` | `architecture` | The kind of diagram. Without it, a spec is an architecture diagram, and every field in this section and the sections up to Sequence is its. A sequence takes the fields in Sequence, below. `archgram spec --kinds` lists the kinds this archgram draws, each with the section that holds its fields |
 | `title` | yes | text | | The diagram's name; the SVG's `<title>` |
 | `description` | yes | text | | The whole diagram in prose; the SVG's `<desc>`, read by screen readers |
 | `direction` | no | `right`, `down`, `auto` | `right` | The direction of the flow. `auto` lets archgram choose: left to right while it keeps its text readable where the diagram is shown (`shownWidth`), and otherwise whichever of left to right and top to bottom is narrower. It is chosen from the spec alone, so the same spec draws the same bytes, and `archgram build` says which it chose |

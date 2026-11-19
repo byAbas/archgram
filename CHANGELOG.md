@@ -15,6 +15,12 @@ follow [Semantic Versioning](https://semver.org/).
   `claude plugin update archgram@archgram` brings each release. Where
   both are on, Claude Code loads this copy in place of the directory's
   `archgram@synced`.
+- `archgram spec --kinds` lists the kinds of diagram this archgram draws,
+  one a line: the value a spec's `diagram` takes, the section of the
+  format that holds its fields (`--section top-level` for an
+  architecture, `--section sequence` for a sequence) and the question it
+  answers. Whoever writes a spec, a person or the skill, learns the kinds
+  from the command that draws them.
 
 ## [0.11.0] - 2026-11-17
 
