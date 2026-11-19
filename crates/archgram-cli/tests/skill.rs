@@ -253,3 +253,33 @@ fn every_kind_pack_is_a_kind_archgram_draws() {
     }
     assert!(packs > 0, "{} holds no pack", kinds.display());
 }
+
+/// The skill downloads nothing the user has not agreed to (docs/PRD.md
+/// 6.6): npx installs a missing package without asking when no terminal
+/// is attached, so before its first `npx --yes` the skill looks for its
+/// archgram with `--no --offline`, which uses no network and installs
+/// nothing, and says it asks the user when it finds none.
+#[test]
+fn the_skill_looks_for_archgram_before_it_downloads() {
+    let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../skills/archgram/SKILL.md");
+    let text = std::fs::read_to_string(&path).unwrap();
+    let version = env!("CARGO_PKG_VERSION");
+    let look = format!("npx --no --offline --loglevel=error archgram@{version} --version");
+    let looks = text
+        .find(&look)
+        .unwrap_or_else(|| panic!("{} never runs `{look}`", path.display()));
+    let downloads = text
+        .find("npx --yes")
+        .unwrap_or_else(|| panic!("{} runs no `npx --yes`", path.display()));
+    assert!(
+        looks < downloads,
+        "{} runs `npx --yes` before it looks for archgram with `{look}`",
+        path.display()
+    );
+    let asks = &text[looks..downloads];
+    assert!(
+        asks.contains("ask the user before anything is"),
+        "{}: between looking and the first download, the skill does not say it asks the user",
+        path.display()
+    );
+}

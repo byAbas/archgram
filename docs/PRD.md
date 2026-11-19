@@ -2,7 +2,7 @@
 
 | Field   | Value      |
 |---------|------------|
-| Version | 0.37       |
+| Version | 0.38       |
 | Date    | 2026-11-19 |
 | Status  | Draft      |
 | Owner   | Abas Turabli |
@@ -312,15 +312,32 @@ same file every time.
   diagram already beside it disagree, the skill says so and asks which
   is right ([docs/features/sources.md](features/sources.md)).
 - It writes `docs/diagrams/<name>.archgram.yaml`, creating the folder when
-  missing, and draws `<name>.svg` beside it with archgram through npx: the
-  project's own archgram when its `package.json` lists one, pinned by the
-  project's lockfile, and otherwise the version released with the skill,
-  named exactly (`archgram@X.Y.Z`), never the latest. A version published
-  to npm later runs only once a reviewed skill names it, as Anthropic's
-  plugin directory asks of a package a plugin runs. Each release sets that
-  version in the skill, and a test holds the two equal. The spec is kept,
-  so a later call changes it and draws again, and says what changed,
-  starting from what `archgram check` says has lost its code. Once
+  missing, and draws `<name>.svg` beside it with archgram, run through npx
+  from where it already is: the project's own archgram when its
+  `package.json` lists one, pinned by the project's lockfile, and
+  otherwise the version released with the skill, named exactly
+  (`archgram@X.Y.Z`), never the latest, when the machine already has it.
+  When the project's own is older than the skill's, the skill draws with
+  it all the same, and its report says so, with the project's command to
+  upgrade; it upgrades only when the user says so.
+- It downloads nothing the user has not agreed to. npx assumes yes when
+  no terminal is attached, so an agent's npx never asks; the skill asks
+  instead. Before its first command it looks for archgram without the
+  network and without installing anything; when it finds none, it stops
+  and says what it would download, the package, its version and the
+  native program for the system, and from where, the npm registry. It
+  offers the user to install that version into the project, pinned by
+  its lockfile, or to let npx download it once, and does neither until
+  the user answers. A version published to npm later runs only once a
+  reviewed skill names it: Anthropic's plugin directory refuses a
+  launcher that is not pinned to an exact version, and holds a pinned one
+  for a reviewer
+  ([pre-submission checklist](https://claude.com/docs/plugins/pre-submission-checklist)).
+  Each release sets that version in the skill, and a test holds the two
+  equal.
+- The spec is kept, so a later call changes it and draws again, and says
+  what changed, starting from what `archgram check` says has lost its
+  code. Once
   `archgram diff` is there, what changed is what it prints for the spec
   before and after the update
   ([docs/features/diff.md](features/diff.md)).
@@ -334,8 +351,9 @@ same file every time.
   it needs one: the theme file when the user asks for colours,
   a problem's section when `check` reports one.
 - It works on its own: everything it needs is in its folder or comes from
-  archgram through npx, so it needs nothing installed in the project; its
-  plugin manifest only lets Claude Code take the same folder as a plugin.
+  archgram, which the project already has or the user agrees to
+  download; its plugin manifest only lets Claude Code take the same
+  folder as a plugin.
   Its text changes only by review, like the code.
 - Its evaluations live beside it: that it is chosen when asked for an
   architecture diagram and not otherwise, that it draws a project it is
@@ -487,3 +505,4 @@ None.
 | 0.35    | 2026-11-19 | The repository is also a Claude Code marketplace of the skill's plugin, so Claude Code installs and updates it without a claude.ai account (§6.5). |
 | 0.36    | 2026-11-19 | `archgram spec --kinds` lists the kinds of diagram a version draws, each with its section of the format and the question it answers (§6.5, `docs/features/facts.md`). |
 | 0.37    | 2026-11-19 | The skill draws the kinds `archgram spec --kinds` lists and it has a pack for, each pack how to find that kind's facts and how they become its spec (§6.6, `docs/features/facts.md`). |
+| 0.38    | 2026-11-19 | The skill downloads nothing the user has not agreed to: it looks for archgram without the network first, and when it finds none, it asks, offering to install the skill's version into the project or to let npx download it once; an agent's npx never asks on its own. A project's own archgram older than the skill's is drawn with, and the report says so and how to upgrade (§6.6). |

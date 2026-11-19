@@ -40,10 +40,24 @@ if [ "${1:-}" = __one ]; then
     const c = require(process.argv[1]).evals.find((e) => e.id === Number(process.argv[2]));
     console.log(c.files[0]);' "$here/evals.json" "$id")
   cp -R "$here/$files" "$dir/outputs"
+  # A case with `"archgram": "absent"` gives the run no archgram at all, so
+  # it sees whether the skill asks before it downloads one.
+  absent=$(node -e '
+    const c = require(process.argv[1]).evals.find((e) => e.id === Number(process.argv[2]));
+    console.log(c.archgram === "absent" ? "yes" : "");' "$here/evals.json" "$id")
+  # npm's cache for the run: the runner's own, where it put the skill's
+  # version once, or an empty one when archgram is absent, so the
+  # machine's own cache never decides what a run finds.
+  if [ -n "$absent" ]; then
+    cache="$dir/npm-cache"
+    mkdir "$cache"
+  else
+    cache="$EVAL_OUT/npm-cache"
+  fi
   # With --archgram, the skill's `npx … archgram@X.Y.Z` runs that build:
   # npx takes a package of the version it asks for from the project's own
   # node_modules before the registry. Kept out of the copy's git.
-  if [ -n "${EVAL_ARCHGRAM:-}" ]; then
+  if [ -n "${EVAL_ARCHGRAM:-}" ] && [ -z "$absent" ]; then
     pkg="$dir/outputs/node_modules/archgram"
     mkdir -p "$pkg/bin" "$dir/outputs/node_modules/.bin"
     printf '{ "name": "archgram", "version": "%s", "bin": { "archgram": "bin/archgram.js" } }\n' \
@@ -72,6 +86,7 @@ if [ "${1:-}" = __one ]; then
     --output-format stream-json --verbose \
     --allowedTools Read Write Edit Glob Grep Skill \
     "Bash(npx --yes --loglevel=error archgram@$EVAL_VERSION *)" \
+    "Bash(npx --no --offline --loglevel=error archgram@$EVAL_VERSION *)" \
     "Bash(ls *)" "Bash(cat *)" "Bash(head *)" "Bash(grep *)" "Bash(find *)" \
     "Bash(wc *)" "Bash(git ls-files*)" "Bash(git status*)" "Bash(git diff*)" \
     "Bash(node --version)"
@@ -89,7 +104,7 @@ if [ "${1:-}" = __one ]; then
   status=0
   # Each event as it happens, which watch.mjs follows live; the last line
   # is the run's result.
-  (cd "$dir/outputs" && printf '%s' "$prompt" | claude -p "$@") \
+  (cd "$dir/outputs" && printf '%s' "$prompt" | npm_config_cache="$cache" claude -p "$@") \
     >"$dir/stream.jsonl" 2>"$dir/stderr.log" || status=$?
   end=$(date -u +%Y-%m-%dT%H:%M:%SZ)
   end_s=$(date +%s)
@@ -180,6 +195,14 @@ out=$(cd "$out" && pwd)
 mkdir "$out/.running" 2>/dev/null ||
   die "another run.sh is running in $out; if none is, one stopped early: remove $out/.running"
 trap 'rmdir "$out/.running"' EXIT
+# The skill looks for its archgram before it runs one, and asks before it
+# downloads it; starting the evaluations is the operator's yes. Without
+# --archgram, the skill's version goes into the runner's npm cache once,
+# where every run finds it but a case whose archgram is absent.
+if [ -z "$archgram" ]; then
+  (cd "$out" && npm_config_cache="$out/npm-cache" npx --yes --loglevel=error "archgram@$version" --version >/dev/null) ||
+    die "could not put archgram@$version from npm into $out/npm-cache"
+fi
 # The skill as it is now, so the runs test one version even if the
 # working tree changes while they run.
 [ -e "$out/skill-snapshot" ] || { mkdir -p "$out/skill-snapshot" && cp -R "$root/skills/archgram" "$out/skill-snapshot/archgram"; }

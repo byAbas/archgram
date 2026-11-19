@@ -13,16 +13,6 @@ what the reader must learn, find the facts in the code, and write them as
 a spec. If the user said what to draw (a flow, a part of the system, a
 direction), draw that.
 
-Every command below runs archgram through npx, so it needs Node 22 or
-later. It names `archgram@0.11.0`, the version released with this skill,
-never the latest. When the project's `package.json` lists archgram, run
-the project's own instead: write each command with `archgram` where it
-says `archgram@0.11.0`, and the project's lockfile decides the version.
-Keep `--loglevel=error` either way: it keeps npm's own warnings, such as
-those about a pnpm project's `.npmrc`, out of archgram's output, and
-changes nothing else. If `npx` is missing, or cannot find that version on
-npm, say so and stop.
-
 Run each command on its own, as it is written here: not joined to another
 with `&&`, `;` or a pipe, and not inside a loop. An agent may approve the
 exact commands this skill names, and a joined one asks the user or is
@@ -31,6 +21,7 @@ by editing it, not through the shell.
 
 ```
 Progress:
+- [ ] archgram found, or the user asked
 - [ ] The kind of diagram
 - [ ] 1. Reader contract
 - [ ] 2. Facts, each with its file
@@ -40,6 +31,51 @@ Progress:
 - [ ] 6. Drawn, critiqued, opened
 - [ ] 7. Reported
 ```
+
+## Find archgram, and ask before downloading it
+
+Every command below runs archgram through npx, which needs Node 22 or
+later. npx downloads a package it does not find, and with no terminal
+attached it does so without asking. So this skill runs archgram from
+where it already is, and downloads it only when the user says so. Do
+this once, before the first command.
+
+- **The project's own.** When the project's `package.json` lists
+  archgram, run that one: write each command below with `archgram`
+  where it says `archgram@0.11.0`, and `--no --offline` where it says
+  `--yes`. npx then runs what the project installed, at the version its
+  lockfile decides, and downloads nothing. If npx says a package is
+  missing, the project's dependencies are not installed: ask the user to
+  install them with the project's own package manager, and wait. Run the
+  version check below the same way: when the project's archgram is older
+  than `archgram@0.11.0`, the version this skill was released with, draw
+  with it all the same, and say so in the report (step 7).
+- **This version, already on the machine.** Otherwise, look for the
+  version this skill was released with, which an earlier download the
+  user agreed to leaves in npx's cache:
+
+  ```bash
+  npx --no --offline --loglevel=error archgram@0.11.0 --version
+  ```
+
+  It uses no network and installs nothing. When it prints
+  `archgram 0.11.0`, run the commands below as they are written.
+- **Not there: ask.** Otherwise stop, and ask the user before anything is
+  downloaded. Say what and from where: the npm package `archgram@0.11.0`
+  and the native archgram program for this system, a few megabytes, from
+  the npm registry. Offer two ways, and run neither until the user picks
+  one; with no answer, draw nothing:
+  - install it into the project, when it has a `package.json`, with the
+    project's own package manager, such as
+    `npm install --save-dev archgram@0.11.0`: its lockfile then pins it,
+    and the commands run as for the project's own;
+  - let npx download it once, now: the commands below then run as they
+    are written.
+
+Keep `--loglevel=error` in every command: it keeps npm's own warnings,
+such as those about a pnpm project's `.npmrc`, out of archgram's output,
+and changes nothing else. If `npx` is missing, or cannot find that
+version on npm, say so and stop.
 
 ## Choose the kind
 
@@ -264,6 +300,11 @@ changed comes first there, and the rest still follows.
 - where the colours came from, or that they are archgram's own and the
   project's can be asked for;
 - what the diagram still does not show;
+- when the project's own archgram is older than `archgram@0.11.0`: its
+  version, that this skill was released with `archgram@0.11.0`, and the
+  project's own command to upgrade it, such as
+  `npm install --save-dev archgram@0.11.0`; upgrade it only when the
+  user says so;
 - the line for the README, with alt text that tells the whole flow in
   words: `![<the flow in one sentence>](docs/diagrams/<name>.svg)`.
 
