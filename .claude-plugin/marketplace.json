@@ -1,0 +1,14 @@
+{
+  "name": "archgram",
+  "owner": {
+    "name": "Abas Turabli",
+    "url": "https://abasturabli.com"
+  },
+  "description": "archgram's agent skill as a Claude Code plugin: it draws a project's software architecture, or the order its parts call each other for one request, as an animated SVG for its README.",
+  "plugins": [
+    {
+      "name": "archgram",
+      "source": "./skills/archgram"
+    }
+  ]
+}

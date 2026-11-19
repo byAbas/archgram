@@ -2,8 +2,8 @@
 
 | Field   | Value      |
 |---------|------------|
-| Version | 0.34       |
-| Date    | 2026-11-14 |
+| Version | 0.35       |
+| Date    | 2026-11-19 |
 | Status  | Draft      |
 | Owner   | Abas Turabli |
 
@@ -257,7 +257,12 @@ same file every time.
   installer of its own (§6.6). The same folder is also a Claude Code
   plugin of that one skill, with a manifest, an icon and a README of its
   own, listed in Anthropic's directory for Claude Code; the plugin is the
-  skill's folder alone, never the repository.
+  skill's folder alone, never the repository. The repository is also a
+  Claude Code marketplace of that one plugin
+  (`.claude-plugin/marketplace.json`), so Claude Code installs it in one
+  command where no claude.ai account brings it from the directory, such
+  as with an API key, Bedrock or Vertex, and `claude plugin update`
+  brings each release.
 
 ### 6.6 The `archgram` skill
 - It draws a project's architecture for its README and docs, from the
@@ -473,3 +478,4 @@ None.
 | 0.32    | 2026-10-11 | A sequence's messages take a colour by their kind, repeating their shape; a sequence is drawn as a blueprint (§6.3, `docs/features/sequence.md`). |
 | 0.33    | 2026-11-14 | Planned: `archgram diff` draws a change's before and after, two architecture specs, as one diagram, with what was added, removed and changed marked and listed as text; one layout of both together; the reviewer of a pull request is a user (§1, §2, §5, §6.5, §8, `docs/features/diff.md`, #47). |
 | 0.34    | 2026-11-14 | A diff's marks take a colour by what the change did, repeating their signs; on an update, the skill's report of what changed is `archgram diff`'s (§6.3, §6.6, `docs/features/diff.md`). |
+| 0.35    | 2026-11-19 | The repository is also a Claude Code marketplace of the skill's plugin, so Claude Code installs and updates it without a claude.ai account (§6.5). |

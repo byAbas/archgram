@@ -120,8 +120,12 @@ version goes in by a pull request and the tag follows the merge.
    project's
    ([skills](https://code.claude.com/docs/en/skills#resolve-skills-that-share-a-name)),
    such as the one `npx skills add -g` links into
-   `~/.claude/skills/archgram`, and the plugin from the directory,
-   `archgram@synced`, loads beside it. Look for both:
+   `~/.claude/skills/archgram`; the plugin from the directory,
+   `archgram@synced`, loads beside it; and the plugin installed from the
+   repository's marketplace, `archgram@archgram`, loads in place of the
+   project's copy
+   ([name conflicts](https://code.claude.com/docs/en/plugins/loading#name-conflicts)).
+   Look for each:
 
    ```sh
    ls -d ~/.claude/skills/archgram ~/.agents/skills/archgram 2>/dev/null
@@ -135,9 +139,10 @@ version goes in by a pull request and the tag follows the merge.
    ([plugin origins](https://code.claude.com/docs/en/plugins/loading)).
    Any other archgram line, or any path the `ls` prints, is another copy.
    Remove a personal copy (`npx skills remove --global archgram -y`) or
-   move it out of the skills folder until the run is done, and turn the
-   plugin off for the run with `claude plugin disable archgram@synced`,
-   on again after with `claude plugin enable archgram@synced`
+   move it out of the skills folder until the run is done, and turn each
+   plugin off for the run with `claude plugin disable archgram@synced` or
+   `claude plugin disable archgram@archgram`, on again after with
+   `claude plugin enable` and the same name
    ([plugin commands](https://code.claude.com/docs/en/plugins/cli-reference#plugin-disable)).
 
    Start Claude Code there and ask, as the eval

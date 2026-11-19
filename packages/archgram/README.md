@@ -167,6 +167,21 @@ and add it to your claude.ai account. Claude Code loads it, as
 `archgram@synced`, the next time it starts signed in with that account
 ([plugins synced from claude.ai](https://code.claude.com/docs/en/plugins/loading#synced-plugins)).
 
+Without a claude.ai account, with an API key, Bedrock or Vertex, install
+the plugin from this repository, which is also its marketplace, in a
+Claude Code session (2.1.275 or later):
+
+```text
+/plugin install archgram --marketplace byAbas/archgram
+```
+
+It installs as `archgram@archgram`, and Claude Code loads it in place of
+`archgram@synced` when both are on
+([name conflicts](https://code.claude.com/docs/en/plugins/loading#name-conflicts)).
+A marketplace of your own does not update by itself: run
+`claude plugin update archgram@archgram` for each release
+([updates](https://code.claude.com/docs/en/plugins/install#keep-plugins-updated)).
+
 Or take it from the release, into your agent's skills folder
 (`~/.agents/skills`, or `~/.claude/skills` for Claude Code):
 

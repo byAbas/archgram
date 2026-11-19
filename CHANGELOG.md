@@ -6,6 +6,16 @@ follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- The repository is also a Claude Code marketplace of the `archgram`
+  skill's plugin, so Claude Code without a claude.ai account, with an API
+  key, Bedrock or Vertex, installs it in one command,
+  `/plugin install archgram --marketplace byAbas/archgram`, and
+  `claude plugin update archgram@archgram` brings each release. Where
+  both are on, Claude Code loads this copy in place of the directory's
+  `archgram@synced`.
+
 ## [0.11.0] - 2026-11-17
 
 ### Changed
