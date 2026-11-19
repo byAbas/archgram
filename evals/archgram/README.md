@@ -1,6 +1,6 @@
 # Evaluations of the archgram skill
 
-Thirteen cases for `skills/archgram`, in the format of Anthropic's
+Fourteen cases for `skills/archgram`, in the format of Anthropic's
 [skill-creator](https://github.com/anthropics/skills/tree/main/skills/skill-creator),
 the one the Agent Skills format's own guide to evaluating skills uses:
 `evals.json` holds each prompt, what a good run produces and the checks a
@@ -22,6 +22,7 @@ prompts run in.
 | `says-a-kind-it-cannot-draw` | Asked for a state diagram, it says archgram does not draw one yet and offers what it can, rather than drawing the states as another kind |
 | `draws-from-a-document` | Named a document and no code, it draws the example the document describes, each part and edge sourced to the sentence that states it, in the document's own words, with nothing the text does not state |
 | `asks-before-downloading` | With no archgram in the project or on the machine, it looks for one without the network, then stops and asks before downloading anything, naming the package, its exact version, the native program and the npm registry, and offers to install it into the project or to let npx download it once |
+| `stops-for-the-facts` | It writes the facts in `docs/diagrams/facts.md`, each part with its file and each relation with its source and evidence level, says what it read and left out, and stops for the user's approval before any spec is written |
 
 Every case that draws expects a source on each node a file backs and on
 each edge, so it needs an archgram that reads them (0.7 or later;
@@ -41,6 +42,11 @@ own in `--out` once, before the first run, and every run uses that cache,
 not the machine's, so what a run finds never depends on the machine. A
 case with `"archgram": "absent"` (`asks-before-downloading`) gets an
 empty cache and no archgram at all.
+
+The skill also stops for the user to approve its facts document before it
+writes a spec (docs/PRD.md 6.6). A case that draws says in its prompt that
+the user does not need to check the facts first, as a user may, so the run
+goes on; `stops-for-the-facts` does not, and expects the stop.
 
 ## Running them
 

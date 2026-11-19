@@ -24,7 +24,7 @@ Progress:
 - [ ] archgram found, or the user asked
 - [ ] The kind of diagram
 - [ ] 1. Reader contract
-- [ ] 2. Facts, each with its file
+- [ ] 2. Facts written in the facts document, and approved
 - [ ] 3. The spec format, from archgram itself
 - [ ] 4. Spec written and checked
 - [ ] 5. The project's colours, when asked
@@ -120,23 +120,53 @@ diagram, the three to five questions they must answer from it alone, the
 one idea it must make obvious, and what is left out on purpose. Everything
 after this is checked against it. Take the reader from the context (the
 README's audience, the user's words); ask only when nothing tells you.
+The contract goes into the facts document, at the top of this diagram's
+layer (step 2).
 
-## 2. Gather the facts
+## 2. Find the facts, and have them approved
 
-Read the kind's `find.md` (`references/kinds/<kind>/find.md`), then the
-code and the docs the diagram describes, and find the facts as it says.
-Whatever the kind, draw a part only when a file backs it: a module, a
-route, a script, a store. Name it after the file that decides, found by
-following the imports, not by a name that looks right. Draw a line
-between two parts (an edge, a message) only where a line of code makes
-it, and note that line (`src/api.ts:42`) and a few words of it that say
-what it does (`db.insert(order)`). Every label and note says what the
-code shows, too: what only the README or the docs say ("the data team
-reads it") is a claim no line backs, so it goes into the report as a gap
-or a question, never into the drawing. Keep the list of parts with their
-files and lines with theirs; the report ends with it, and it catches
-boxes and lines that exist only in someone's memory. How much of it to
-draw, and what to merge, is the kind's `spec.md` (step 4).
+Read `references/facts.md`, `references/ignore.md` and the kind's
+`find.md` (`references/kinds/<kind>/find.md`), then the code and the docs
+the diagram describes, leaving out what `references/ignore.md` says, and
+find the facts as the kind's `find.md` says. When the facts document
+(`docs/diagrams/facts.md`) or a spec beside it is already there, this is
+an update: start from them, as `references/facts.md` says (On an
+update).
+
+Whatever the kind, a part is a fact only when a file backs it: a module,
+a route, a script, a store. Name it after the file that decides, found by
+following the imports, not by a name that looks right. A line between
+two parts (an edge, a message) is a fact only where a line of code makes
+it: open that line, and note it (`src/api.ts:42`) and a few words of it
+that say what it does (`db.insert(order)`). Every label and note says what
+the code shows, too: what only the README or the docs say ("the data team
+reads it") is a claim no line backs, level 4 evidence, so it is an open
+question, never something to draw.
+
+Write the facts in the facts document as `references/facts.md` says: the
+project's parts, boundaries, entry points and what was read in its core,
+and in this diagram's layer its reader, its kind's tables, what was
+expected and not found, and the open questions. Each fact carries its
+evidence, and each line its source. The document holds what the code
+says; how much of it to draw, and what to merge, is the kind's `spec.md`
+(step 4).
+
+### Approve the facts
+
+Then stop, and ask the user to approve the document before any spec is
+written. Give its path, and in a few lines the parts and the lines this
+diagram would draw, what was not read, what was expected and not found,
+and each open question. When they correct a fact, check it in the code,
+change the document, and ask again; on an update, ask about what
+changed. Write no spec until they approve. When the request itself says
+to go on without stopping, such as "no need to check the facts with me",
+go on, and say in the report that the facts were not approved.
+
+An open question stops the drawing either way. Ask the user, and only
+then, when the architecture is unclear: the README describes a part the
+code does not have, two readings of the code are equally likely, or the
+request names something you cannot find. Say what you found and what you
+need to know. Everything else you decide yourself.
 
 ### From a document
 
@@ -153,14 +183,10 @@ Label each part and edge in the document's own words, not a paraphrase:
 a reader who goes from the drawing to the text finds the same names.
 What the document does not state is not drawn, however likely; say it in
 the report as a gap. When the document and a diagram already beside it
-disagree, say where and ask which is right. Everything after this step
-holds for a document as for code: the critique's "file" is the
-sentence.
-
-Ask the user, and only then, when the architecture is unclear: the README
-describes a part the code does not have, two readings of the code are
-equally likely, or the request names something you cannot find. Say what
-you found and what you need to know. Everything else you decide yourself.
+disagree, say where and ask which is right. The facts still go into the
+facts document, each sentence as its source and its evidence, and are
+approved as above. Everything after this step holds for a document as
+for code: the critique's "file" is the sentence.
 
 ## 3. Learn the spec format from archgram
 
@@ -196,19 +222,19 @@ so what it does not mention, that archgram does not read: leave it out.
 The spec lives at `docs/diagrams/<name>.archgram.yaml`, where `<name>` says
 what the diagram shows (`architecture`, `request-flow`). Create the folder
 when it is missing. When the file already exists, this is an update:
-change it rather than starting over, keep what still holds, and note what
-you changed for the report; keep, too, what the kind's `spec.md` says an
-update keeps (an architecture's direction). Start an update with
-`archgram check` on the spec as it is: whatever it says has lost its
-code, find where that code went, if anywhere, and move or remove the
-part or line. The check cannot see what the code gained, so step 2's
-walk still finds what is new. Change what the check and the walk found,
-and nothing more: a part or a flow the request did not ask for is the
-user's to add.
+change it as the facts document changed (step 2) rather than starting
+over, keep what still holds, and note what you changed for the report;
+keep, too, what the kind's `spec.md` says an update keeps (an
+architecture's direction). Change what the document's update found, and
+nothing more: a part or a flow the request did not ask for is the user's
+to add.
 
-Write the facts in the format as the kind's `spec.md`
-(`references/kinds/<kind>/spec.md`) says, and draw as much of them as it
-says a reader takes in.
+Write the spec from the approved facts document, this diagram's layer
+and the core's parts it names: only a fact at evidence 1 or 2, each with
+the source the document gives it, in the format as the kind's `spec.md`
+(`references/kinds/<kind>/spec.md`) says, and as much of them as it says
+a reader takes in. A fact the document does not hold is not drawn: find
+it, add it to the document and have it approved first.
 
 Say where the drawing is shown when it is not a README on GitHub: a docs
 site, a blog, a wiki, any page that shows it narrower. Write that width
@@ -216,8 +242,9 @@ as `shownWidth`, in CSS pixels, the place at its widest, from the user's
 words or the page's own styles; ask only when nothing tells you. A
 drawing shown in two places takes the narrower.
 
-Put step 2's files and lines, or the document's sentences, in the spec
-wherever the format has a place for them, as it says, so archgram can
+Put the facts document's sources, its files and lines or a named
+document's sentences, in the spec wherever the format has a place for
+them, as it says, so archgram can
 tell when the code or the text behind a part or a line is gone. A line
 from someone outside the code, a browser or a person at a terminal,
 takes the line of code that receives it.
@@ -287,6 +314,8 @@ Tell the user, briefly, all of the following, on an update too: what
 changed comes first there, and the rest still follows.
 
 - the reader contract, and how the drawing answers it;
+- the facts document's path, and that the user approved it, or that the
+  request said to go on without it;
 - where it is drawn to be shown (a README, or `shownWidth`), and its
   size;
 - each part drawn, one line each, with the file (or the sentence) behind

@@ -249,6 +249,13 @@ fn every_kind_pack_is_a_kind_archgram_draws() {
         for file in ["find.md", "spec.md"] {
             assert!(path.join(file).is_file(), "the {name} pack has no {file}");
         }
+        // Its layer of the facts document (references/facts.md, A
+        // diagram's layer), which its spec.md writes the spec from.
+        let find = std::fs::read_to_string(path.join("find.md")).unwrap();
+        assert!(
+            find.contains("\n## In the facts document\n"),
+            "the {name} pack's find.md does not say what its layer of the facts document holds"
+        );
         packs += 1;
     }
     assert!(packs > 0, "{} holds no pack", kinds.display());

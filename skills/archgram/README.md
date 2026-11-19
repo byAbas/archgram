@@ -44,6 +44,12 @@ For other agents, and every other way, see
   only under the project's folder, never `.git` nor a file that commonly
   holds secrets, and keeps only whether each holds the words
   ([SECURITY.md, What archgram reads](https://github.com/byAbas/archgram/blob/main/SECURITY.md#what-archgram-reads)).
+- Before any spec, it writes what it found in `docs/diagrams/facts.md`:
+  the project's parts with their files, what it read and what it left
+  out, and each diagram's relations with the line of code behind each.
+  It stops and asks you to approve that document, unless you said to go
+  on without it, and writes the spec only from facts a line of code or
+  a configuration backs.
 - It writes the spec and the SVG under `docs/diagrams/`. When the user
   asks for the project's colours, it also writes `archgram.theme.json`
   at the project's root and, where the colours are not already design
