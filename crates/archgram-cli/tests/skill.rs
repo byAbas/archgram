@@ -72,6 +72,38 @@ fn the_plugin_carries_the_version_it_is_released_with() {
     );
 }
 
+/// The repository is also a Claude Code marketplace of that one plugin
+/// (docs/PRD.md 6.5): its entry is the skill's folder by relative path, so
+/// Claude Code copies that folder alone, and it sets no version of its own,
+/// so the manifest's, the release's, is the one users get.
+#[test]
+fn the_marketplace_lists_the_skill_folder_as_its_one_plugin() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+    let path = root.join(".claude-plugin/marketplace.json");
+    let text = std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("{}: {e}", path.display()));
+    assert!(
+        text.contains("\"source\": \"./skills/archgram\""),
+        "{} does not list ./skills/archgram",
+        path.display()
+    );
+    assert_eq!(
+        text.matches("\"source\":").count(),
+        1,
+        "{} lists more than one plugin",
+        path.display()
+    );
+    assert!(
+        !text.contains("\"version\""),
+        "{} sets a version; the plugin's manifest carries it",
+        path.display()
+    );
+    assert!(
+        root.join("skills/archgram/.claude-plugin/plugin.json")
+            .is_file(),
+        "the folder the marketplace lists has no plugin manifest"
+    );
+}
+
 /// `.claude-plugin/` holds the manifest and nothing else: Claude Code's
 /// plugin manifest reference puts every other file of a plugin at its root,
 /// so the icon the manifest names for the directory's listing is there too.

@@ -9,6 +9,19 @@ other for one request. The agent reads the code and the documentation, writes a 
 `docs/diagrams/<name>.svg` beside it, in light and dark, in archgram's
 colours or, when asked, the project's own. The report lists each part drawn with the file behind it.
 
+## Install
+
+In Claude Code, add it from [Anthropic's directory](https://claude.ai/directory),
+or, without a claude.ai account, install it from its repository in a
+session (Claude Code 2.1.275 or later):
+
+```text
+/plugin install archgram --marketplace byAbas/archgram
+```
+
+For other agents, and every other way, see
+[the archgram README](https://github.com/byAbas/archgram#draw-with-your-coding-agent).
+
 ## What it runs, reads and writes
 
 - It runs archgram through npx: the project's own archgram when its

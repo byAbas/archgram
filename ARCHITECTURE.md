@@ -531,6 +531,11 @@ spec generator are small helpers inside the workspace.
   the format. Its `.claude-plugin/plugin.json`, icon and README make the
   same folder a Claude Code plugin of one skill, so Anthropic's plugin
   directory takes that folder and not the repository.
+  `.claude-plugin/marketplace.json` at the repository's root lists that
+  folder, by its relative path, as the one plugin of the repository's own
+  marketplace; Claude Code clones the repository to read it and copies
+  only the folder into its plugin cache
+  ([plugin loading](https://code.claude.com/docs/en/plugins/loading#in-place-and-copied-plugins)).
 - Later: a WASM package for the browser, and the PNG module as a
   separate, optional package.
 - Crates on crates.io once the API is stable.
