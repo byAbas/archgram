@@ -119,11 +119,16 @@ The user calls one skill. It runs these steps in order:
 
 ### Kind packs
 
-- Each kind is a folder, `references/kinds/<kind>/`, with the same
-  sections: when to choose it (the reader's question), which facts it
-  needs and in what form, where the code holds them, how they are
-  verified and what is expected, how the facts become the kind's spec,
-  and the critique.
+- Each kind is a folder, `references/kinds/<kind>/`, of two files, so an
+  agent that only finds facts reads only the first:
+  - `find.md`: which facts the kind needs and in what form, where the
+    code holds them, and, as the scan and the verifier are built, how
+    they are verified and what is expected;
+  - `spec.md`: how the facts become the kind's spec, how much of them to
+    draw, what an update keeps, and what the report adds.
+
+  When to choose a kind is the question `archgram spec --kinds` prints
+  for it; the core's step that chooses adds the words a request uses.
 - A pack may say what counts as evidence for its kind. A workflow's
   roles, for one, are more often written in a document than in code.
 - Adding a kind adds a pack and changes nothing in the core.

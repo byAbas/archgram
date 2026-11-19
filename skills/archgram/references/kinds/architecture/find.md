@@ -3,18 +3,27 @@
 The reader contract says what the diagram must answer; this says how to
 find the parts and lines that answer it, so the drawing is complete at the
 level it chose, named as the code names things, and has no line the code
-does not draw.
+does not draw. How the facts become the spec, and how much of them to
+draw, is in `references/kinds/architecture/spec.md`.
 
 ## Contents
 
+- In order
 - One level per diagram
 - Start from the entry points
 - Name a part after the file that decides
 - Every line has a call site
-- Same relations, one node
-- How much to draw
 - What is easy to miss
 - Styles of architecture
+
+## In order
+
+Recognise the style the system follows in the table in
+`references/kinds/architecture/styles.md`, and read that style's own
+file. Pick one level for the whole diagram, list the entry points, and
+follow each the reader cares about to what it calls, reads and writes.
+Each part you find has its file, and each edge its line (SKILL.md,
+step 2).
 
 ## One level per diagram
 
@@ -73,40 +82,11 @@ order, not an edge beside them; when most start other parts, a store they
 share is a note. "Configures", "contains" and "documents" are not edges:
 show them with a frame or a note.
 
-## Same relations, one node
-
-Whatever the architecture, parts the reader need not tell apart can be
-one node, and the drawing says so without knowing the style: two parts
-are the same to the reader when the same nodes lead into them and they
-lead to the same nodes. Tokens, a rules document and source code that
-one command reads and another writes are one node, "design sources",
-with their names in its note; a config file only a third command writes
-stays its own. Merge only parts at the same level, and name the merged
-node after what they are for, not after one of them.
-
-Keep a part apart, even with the same relations, when a question in the
-reader contract is about it, or when it is the one idea.
-
-## How much to draw
-
-About 10 nodes and 12 edges is what a reader takes in within thirty
-seconds; start there, and treat it as a limit to argue with rather than a
-rule. Over it:
-
-1. merge parts with the same relations (above);
-2. move what the contract does not ask about to "left out on purpose";
-3. split into two diagrams, each with its own contract: one per entry
-   point, per phase, or per level.
-
-Completeness means nothing the reader's questions need is missing, not
-that everything in the code is drawn. A loop (a report read by the
-command that changes what the report reads) makes the drawing tall;
-keep it when the loop is the idea, split it when it is not.
-
 ## What is easy to miss
 
 Check each before drawing; draw the ones at your level that the reader's
-questions touch, within how much to draw, and list the rest as left out.
+questions touch, within how much to draw
+(`references/kinds/architecture/spec.md`), and list the rest as left out.
 
 - **Modes of one entry point.** One script with several stages
   (`before-commit`, `lint`, `staleness`) is one node with each stage on
@@ -126,6 +106,7 @@ questions touch, within how much to draw, and list the rest as left out.
 ## Styles of architecture
 
 Most systems follow a known style, and each has its usual parts and
-questions: the table in `references/styles.md` says how to recognise
-each in the code and which file describes it. Read the file for the style
-you recognise; when none fits, the rules above are enough.
+questions: the table in `references/kinds/architecture/styles.md` says
+how to recognise each in the code and which file describes it. Read the
+file for the style you recognise; when none fits, the rules above are
+enough.

@@ -22,6 +22,15 @@ follow [Semantic Versioning](https://semver.org/).
   answers. Whoever writes a spec, a person or the skill, learns the kinds
   from the command that draws them.
 
+### Changed
+
+- The `archgram` skill learns the kinds of diagram it may draw from
+  `archgram spec --kinds`, and from `spec --section top-level` with an
+  older archgram, instead of a table of its own. Each kind it draws has
+  a pack, `references/kinds/<kind>/`: `find.md`, how to find its facts in
+  the code, and `spec.md`, how they become its spec. Architecture and
+  sequence are drawn as before; a new kind adds a pack.
+
 ## [0.11.0] - 2026-11-17
 
 ### Changed

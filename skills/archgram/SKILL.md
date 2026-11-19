@@ -43,20 +43,39 @@ Progress:
 
 ## Choose the kind
 
-Draw the kind the reader's question asks for:
+archgram says which kinds of diagram it draws:
 
-| The reader asks | Draw |
-|---|---|
-| What is it made of, and what calls what? | Architecture: the steps below as written |
-| In what order do the parts call each other for one request, and what comes back? | A sequence: the steps below, with `references/sequence.md` in place of `references/architecture.md` and `references/styles.md` |
-| What states does something go through, and what moves it from one to the next (a lifecycle)? Which role does each step of a business process (a workflow in lanes)? | Not a kind archgram draws yet: say so, and offer an architecture diagram or a sequence where one answers part of the question |
+```bash
+npx --yes --loglevel=error archgram@0.11.0 spec --kinds
+```
 
-"How it works", "the architecture", a data pipeline, a diagram for a
-README: architecture.
-"What happens when …", "step by step", the order of the calls of one
-request: a sequence. Never draw one kind as another without saying so:
-drawn as architecture, a request loses its order, and nothing tells the
-reader.
+Each line is one kind: the value a spec's `diagram` takes, the section of
+the format that holds its fields, and the question it answers. Draw the
+kind whose question the reader asks. "How it works", "the architecture",
+a data pipeline, a diagram for a README: architecture. "What happens when
+…", "step by step", the order of the calls of one request: a sequence.
+Never draw one kind as another without saying so: drawn as architecture,
+a request loses its order, and nothing tells the reader.
+
+Each kind this skill draws has a pack, `references/kinds/<kind>/`:
+`find.md` says how to find its facts (step 2), and `spec.md` how they
+become its spec (step 4). Then:
+
+- a kind archgram lists and this skill has a pack for: draw it;
+- a kind archgram lists and this skill has no pack for: say that this
+  archgram draws it and this skill cannot yet, and offer a kind it can
+  where one answers part of the question;
+- a question no listed kind answers, such as the states something goes
+  through (a lifecycle) or which role does each step of a business
+  process (a workflow in lanes): say that archgram does not draw it yet,
+  and offer a kind it draws where one answers part of the question.
+
+An archgram that refuses `--kinds` is older than the listing, such as a
+project's own older one. The kinds it draws are then the values
+`diagram` takes in `spec --section top-level`, and with no `diagram`
+there, architecture alone. A kind this skill has a pack for and that
+archgram does not draw needs a newer archgram: say so, and draw nothing
+of that kind.
 
 ## 1. Decide who reads it
 
@@ -68,27 +87,20 @@ README's audience, the user's words); ask only when nothing tells you.
 
 ## 2. Gather the facts
 
-Read `references/architecture.md`, then the code and the docs the diagram
-describes. For a sequence, read `references/sequence.md` instead and skip
-the styles: follow one entry point in the order the code runs it, each
-call a message with the line that makes it, and keep its participants,
-messages, fragments and phases as that file says; then go on to step 3. Recognise the style the system follows in the table in
-`references/styles.md`, and read that style's own file. Pick one level for
-the whole diagram, list the entry points, and follow each the reader cares
-about to what it calls, reads and writes. Draw a part only when a file
-backs it: a module, a route, a script, a store. Name it after the file
-that decides, found by following the imports, not by a name that looks
-right. Draw an edge only where a line of code makes it, and note that line
-(`src/api.ts:42`) and a few words of it that say what it does
-(`db.insert(order)`). Every label and note says what the code shows, too:
-what only the README or the docs say ("the data team reads it") is a
-claim no line backs, so it goes into the report as a gap or a question,
-never into the drawing. Keep the list of parts with their files and edges with
-their lines; the report ends with it, and it catches boxes and lines that
-exist only in someone's memory. Then fit it to what a reader takes in:
-merge parts with the same relations, each merged node's note naming the
-parts it stands for, and split what is left over about 10 nodes and 12
-edges (`references/architecture.md`, How much to draw).
+Read the kind's `find.md` (`references/kinds/<kind>/find.md`), then the
+code and the docs the diagram describes, and find the facts as it says.
+Whatever the kind, draw a part only when a file backs it: a module, a
+route, a script, a store. Name it after the file that decides, found by
+following the imports, not by a name that looks right. Draw a line
+between two parts (an edge, a message) only where a line of code makes
+it, and note that line (`src/api.ts:42`) and a few words of it that say
+what it does (`db.insert(order)`). Every label and note says what the
+code shows, too: what only the README or the docs say ("the data team
+reads it") is a claim no line backs, so it goes into the report as a gap
+or a question, never into the drawing. Keep the list of parts with their
+files and lines with theirs; the report ends with it, and it catches
+boxes and lines that exist only in someone's memory. How much of it to
+draw, and what to merge, is the kind's `spec.md` (step 4).
 
 ### From a document
 
@@ -131,7 +143,8 @@ brief gives it: the theme file in step 5, or the section a problem from
 npx --yes --loglevel=error archgram@0.11.0 spec --section <name>
 ```
 
-For a sequence, print its section too, before writing:
+The brief holds an architecture's fields. For any other kind, print the
+section `spec --kinds` named for it too, before writing, such as:
 
 ```bash
 npx --yes --loglevel=error archgram@0.11.0 spec --section sequence
@@ -148,54 +161,30 @@ The spec lives at `docs/diagrams/<name>.archgram.yaml`, where `<name>` says
 what the diagram shows (`architecture`, `request-flow`). Create the folder
 when it is missing. When the file already exists, this is an update:
 change it rather than starting over, keep what still holds, and note what
-you changed for the report. Keep its `direction` as it is written, and
-with none written, write none: the spec is then drawn left to right, as
-`right` would draw it. Only when it is `auto`, first draw the spec as it
-is (step 6) and write the direction `build` reports in its place, so the
-update cannot turn the drawing on its side. Start an update with
+you changed for the report; keep, too, what the kind's `spec.md` says an
+update keeps (an architecture's direction). Start an update with
 `archgram check` on the spec as it is: whatever it says has lost its
 code, find where that code went, if anywhere, and move or remove the
-part or line. The check cannot see what
-the code gained, so step 2's walk still finds what is new.
-Change what the check and the walk found, and nothing more: a part or a
-flow the request did not ask for is the user's to add.
+part or line. The check cannot see what the code gained, so step 2's
+walk still finds what is new. Change what the check and the walk found,
+and nothing more: a part or a flow the request did not ask for is the
+user's to add.
 
-A sequence's facts map as `references/sequence.md` says: participants,
-messages in the order the code runs, fragments for its branches, phases
-for its steps. A sequence has no `direction` and no `flows`: it is drawn
-top to bottom, numbers its messages and moves on its own, one phase at a
-time, so leave `still` out too. `shownWidth` holds as below. The rest of
-this step is for architecture, except `shownWidth` and the check.
+Write the facts in the format as the kind's `spec.md`
+(`references/kinds/<kind>/spec.md`) says, and draw as much of them as it
+says a reader takes in.
 
-Map the facts onto the format: each part a node of the kind that fits it,
-with its technology's logo (`tech`) when the part is built on one; each
-call or data movement an edge; a boundary (a service, a trust zone, the
-plugin versus the project) a frame; the path the contract's questions
-follow a flow, so it animates. Keep labels to the words a reader needs:
-an edge's label is a few words, two or three, naming the call or the data
-(`POST /orders`, `enqueue`, `read-through`); what the reader needs beyond
-that goes in a node's `note` or the report, not onto the line, since a
-long label pushes the cards apart.
 Say where the drawing is shown when it is not a README on GitHub: a docs
 site, a blog, a wiki, any page that shows it narrower. Write that width
 as `shownWidth`, in CSS pixels, the place at its widest, from the user's
 words or the page's own styles; ask only when nothing tells you. A
-drawing shown in two places takes the narrower. Leave the direction of a
-new drawing to archgram, `direction: auto`, unless the user asked for
-one: it lays the drawing out left to right while that keeps its text
-readable where it is shown, and otherwise in the narrower direction.
+drawing shown in two places takes the narrower.
 
 Put step 2's files and lines, or the document's sentences, in the spec
 wherever the format has a place for them, as it says, so archgram can
-tell when the code or the text behind a part or a line is gone. An edge from someone outside the code, a browser or a
-person at a terminal, takes the line that receives it.
-
-Leave `still` out, so the drawing carries no extra text, unless the user
-asks for it or the drawing is meant to be seen still (a PNG, print): then
-`numbers` for one or two flows, whose step numbers a reader can follow on
-the lines, and `legend` for more, whose flows read better as words. With
-four flows, numbers pile up into badges such as `5,8,11,14` that a reader
-cannot tie to a flow.
+tell when the code or the text behind a part or a line is gone. A line
+from someone outside the code, a browser or a person at a terminal,
+takes the line of code that receives it.
 
 Then check it, and repeat until it passes:
 
@@ -244,19 +233,14 @@ with what would bring it within: the other direction, with the width it
 would draw, or two diagrams. Do what it says: write that direction in the
 spec, or split the diagram in two, check each, and build again.
 
-A sequence is always drawn top to bottom; for it, skip the direction
-below. Once the drawing passes the critique below, write the direction `build`
-reported (`right` or `down`) in place of `direction: auto`, and check
-again: the drawing stays the same bytes, and a later edit cannot turn it
-on its side. Turn a drawing only when the user asks or `build` warns that
-it no longer fits where it is shown, and say so in the report.
-
 Run the critique in `references/reader.md` against the contract and fix
 what it finds: a question the picture cannot answer, a box no file backs,
 an edge with no line of code behind it, a missing hop. Judge from the spec
 and what `archgram build` wrote; never start a browser, headless or not,
 and never take a screenshot: the user sees the drawing, and a browser
-started in the background alarms them.
+started in the background alarms them. Once the drawing passes, do what
+the kind's `spec.md` asks of a drawing that passed: an architecture
+writes the direction `build` chose.
 
 Then open the drawing for the user, once, with the system's own viewer:
 `open` on macOS, `xdg-open` on Linux, `start ""` on Windows.
@@ -267,16 +251,14 @@ Tell the user, briefly, all of the following, on an update too: what
 changed comes first there, and the rest still follows.
 
 - the reader contract, and how the drawing answers it;
-- where it is drawn to be shown (a README, or `shownWidth`), its size,
-  and the direction written in the spec;
-- the style of architecture you recognised, by its name in
-  `references/styles.md`, or that none fitted;
+- where it is drawn to be shown (a README, or `shownWidth`), and its
+  size;
 - each part drawn, one line each, with the file (or the sentence) behind
   it, or that no file backs it (a browser, a person), and each edge, one
   line each, with the line (or the sentence) that makes it, those an
-  update left unchanged included; for a sequence, each participant with
-  its file, and each message in order with the line (or the sentence)
-  that makes it, and what was split or left out past about 15 messages;
+  update left unchanged included;
+- what the kind's `spec.md` adds to the report, or puts in place of the
+  parts and edges (a sequence's participants and messages);
 - on an update, what changed in the spec and why, starting with what
   `archgram check` said had lost its code;
 - where the colours came from, or that they are archgram's own and the

@@ -2,7 +2,7 @@
 
 | Field   | Value      |
 |---------|------------|
-| Version | 0.36       |
+| Version | 0.37       |
 | Date    | 2026-11-19 |
 | Status  | Draft      |
 | Owner   | Abas Turabli |
@@ -282,7 +282,10 @@ same file every time.
   work takes and who does each (workflow), where data goes (dataflow).
   A request that fits a kind archgram does not draw yet is said to be
   so, never drawn as another kind
-  ([docs/features/diagram-kinds.md](features/diagram-kinds.md)).
+  ([docs/features/diagram-kinds.md](features/diagram-kinds.md)). The
+  kinds it may draw are those `archgram spec --kinds` lists and it has a
+  pack for: how to find that kind's facts and how they become its spec
+  ([docs/features/facts.md](features/facts.md)).
 - It is written to the Agent Skills format alone: its frontmatter keeps the
   format's fields, and its steps name no one agent's tools, so every agent
   that reads skills follows the same steps.
@@ -483,3 +486,4 @@ None.
 | 0.34    | 2026-11-14 | A diff's marks take a colour by what the change did, repeating their signs; on an update, the skill's report of what changed is `archgram diff`'s (§6.3, §6.6, `docs/features/diff.md`). |
 | 0.35    | 2026-11-19 | The repository is also a Claude Code marketplace of the skill's plugin, so Claude Code installs and updates it without a claude.ai account (§6.5). |
 | 0.36    | 2026-11-19 | `archgram spec --kinds` lists the kinds of diagram a version draws, each with its section of the format and the question it answers (§6.5, `docs/features/facts.md`). |
+| 0.37    | 2026-11-19 | The skill draws the kinds `archgram spec --kinds` lists and it has a pack for, each pack how to find that kind's facts and how they become its spec (§6.6, `docs/features/facts.md`). |
