@@ -93,8 +93,8 @@ Run it on the drawing before you report, and fix what it finds.
 1. **Contract.** Can each question be answered from the picture alone?
 2. **The one idea.** Is it visible without reading any note?
 3. **Truth.** Is every node backed by a file you read, and named after
-   the file that decides (`references/architecture.md`)? Any name that
-   does not exist in the code?
+   the file that decides (`references/kinds/architecture/find.md`)? Any
+   name that does not exist in the code?
 4. **Edges.** Does every edge have the line of code that makes it, and
    mean the same kind of thing (a call, data moving)? Open each line you
    cite and check it does what the edge says: a line number read from
@@ -104,11 +104,11 @@ Run it on the drawing before you report, and fix what it finds.
    load-bearing idea is missing? Is anything there only because it exists
    in the code? More than about 10 nodes and 12 edges, or two nodes with
    the same relations that no question tells apart
-   (`references/architecture.md`, Same relations, one node)?
+   (`references/kinds/architecture/spec.md`, Same relations, one node)?
 6. **Missing steps.** Any hop the data takes that the picture skips: an
    embedding call, a build step, a check? Any entry point, mode, output or
    enforcement at this level that is neither drawn nor listed as left out
-   (`references/architecture.md`, What is easy to miss)?
+   (`references/kinds/architecture/find.md`, What is easy to miss)?
 7. **Width.** No wider than keeps its text readable where it is shown:
    1,300 px in a README, `shownWidth × 1300 / 880` elsewhere (SKILL.md,
    step 6); over it, `build` warns with what brings it within: the other

@@ -188,3 +188,68 @@ fn the_skill_frontmatter_is_plain_yaml() {
         }
     }
 }
+
+/// Every file the skill names by its path from the skill's root, as the
+/// Agent Skills format asks (`references/kinds/architecture/find.md`), is
+/// there, so moving a file cannot leave the skill pointing at nothing. A
+/// path with a placeholder (`references/kinds/<kind>/find.md`) names no
+/// one file.
+#[test]
+fn every_file_the_skill_names_is_there() {
+    let skill = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../skills/archgram");
+    let mut files = Vec::new();
+    markdown(&skill, &mut files);
+    let mut named = 0;
+    for file in &files {
+        let text = std::fs::read_to_string(file).unwrap();
+        for (n, line) in text.lines().enumerate() {
+            for (i, _) in line.match_indices("`references/") {
+                let path = line[i + 1..].split('`').next().unwrap_or_default();
+                let markdown = Path::new(path).extension().is_some_and(|e| e == "md");
+                if path.contains('<') || !markdown {
+                    continue;
+                }
+                assert!(
+                    skill.join(path).is_file(),
+                    "{}:{} names {path}, which is not in the skill",
+                    file.display(),
+                    n + 1
+                );
+                named += 1;
+            }
+        }
+    }
+    assert!(named > 0, "the skill names no reference file");
+}
+
+/// Each kind's pack, `references/kinds/<kind>/`, is named after a kind
+/// archgram draws, the value a spec's `diagram` takes, and holds the two
+/// files the skill reads: `find.md` for the facts and `spec.md` for the
+/// spec (docs/features/facts.md, Kind packs).
+#[test]
+fn every_kind_pack_is_a_kind_archgram_draws() {
+    let kinds =
+        Path::new(env!("CARGO_MANIFEST_DIR")).join("../../skills/archgram/references/kinds");
+    let drawn: Vec<&str> = archgram_core::spec::DiagramKind::ALL
+        .iter()
+        .map(|k| k.name())
+        .collect();
+    let mut packs = 0;
+    for entry in std::fs::read_dir(&kinds).unwrap_or_else(|e| panic!("{}: {e}", kinds.display())) {
+        let path = entry.unwrap().path();
+        if !path.is_dir() {
+            continue;
+        }
+        let name = path.file_name().unwrap().to_string_lossy().into_owned();
+        assert!(
+            drawn.contains(&name.as_str()),
+            "{} is a pack for `{name}`, which archgram does not draw ({drawn:?})",
+            path.display()
+        );
+        for file in ["find.md", "spec.md"] {
+            assert!(path.join(file).is_file(), "the {name} pack has no {file}");
+        }
+        packs += 1;
+    }
+    assert!(packs > 0, "{} holds no pack", kinds.display());
+}
