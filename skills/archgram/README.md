@@ -36,6 +36,12 @@ For other agents, and every other way, see
   the npm registry. You choose to install it into the project, pinned by
   its lockfile, or to let npx download it once, and it does neither
   until you answer.
+- Before it reads the code, it runs its own `scripts/size.mjs` with
+  Node, from the project's root: it lists what git tracks (`git ls-files`,
+  `git check-attr`), counts the lines of what it would read, and prints
+  the size, the areas and what it leaves out. It reads only under the
+  project's folder, follows no symbolic link, prints no file's contents
+  and makes no network request.
 - It reads the project's code and documentation, and its styling files
   when asked for its colours.
 - From archgram 0.7, a spec may name the file behind each part and a few

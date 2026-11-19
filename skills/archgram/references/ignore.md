@@ -17,6 +17,10 @@ before leaves:
    - `*.min.js`, `*.map`, and lock files (`package-lock.json`,
      `pnpm-lock.yaml`, `yarn.lock`, `Cargo.lock`, `go.sum`,
      `poetry.lock`);
+   - images, fonts and other media (`.svg`, `.png`, `.jpg`, `.woff2`,
+     `.ttf`, `.pdf`, `.mp4`, archives), which no walk of the code reads;
+     a theme's colours come from the styling code, not from them
+     (`references/theme.md`);
    - a generated file, by its first lines (Go's
      `// Code generated … DO NOT EDIT.`, a `@generated` mark) or its name
      (`zz_generated*`, `*.pb.go`, `*_pb2.py`).
@@ -25,6 +29,8 @@ before leaves:
 ignores them or what they hold is generated: in some projects they hold
 source, such as build scripts. Look before you leave one out.
 
+The skill's `scripts/size.mjs` leaves out the same, from git's own lists
+and `git check-attr`, and prints each with its layer (SKILL.md, step 2).
 Everything left out goes into the facts document's coverage, with the
 layer that left it out (`references/facts.md`, The core layer), so the
 user sees what was not read. A generated file is not read, but a

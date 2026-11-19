@@ -2,7 +2,7 @@
 
 | Field   | Value      |
 |---------|------------|
-| Version | 0.2        |
+| Version | 0.3        |
 | Date    | 2026-11-19 |
 | Status  | Draft      |
 | Release | Planned    |
@@ -266,6 +266,16 @@ that is not generated.
     the report says the facts were not approved. An open question stops
     it either way. The skill's evaluations that draw say so in their
     prompts; `stops-for-the-facts` does not, and expects the stop.
+12. **Sizing is a script in the skill, `scripts/size.mjs`,** run with
+    Node before the code is read. It takes git's list of tracked files,
+    the project's `.gitattributes` through `git check-attr`, and the
+    rest of `references/ignore.md`; it counts the lines and the bytes of
+    what is left, about four bytes a token, and splits it into areas no
+    larger than one reader's budget, 100,000 tokens until measured. It
+    reads only under the project's folder, follows no symbolic link,
+    prints no file's contents and uses no network. Its test,
+    `scripts/skill-size.test.mjs`, runs in CI on the Node versions the
+    launcher is tested on.
 
 ## Open questions
 
@@ -273,10 +283,10 @@ that is not generated.
   Recommended: always.
 - Which model each agent runs on. To be measured on Kubernetes: the
   session's model against Sonnet, for accuracy and tokens.
-- Where sizing lives: a command, `archgram survey`, deterministic and
-  tested in CI, which reads every file's size and header and so changes
-  `SECURITY.md` (What archgram reads); or a script in the skill,
-  quicker to write and tried first.
+- Whether sizing moves into archgram, as `archgram survey`, from the
+  skill's script, `scripts/size.mjs` (Decided, 12). The command would be
+  tested on every system CI builds, but reads every file's size and
+  header, and so changes `SECURITY.md` (What archgram reads).
 - The limits between a small, a medium and a large scope, to be
   measured, not guessed. A first guess, to replace: about 100,000 tokens
   for one scanner.
@@ -300,3 +310,4 @@ that is not generated.
 |---------|------------|--------|
 | 0.1     | 2026-11-19 | First draft, from #165: one skill that takes the kind first, measures the scope, scans it with read-only sub-agents in clean contexts, verifies every cited line and writes the facts as a document the user approves before the spec; a core layer and a layer per kind, with evidence levels; what is not read, in three layers; `archgram spec --kinds`, built from `DiagramKind`. Open: the verifier, the models, where sizing lives, its limits, the document's place, the PRD. |
 | 0.2     | 2026-11-19 | The document is one for the project, `docs/diagrams/facts.md`, its core once and a layer per diagram; the skill stops for the user's approval of it before a spec, unless the request says to go on (Decided, 10 and 11). The PRD points here (§6.6). |
+| 0.3     | 2026-11-19 | Sizing is a script in the skill, `scripts/size.mjs`, tested in CI; whether it moves into archgram stays open (Decided, 12). |

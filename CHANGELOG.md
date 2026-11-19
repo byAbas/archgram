@@ -30,6 +30,14 @@ follow [Semantic Versioning](https://semver.org/).
   the document, unless you said to go on without it, and draws only
   facts a line of code or a configuration backs. A second diagram of the
   project starts from the same document.
+- Before it reads the code, the `archgram` skill measures what it would
+  read with a script of its own, `scripts/size.mjs`: the files git
+  tracks, less what is never the project's own (vendored, generated,
+  minified, lock files, media, what `.gitattributes` marks), in areas no
+  larger than one reader takes in. It tells you the size and the areas,
+  asks whether to narrow a large scope, and reads area by area. The
+  script reads only under the project's folder, follows no link and
+  uses no network.
 
 ### Changed
 

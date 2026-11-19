@@ -69,9 +69,9 @@ sh evals/archgram/run.sh --out ~/archgram-evals/iteration-1 --repeat 3 --jobs 4 
 - **Nothing else:** only the project's own settings load
   (`--setting-sources project`), and every plugin the user has on is
   turned off for the runs, so neither side gets help the other does not.
-- **Unattended:** reading, writing in the copy, and archgram at the
-  skill's version, looked for (`npx --no --offline`) or run, run without
-  a prompt; anything else is denied
+- **Unattended:** reading, writing in the copy, archgram at the skill's
+  version, looked for (`npx --no --offline`) or run, and the skill's
+  sizing script (`scripts/size.mjs`) run without a prompt; anything else is denied
   (`--permission-prompts none`), which also takes away the tool that asks
   the user a question, so a question is asked in the run's reply. The
   system's viewer is denied too, so a case expects the skill to try to

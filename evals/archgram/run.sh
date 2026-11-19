@@ -87,6 +87,8 @@ if [ "${1:-}" = __one ]; then
     --allowedTools Read Write Edit Glob Grep Skill \
     "Bash(npx --yes --loglevel=error archgram@$EVAL_VERSION *)" \
     "Bash(npx --no --offline --loglevel=error archgram@$EVAL_VERSION *)" \
+    "Bash(node $EVAL_OUT/skill-snapshot/archgram/scripts/size.mjs)" \
+    "Bash(node $EVAL_OUT/skill-snapshot/archgram/scripts/size.mjs *)" \
     "Bash(ls *)" "Bash(cat *)" "Bash(head *)" "Bash(grep *)" "Bash(find *)" \
     "Bash(wc *)" "Bash(git ls-files*)" "Bash(git status*)" "Bash(git diff*)" \
     "Bash(node --version)"
