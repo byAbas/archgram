@@ -6,7 +6,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import { chmodSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -150,4 +150,35 @@ test('outside git it walks the folder, and does not walk into one never its own'
   assert.match(out, /^Not a git repository/m);
   assert.match(out, /^Read: 1 files, /m);
   assert.match(section(out, 'Left out'), /\| node_modules\/ \|  \| never the project's own/);
+});
+
+test('a file that commonly holds secrets is left out by its name, never opened', (t) => {
+  // The list docs/SPEC.md (Sources) gives, so a name added there is held
+  // here too: a pattern becomes a file of that pattern, a folder a file in it.
+  const spec = readFileSync(path.join(path.dirname(script), '../../../docs/SPEC.md'), 'utf8');
+  const sentence = spec.split('commonly holds secrets rather than code (')[1].split(').')[0];
+  const names = [...sentence.matchAll(/`([^`]+)`/g)].map((m) => m[1]);
+  assert.ok(names.includes('.env') && names.includes('.ssh'), sentence);
+  const folders = new Set(['.ssh', '.aws', '.gnupg', '.docker']);
+  const files = names.map((n) => (folders.has(n) ? `${n}/config` : n.replace('*', 'x')));
+
+  const dir = project({ 'src/app.js': 'run();\n', ...Object.fromEntries(files.map((f) => [f, 'TOKEN=secret\n'])) });
+  // Unreadable once git has them: a script that opened one would fail to,
+  // and drop it, instead of listing it as left out.
+  for (const f of files) chmodSync(path.join(dir, f), 0o000);
+  t.after(() => {
+    for (const f of files) chmodSync(path.join(dir, f), 0o600);
+    rmSync(dir, { recursive: true, force: true });
+  });
+
+  const { code, out } = size(dir);
+  assert.equal(code, 0);
+  assert.match(out, /^Read: 1 files, /m, 'only src/app.js');
+  const left = section(out, 'Left out');
+  const secret = left
+    .split('\n')
+    .filter((l) => l.includes('commonly holds secrets: never opened'))
+    .reduce((n, l) => n + Number(l.split('|')[2].trim()), 0);
+  assert.equal(secret, files.length, `${files.length} secret files, each left out:\n${left}`);
+  assert.ok(!out.includes('TOKEN'), 'nothing of a secret is printed');
 });

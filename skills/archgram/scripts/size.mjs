@@ -30,7 +30,21 @@ const LARGEST = 4 * 1024 * 1024;
 const ROWS = 40;
 const HEAD = 1024;
 
-// references/ignore.md, layer 3: folders and files never the project's own.
+// Files that commonly hold secrets, the list docs/SPEC.md (Sources) gives
+// and archgram itself refuses as a source: never opened, not even to
+// count their lines, so a key or a token never passes through here.
+const SECRET_NAMES = new Set([
+  '.env', '.npmrc', '.pypirc', '.netrc', '.git-credentials',
+  'id_rsa', 'id_dsa', 'id_ecdsa', 'id_ed25519',
+]);
+const SECRET_DIRS = new Set(['.ssh', '.aws', '.gnupg', '.docker']);
+const isSecret = (parts) => {
+  const name = parts.at(-1);
+  return SECRET_NAMES.has(name) || name.startsWith('.env.') ||
+    /\.(pem|key|p12|pfx)$/.test(name) || parts.slice(0, -1).some((p) => SECRET_DIRS.has(p));
+};
+
+// references/ignore.md, layer 4: folders and files never the project's own.
 const NEVER_DIRS = new Set([
   'vendor', 'third_party', 'node_modules', 'bower_components', 'Pods',
   '.venv', 'venv', '__pycache__',
@@ -55,15 +69,16 @@ const isManifest = (name) =>
   /\.csproj$/.test(name);
 
 const WHY = {
-  never: "never the project's own (references/ignore.md, 3)",
-  lock: 'a lock file (references/ignore.md, 3)',
-  minified: 'minified or a source map (references/ignore.md, 3)',
-  generatedName: 'generated, by its name (references/ignore.md, 3)',
-  generatedHead: 'generated, by its first lines (references/ignore.md, 3)',
-  media: 'an image, a font or other media (references/ignore.md, 3)',
-  marked: 'marked in .gitattributes (references/ignore.md, 2)',
-  ignored: 'git ignores it (references/ignore.md, 1)',
-  untracked: 'git does not track it (references/ignore.md, 1)',
+  secret: 'commonly holds secrets: never opened (references/ignore.md, 1)',
+  never: "never the project's own (references/ignore.md, 4)",
+  lock: 'a lock file (references/ignore.md, 4)',
+  minified: 'minified or a source map (references/ignore.md, 4)',
+  generatedName: 'generated, by its name (references/ignore.md, 4)',
+  generatedHead: 'generated, by its first lines (references/ignore.md, 4)',
+  media: 'an image, a font or other media (references/ignore.md, 4)',
+  marked: 'marked in .gitattributes (references/ignore.md, 3)',
+  ignored: 'git ignores it (references/ignore.md, 2)',
+  untracked: 'git does not track it (references/ignore.md, 2)',
   link: 'a symbolic link, not followed',
   binary: 'not text',
   large: `larger than ${LARGEST / (1024 * 1024)} MiB`,
@@ -177,6 +192,8 @@ function head(full) {
 function why(root, file, mark) {
   const parts = file.split('/');
   const name = parts.at(-1);
+  // First, by its name alone: nothing of a secret's file is looked at.
+  if (isSecret(parts)) return WHY.secret;
   if (mark === true) return WHY.marked;
   const kept = mark === false;
   if (!kept && parts.slice(0, -1).some((p) => NEVER_DIRS.has(p))) return WHY.never;
