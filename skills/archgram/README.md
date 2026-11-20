@@ -40,8 +40,10 @@ For other agents, and every other way, see
   Node, from the project's root: it lists what git tracks (`git ls-files`,
   `git check-attr`), counts the lines of what it would read, and prints
   the size, the areas and what it leaves out. It reads only under the
-  project's folder, follows no symbolic link, prints no file's contents
-  and makes no network request.
+  project's folder, follows no symbolic link, prints no file's contents,
+  makes no network request, and never opens a file that commonly holds
+  secrets (`.env`, `*.pem`, `.npmrc` and the like): it leaves it out by
+  its name.
 - It reads the project's code and documentation, and its styling files
   when asked for its colours.
 - From archgram 0.7, a spec may name the file behind each part and a few

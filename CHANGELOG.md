@@ -36,8 +36,10 @@ follow [Semantic Versioning](https://semver.org/).
   minified, lock files, media, what `.gitattributes` marks), in areas no
   larger than one reader takes in. It tells you the size and the areas,
   asks whether to narrow a large scope, and reads area by area. The
-  script reads only under the project's folder, follows no link and
-  uses no network.
+  script reads only under the project's folder, follows no link, uses no
+  network, and never opens a file that commonly holds secrets (`.env`,
+  `*.pem`, `.npmrc` and the rest of the list archgram refuses as a
+  source), not even to count its lines.
 
 - `archgram build --preview` also writes a still PNG of each theme beside
   the drawing, `<name>.preview.light.png` and `<name>.preview.dark.png`,

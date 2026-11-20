@@ -5,13 +5,20 @@ by hand. Reading it fills the context and draws parts that are not the
 project's. Leave out, in this order, each layer catching what the one
 before leaves:
 
-1. **What git does not track.** What the project's `.gitignore` files
+1. **What commonly holds secrets**, tracked or not, and never opened,
+   not even to look or count: `.env`, `.env.*`, `.npmrc`, `.pypirc`,
+   `.netrc`, `.git-credentials`, `*.pem`, `*.key`, `*.p12`, `*.pfx`,
+   `id_rsa`, `id_dsa`, `id_ecdsa`, `id_ed25519`, and anything in `.ssh`,
+   `.aws`, `.gnupg` or `.docker`: the list archgram itself refuses as a
+   source (`spec --section sources`). Its path may go into the coverage;
+   nothing of it goes anywhere.
+2. **What git does not track.** What the project's `.gitignore` files
    ignore: usually `node_modules/`, `dist/`, `out/`, `.next/`,
    `coverage/`.
-2. **What the project marks.** Paths its `.gitattributes` gives
+3. **What the project marks.** Paths its `.gitattributes` gives
    `linguist-vendored` or `linguist-generated`, GitHub Linguist's marks
    for code that is not the project's own or is written by a tool.
-3. **What is never the project's own**, tracked or not:
+4. **What is never the project's own**, tracked or not:
    - `vendor/`, `third_party/`, `node_modules/`, `bower_components/`,
      `Pods/`, `.venv/`, `venv/`, `__pycache__/`;
    - `*.min.js`, `*.map`, and lock files (`package-lock.json`,
