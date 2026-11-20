@@ -14,6 +14,9 @@ path = "src/main.rs"
 archgram-core = { path = "../archgram-core" }
 archgram-icons = { path = "../archgram-icons" }
 archgram-yaml = { path = "../archgram-yaml" }
+# The still preview (docs/features/reader-check.md, #173): rendering only,
+# with the embedded fonts; no system fonts, no image formats.
+resvg = { version = "0.50", default-features = false, features = ["text"] }
 
 [lints]
 workspace = true

@@ -28,7 +28,7 @@ Progress:
 - [ ] 3. The spec format, from archgram itself
 - [ ] 4. Spec written and checked
 - [ ] 5. The project's colours, when asked
-- [ ] 6. Drawn, critiqued, opened
+- [ ] 6. Drawn, looked at, critiqued, opened
 - [ ] 7. Reported
 ```
 
@@ -307,16 +307,18 @@ styling files unread and write no theme.
 An `archgram.theme.json` already at the project's root was asked for
 before: keep drawing with it.
 
-## 6. Draw, critique, open
+## 6. Draw, look at it, critique, open
 
 ```bash
-npx --yes --loglevel=error archgram@0.11.0 build docs/diagrams/<name>.archgram.yaml
+npx --yes --loglevel=error archgram@0.11.0 build docs/diagrams/<name>.archgram.yaml --preview
 ```
 
 Add `--theme-file archgram.theme.json` when the project's root has one.
 The drawing lands beside the spec as `docs/diagrams/<name>.svg`, and
 `build` says its size and the direction it chose: `wrote … (588 × 740 px,
-top to bottom)`.
+top to bottom)`. `--preview` also writes a still image of each theme
+beside it, `<name>.preview.light.png` and `<name>.preview.dark.png`,
+which archgram renders itself: no browser, no network.
 A drawing wider than keeps its text readable where it is shown, 1,300 px
 in a README on GitHub (which shows an image about 880 px wide) or
 `shownWidth × 1300 / 880` elsewhere, is still drawn, and `build` warns
@@ -324,14 +326,23 @@ with what would bring it within: the other direction, with the width it
 would draw, or two diagrams. Do what it says: write that direction in the
 spec, or split the diagram in two, check each, and build again.
 
-Run the critique in `references/reader.md` against the contract and fix
-what it finds: a question the picture cannot answer, a box no file backs,
-an edge with no line of code behind it, a missing hop. Judge from the spec
-and what `archgram build` wrote; never start a browser, headless or not,
-and never take a screenshot: the user sees the drawing, and a browser
-started in the background alarms them. Once the drawing passes, do what
-the kind's `spec.md` asks of a drawing that passed: an architecture
-writes the direction `build` chose.
+Look at both previews, as the reader will see the drawing, and run the
+critique in `references/reader.md` on what you see, not on the spec:
+answer each of the contract's questions from the image alone, and find
+where the one idea's parts stand, where arrows crowd or cross, and what
+is hard to read in either theme. Fix what it finds in the spec, build
+again with `--preview`, and look again, until it passes; say in the
+report what you saw and what you changed. Never start a browser,
+headless or not: the previews are what you look at. Once the drawing
+passes, do what the kind's `spec.md` asks of a drawing that passed: an
+architecture writes the direction `build` chose.
+
+An archgram older than the preview refuses `--preview`: build without it,
+critique from the spec and the size as well as you can, and say in the
+report that you could not see the drawing.
+
+The previews are for checking, not for the project: tell the user they
+can delete them, or leave them out of git.
 
 Then open the drawing for the user, once, with the system's own viewer:
 `open` on macOS, `xdg-open` on Linux, `start ""` on Windows.
@@ -356,6 +367,8 @@ changed comes first there, and the rest still follows.
   `archgram check` said had lost its code;
 - where the colours came from, or that they are archgram's own and the
   project's can be asked for;
+- what you saw in the previews, the answer to each contract question
+  the image gave, and what you changed after looking;
 - what the diagram still does not show;
 - when the project's own archgram is older than `archgram@0.11.0`: its
   version, that this skill was released with `archgram@0.11.0`, and the

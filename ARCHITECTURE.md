@@ -16,7 +16,7 @@ spec (JSON, or YAML through archgram-yaml)
   -> layout                  layers, order, coordinates, frames
   -> route                   orthogonal edge paths around the boxes
   -> render                  SVG: shapes, theme, legend, optional animation
-  -> rasterise (later)       PNG per theme, through archgram-png
+  -> preview (on request)    the SVG of each theme to a still PNG, with resvg
 ```
 
 Every stage takes the previous stage's output and returns a new value. No
@@ -33,8 +33,7 @@ The repository is one Cargo workspace.
 | `archgram-core` | Spec types, validation, the check of each source against the code, IR, measuring, layout, routing, SVG, themes and their import from DTCG tokens, the flows' timing and animation, the embedded font and its subsetter | `serde`, `serde_json`, `skrifa` |
 | `archgram-icons` | Technology logos: a pinned release of Simple Icons as data, written by `cargo xtask icons <tag> <commit>`, through the core's `Logos` trait | `archgram-core` |
 | `archgram-yaml` | YAML to the core's `Spec`, with line and column in errors | `archgram-core`, `saphyr-parser` |
-| `archgram-png` (later) | The scene to PNG, one theme at a time, with archgram's own rasterizer | `archgram-core` |
-| `archgram-cli` | The `archgram` binary: files, flags, exit codes | the crates above |
+| `archgram-cli` | The `archgram` binary: files, flags, exit codes; the still preview, `build --preview`, which renders the SVG of each theme to PNG with resvg after replacing its CSS custom properties with their values and naming the embedded font as its files do (`src/preview.rs`, docs/features/reader-check.md) | the crates above, `resvg` |
 | `archgram-wasm` (later) | The WASM package, for the browser | `archgram-core`, `archgram-yaml`, `wasm-bindgen` |
 | `xtask` | Repository tasks run with `cargo xtask`: the logos, the embedded fonts, the npm packages; never shipped | `archgram-core`, `serde_json` |
 
@@ -413,13 +412,22 @@ passes, its pill traced like a lit card's border from the moment the
 eased signal reaches it (`motion::reached`); the light is one of the
 borders, so it is hidden with them.
 
-### Rasterise
+### Preview
 
-Later (PRD, §5). `archgram-png` will draw the scene (Render) into pixels
-with archgram's own rasterizer, one theme at a time, reading the same
-style table as the SVG; what moves is not drawn, so the PNG is the still
-image. No third-party renderer: `resvg` and `tiny-skia` were weighed and
-left out to keep the supply chain small.
+`archgram build --preview` (docs/features/reader-check.md) renders the
+SVG of each theme, the one Render writes for that theme, to a still PNG
+with resvg, in `archgram-cli` (`src/preview.rs`). Before resvg reads it,
+each CSS custom property is replaced by the value the style gives it,
+since usvg resolves none and draws such a shape black, and the embedded
+font's family is named as the font files name it; a property with no
+value, or two, is an error. Only the embedded fonts are loaded, and no
+image is fetched. What moves is not drawn, so the PNG is the still image.
+
+An earlier plan kept the supply chain smaller with a rasterizer of
+archgram's own, `resvg` and `tiny-skia` weighed and left out. The owner
+chose resvg on 2026-11-19 (#173): the preview exists so the skill can
+check a drawing as a reader sees it, and an error in our own drawing of
+the icons or the text would put a wrong image in front of that check.
 
 ## Invariants
 
@@ -536,8 +544,7 @@ spec generator are small helpers inside the workspace.
   marketplace; Claude Code clones the repository to read it and copies
   only the folder into its plugin cache
   ([plugin loading](https://code.claude.com/docs/en/plugins/loading#in-place-and-copied-plugins)).
-- Later: a WASM package for the browser, and the PNG module as a
-  separate, optional package.
+- Later: a WASM package for the browser.
 - Crates on crates.io once the API is stable.
 - One SVG carries both themes by default. `archgram build --split-themes`
   lays the diagram out once and writes `<name>.light.svg` and

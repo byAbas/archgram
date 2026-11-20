@@ -996,3 +996,124 @@ fn spec_has_a_sequence_section() {
     assert!(section.starts_with("## Sequence\n"), "{section}");
     assert!(section.contains("diagram: sequence"));
 }
+
+/// The colour a theme's drawing gives `--name` on its `:root`, as RGB.
+fn root_colour(svg: &str, name: &str) -> [u8; 3] {
+    let rule = svg
+        .split(":root {")
+        .nth(1)
+        .unwrap()
+        .split('}')
+        .next()
+        .unwrap();
+    let hex = rule
+        .split(';')
+        .find_map(|d| d.trim().strip_prefix(&format!("{name}:")))
+        .unwrap_or_else(|| panic!("no {name} on :root"))
+        .trim()
+        .trim_start_matches('#');
+    let byte = |i: usize| u8::from_str_radix(&hex[i..i + 2], 16).unwrap();
+    [byte(0), byte(2), byte(4)]
+}
+
+/// `build --preview` writes a still PNG of each theme beside the drawing,
+/// at the drawing's size, its canvas the theme's own colour and almost none
+/// of it black: what resvg draws of an SVG whose colours it cannot read
+/// (docs/features/reader-check.md). Both kinds of diagram, every example.
+#[test]
+fn build_preview_draws_each_theme_as_the_drawing_shows_it() {
+    use resvg::tiny_skia::Pixmap;
+    let dir = scratch("preview");
+    let examples = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../examples");
+    let mut drawn = 0;
+    for entry in std::fs::read_dir(&examples).unwrap() {
+        let spec = entry.unwrap().path();
+        if spec.extension().is_none_or(|e| e != "json") {
+            continue;
+        }
+        let name = spec.file_stem().unwrap().to_string_lossy().into_owned();
+        let out = dir.join(format!("{name}.svg"));
+        let run = archgram(&[
+            "build",
+            spec.to_str().unwrap(),
+            "-o",
+            out.to_str().unwrap(),
+            "--preview",
+        ]);
+        assert!(run.status.success(), "{name}: {}", stderr(&run));
+        for theme in ["light", "dark"] {
+            let png = dir.join(format!("{name}.preview.{theme}.png"));
+            assert!(
+                stdout(&run).contains(&format!("{} (the still preview, {theme})", png.display()))
+            );
+            let image = Pixmap::decode_png(&std::fs::read(&png).unwrap())
+                .unwrap_or_else(|e| panic!("{}: {e}", png.display()));
+
+            let themed = dir.join(format!("{name}.{theme}.svg"));
+            let run = archgram(&[
+                "build",
+                spec.to_str().unwrap(),
+                "-o",
+                themed.to_str().unwrap(),
+                "--theme",
+                theme,
+            ]);
+            assert!(run.status.success(), "{name} {theme}: {}", stderr(&run));
+            let svg = read(&themed);
+            let size = |attr: &str| -> f64 {
+                let v = svg
+                    .split(&format!(" {attr}=\""))
+                    .nth(1)
+                    .unwrap()
+                    .split('"')
+                    .next()
+                    .unwrap();
+                v.parse::<f64>().unwrap()
+            };
+            // The drawing's size, rounded up: no row of it cut off.
+            for (got, want, attr) in [
+                (image.width(), size("width"), "width"),
+                (image.height(), size("height"), "height"),
+            ] {
+                assert!(
+                    f64::from(got) >= want && f64::from(got) < want + 1.0,
+                    "{name} {theme}: the preview's {attr} is {got}, the drawing's {want}"
+                );
+            }
+
+            let canvas = root_colour(&svg, "--canvas");
+            let middle_left = image
+                .pixel(image.width() / 100 + 2, image.height() / 2)
+                .unwrap();
+            assert_eq!(
+                [middle_left.red(), middle_left.green(), middle_left.blue()],
+                canvas,
+                "{name} {theme}: the canvas is not the theme's"
+            );
+            let black = image
+                .pixels()
+                .iter()
+                .filter(|p| p.alpha() > 0 && p.red() < 8 && p.green() < 8 && p.blue() < 8)
+                .count();
+            // Under 2 %: a drawing resvg could not colour is almost all black.
+            assert!(
+                black * 50 < image.pixels().len(),
+                "{name} {theme}: {black} of {} pixels black",
+                image.pixels().len()
+            );
+        }
+        drawn += 1;
+    }
+    assert!(drawn >= 5, "only {drawn} examples drawn");
+    let plain = archgram(&[
+        "build",
+        examples.join("linkshort.json").to_str().unwrap(),
+        "-o",
+        dir.join("plain.svg").to_str().unwrap(),
+    ]);
+    assert!(plain.status.success());
+    assert!(
+        !dir.join("plain.preview.light.png").exists(),
+        "no preview without --preview"
+    );
+}

@@ -14,6 +14,16 @@ allow = [
   # archgram-core: the embedded Geist fonts
   "OFL-1.1",
 ]
+# resvg's tree, for the still preview (docs/features/reader-check.md, #173),
+# approved by the owner on 2026-11-19 for these crates alone, so another
+# crate under the same licence is still refused until it is approved.
+exceptions = [
+  { crate = "tiny-skia", allow = ["BSD-3-Clause"] },
+  { crate = "tiny-skia-path", allow = ["BSD-3-Clause"] },
+  { crate = "arrayref", allow = ["BSD-2-Clause"] },
+  { crate = "foldhash", allow = ["Zlib"] },
+  { crate = "slotmap", allow = ["Zlib"] },
+]
 
 # Every version in Cargo.lock against the RustSec advisory database,
 # cargo-deny's default. Any vulnerability fails. An unmaintained crate

@@ -43,6 +43,22 @@ not the machine's, so what a run finds never depends on the machine. A
 case with `"archgram": "absent"` (`asks-before-downloading`) gets an
 empty cache and no archgram at all.
 
+The skill looks at its drawing before it reports: it builds with
+`--preview` and critiques the still images, so a case that draws expects
+that, and still that no browser was started (docs/features/reader-check.md).
+
+## The reader test
+
+Whether a reader understands the drawing is measured, not only claimed.
+A case with `reader` questions in `evals.json` (`draws-a-project`,
+`draws-a-sequence`) gets one more step after a `with_skill` run: a fresh
+`claude -p` session, in an empty folder holding nothing but the run's
+light preview, reads the image and answers each question from it alone,
+or says `not shown`. Each answer counts as right when it holds one of the
+words a right answer holds, and `reader.json` beside the run keeps the
+score, the answers and the words. The session may read that one image
+and nothing else, and stops at $0.30; a run that drew no preview scores 0.
+
 The skill also stops for the user to approve its facts document before it
 writes a spec (docs/PRD.md 6.6). A case that draws says in its prompt that
 the user does not need to check the facts first, as a user may, so the run

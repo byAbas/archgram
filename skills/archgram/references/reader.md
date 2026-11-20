@@ -88,10 +88,17 @@ than cramming both into one, and write two specs.
 
 ## The critique
 
-Run it on the drawing before you report, and fix what it finds.
+Run it on the previews `build --preview` writes, the drawing as a reader
+sees it (SKILL.md, step 6), before you report, and fix what it finds.
+Judge what the image shows, not what the spec says it should.
 
-1. **Contract.** Can each question be answered from the picture alone?
-2. **The one idea.** Is it visible without reading any note?
+1. **Contract.** Answer each question from the preview alone, and write
+   the answer down. A question the image cannot answer is a gap: fix the
+   spec, not the answer.
+2. **The one idea.** Is it visible without reading any note? Its parts
+   stand where the eye lands, near the middle or on the main path, not
+   pushed to an edge, and the lines that carry it are not lost among
+   others.
 3. **Truth.** Is every node backed by a file you read, and named after
    the file that decides (`references/kinds/architecture/find.md`)? Any
    name that does not exist in the code?
@@ -115,6 +122,11 @@ Run it on the drawing before you report, and fix what it finds.
    direction, written in the spec, or two diagrams.
 8. **Clutter.** An edge label longer than two or three words; a label on
    an edge that could be a node's note; a line that detours round the
-   whole drawing; a frame that groups nothing a reader needs.
-9. **Honest gaps.** What the diagram still does not show. Say it in the
+   whole drawing; arrowheads crowding into one card, or lines crossing
+   where another order would not; a frame that groups nothing a reader
+   needs.
+9. **Both themes.** Every label, note and logo readable on the light and
+   on the dark preview; a logo or a colour that disappears on one of
+   them is named in the report.
+10. **Honest gaps.** What the diagram still does not show. Say it in the
    report; do not hide it.

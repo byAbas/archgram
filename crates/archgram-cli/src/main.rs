@@ -5,6 +5,7 @@
 //! wrong or a file cannot be read or written.
 
 mod files;
+mod preview;
 
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
@@ -188,6 +189,9 @@ struct Build {
     split: bool,
     /// A mapping file for a project's own colours.
     theme_file: Option<String>,
+    /// Also write a still PNG of each theme, to check what a reader sees
+    /// (docs/features/reader-check.md).
+    preview: bool,
 }
 
 fn build_options(rest: &[&str]) -> Result<Build, String> {
@@ -195,6 +199,7 @@ fn build_options(rest: &[&str]) -> Result<Build, String> {
     let mut options = Options::default();
     let (mut split, mut themed) = (false, false);
     let mut theme_file = None;
+    let mut preview = false;
     let mut it = rest.iter();
     while let Some(arg) = it.next() {
         match *arg {
@@ -215,6 +220,7 @@ fn build_options(rest: &[&str]) -> Result<Build, String> {
             }
             "--system-font" => options.embed_font = false,
             "--split-themes" => split = true,
+            "--preview" => preview = true,
             "--theme-file" => {
                 theme_file = Some((*it.next().ok_or("--theme-file needs a file")?).to_owned());
             }
@@ -229,6 +235,7 @@ fn build_options(rest: &[&str]) -> Result<Build, String> {
         options,
         split,
         theme_file,
+        preview,
     })
 }
 
@@ -403,6 +410,7 @@ fn build(
         mut options,
         split,
         theme_file,
+        preview,
     }: Build,
 ) -> ExitCode {
     if let Some(file) = theme_file {
@@ -429,7 +437,7 @@ fn build(
                 Diagram::Architecture(spec) => spec,
                 Diagram::Sequence(seq) => {
                     let out = out.unwrap_or_else(|| default_output(path));
-                    return build_sequence(path, &seq, (out, split), options);
+                    return build_sequence(path, &seq, (out, split, preview), options);
                 }
             }
         }
@@ -446,7 +454,7 @@ fn build(
         }
     } else {
         match archgram_core::draw_with(&spec, options, &Icons::load()) {
-            Ok(drawing) => vec![(out, drawing)],
+            Ok(drawing) => vec![(out.clone(), drawing)],
             Err(errors) => return report(path, &errors),
         }
     };
@@ -458,7 +466,14 @@ fn build(
             too_wide(&spec, options, drawing)
         );
     }
-    write_drawings(drawings)
+    let code = write_drawings(drawings);
+    if !preview || code != ExitCode::SUCCESS {
+        return code;
+    }
+    match archgram_core::draw_themes(&spec, options, &Icons::load()) {
+        Ok((light, dark)) => write_previews(&out, &light.svg, &dark.svg),
+        Err(errors) => report(path, &errors),
+    }
 }
 
 /// Draws a sequence (docs/features/sequence.md) into `out`, or one file
@@ -467,7 +482,7 @@ fn build(
 fn build_sequence(
     path: &str,
     seq: &archgram_core::sequence::Sequence,
-    (out, split): (PathBuf, bool),
+    (out, split, preview): (PathBuf, bool, bool),
     options: Options,
 ) -> ExitCode {
     let icons = Icons::load();
@@ -478,7 +493,10 @@ fn build_sequence(
         let (light, dark) = archgram_core::draw_sequence_themes(seq, options, &icons);
         vec![(themed(&out, "light"), light), (themed(&out, "dark"), dark)]
     } else {
-        vec![(out, archgram_core::draw_sequence(seq, options, &icons))]
+        vec![(
+            out.clone(),
+            archgram_core::draw_sequence(seq, options, &icons),
+        )]
     };
     let limit = archgram_core::readable_width(&seq.as_spec());
     if let Some((_, drawing)) = drawings.first()
@@ -490,7 +508,34 @@ fn build_sequence(
             drawing.width
         );
     }
-    write_drawings(drawings)
+    let code = write_drawings(drawings);
+    if !preview || code != ExitCode::SUCCESS {
+        return code;
+    }
+    let (light, dark) = archgram_core::draw_sequence_themes(seq, options, &icons);
+    write_previews(&out, &light.svg, &dark.svg)
+}
+
+/// Writes the still preview of each theme beside the drawing,
+/// `<name>.preview.light.png` and `<name>.preview.dark.png`, and says what
+/// it wrote (docs/features/reader-check.md).
+fn write_previews(out: &Path, light: &str, dark: &str) -> ExitCode {
+    for (theme, svg) in [("light", light), ("dark", dark)] {
+        let file = out.with_extension(format!("preview.{theme}.png"));
+        let png = match preview::png(svg) {
+            Ok(png) => png,
+            Err(e) => {
+                eprintln!("archgram: cannot draw the {theme} preview: {e}");
+                return ExitCode::from(2);
+            }
+        };
+        if let Err(e) = write_bytes_replacing(&file, &png) {
+            eprintln!("archgram: cannot write {}: {e}", file.display());
+            return ExitCode::from(2);
+        }
+        println!("wrote {} (the still preview, {theme})", file.display());
+    }
+    ExitCode::SUCCESS
 }
 
 /// Writes each drawing to its file, its folder created when missing, and
@@ -598,6 +643,11 @@ fn too_wide(spec: &Spec, options: Options, drawing: &archgram_core::Drawing) -> 
 /// replaced, never followed, so a spec cannot aim the drawing at another
 /// file, and a reader never sees half a drawing.
 fn write_replacing(path: &Path, contents: &str) -> std::io::Result<()> {
+    write_bytes_replacing(path, contents.as_bytes())
+}
+
+/// [`write_replacing`] for bytes, such as a preview's PNG.
+fn write_bytes_replacing(path: &Path, contents: &[u8]) -> std::io::Result<()> {
     use std::io::Write;
     let name = path
         .file_name()
@@ -612,7 +662,7 @@ fn write_replacing(path: &Path, contents: &str) -> std::io::Result<()> {
         .write(true)
         .create_new(true)
         .open(&temporary)
-        .and_then(|mut file| file.write_all(contents.as_bytes()));
+        .and_then(|mut file| file.write_all(contents));
     let renamed = written.and_then(|()| std::fs::rename(&temporary, path));
     if renamed.is_err() {
         let _ = std::fs::remove_file(&temporary);
