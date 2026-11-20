@@ -28,13 +28,13 @@ For other agents, and every other way, see
 ## What it runs, reads and writes
 
 - It runs archgram through npx: the project's own archgram when its
-  `package.json` lists one, and otherwise `archgram@0.11.0`, the version
+  `package.json` lists one, and otherwise `archgram@0.12.0`, the version
   released with this skill, when the machine already has it. It looks
   for it with no network and installs nothing while it looks. When the
-  project's own is older than `archgram@0.11.0`, the report says so,
+  project's own is older than `archgram@0.12.0`, the report says so,
   with the command to upgrade it; it upgrades only when you ask.
 - It downloads nothing you have not agreed to. When it finds no
-  archgram, it stops and asks, naming the npm package `archgram@0.11.0`
+  archgram, it stops and asks, naming the npm package `archgram@0.12.0`
   and the native archgram program for your system, a few megabytes, from
   the npm registry. You choose to install it into the project, pinned by
   its lockfile, or to let npx download it once, and it does neither
@@ -89,7 +89,7 @@ and send none: there is no account, no telemetry and no analytics.
   and writes the diagram's files there, where you can change or delete
   them; the archgram command makes no network request.
 - The one request goes to the npm registry, when you agree to download
-  `archgram@0.11.0`; a project that lists archgram has installed it
+  `archgram@0.12.0`; a project that lists archgram has installed it
   already. npm's
   [privacy policy](https://docs.npmjs.com/policies/privacy) covers that
   request.

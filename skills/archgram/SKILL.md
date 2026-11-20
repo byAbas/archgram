@@ -54,32 +54,32 @@ goes by what you read there, never by a guess.
 
 - **The project's own.** When the project's `package.json` lists
   archgram, run that one: write each command below with `archgram`
-  where it says `archgram@0.11.0`, and `--no --offline` where it says
+  where it says `archgram@0.12.0`, and `--no --offline` where it says
   `--yes`. npx then runs what the project installed, at the version its
   lockfile decides, and downloads nothing. If npx says a package is
   missing, the project's dependencies are not installed: ask the user to
   install them with the project's own package manager, and wait. Run the
   version check below the same way: when the project's archgram is older
-  than `archgram@0.11.0`, the version this skill was released with, draw
+  than `archgram@0.12.0`, the version this skill was released with, draw
   with it all the same, and say so in the report (step 7).
 - **This version, already on the machine.** Otherwise, look for the
   version this skill was released with, which an earlier download the
   user agreed to leaves in npx's cache:
 
   ```bash
-  npx --no --offline --loglevel=error archgram@0.11.0 --version
+  npx --no --offline --loglevel=error archgram@0.12.0 --version
   ```
 
   It uses no network and installs nothing. When it prints
-  `archgram 0.11.0`, run the commands below as they are written.
+  `archgram 0.12.0`, run the commands below as they are written.
 - **Not there: ask.** Otherwise stop, and ask the user before anything is
-  downloaded. Say what and from where: the npm package `archgram@0.11.0`
+  downloaded. Say what and from where: the npm package `archgram@0.12.0`
   and the native archgram program for this system, a few megabytes, from
   the npm registry. Offer two ways, and run neither until the user picks
   one; with no answer, draw nothing:
   - install it into the project, when the `package.json` you read is
     there, with the project's own package manager, such as
-    `npm install --save-dev archgram@0.11.0`: its lockfile then pins it,
+    `npm install --save-dev archgram@0.12.0`: its lockfile then pins it,
     and the commands run as for the project's own;
   - let npx download it once, now: the commands below then run as they
     are written.
@@ -94,7 +94,7 @@ version on npm, say so and stop.
 archgram says which kinds of diagram it draws:
 
 ```bash
-npx --yes --loglevel=error archgram@0.11.0 spec --kinds
+npx --yes --loglevel=error archgram@0.12.0 spec --kinds
 ```
 
 Each line is one kind: the value a spec's `diagram` takes, the section of
@@ -242,7 +242,7 @@ for code: the critique's "file" is the sentence.
 ## 3. Learn the spec format from archgram
 
 ```bash
-npx --yes --loglevel=error archgram@0.11.0 spec --brief
+npx --yes --loglevel=error archgram@0.12.0 spec --brief
 ```
 
 This prints the short part of the format the very archgram you run reads:
@@ -253,14 +253,14 @@ brief gives it: the theme file in step 5, or the section a problem from
 `archgram check` points to.
 
 ```bash
-npx --yes --loglevel=error archgram@0.11.0 spec --section <name>
+npx --yes --loglevel=error archgram@0.12.0 spec --section <name>
 ```
 
 The brief holds an architecture's fields. For any other kind, print the
 section `spec --kinds` named for it too, before writing, such as:
 
 ```bash
-npx --yes --loglevel=error archgram@0.11.0 spec --section sequence
+npx --yes --loglevel=error archgram@0.12.0 spec --section sequence
 ```
 
 A field the format does not list is an error. Besides the fields, it says
@@ -311,7 +311,7 @@ takes the line of code that receives it.
 Then check it, and repeat until it passes:
 
 ```bash
-npx --yes --loglevel=error archgram@0.11.0 check docs/diagrams/<name>.archgram.yaml
+npx --yes --loglevel=error archgram@0.12.0 check docs/diagrams/<name>.archgram.yaml
 ```
 
 Check again after every change to the spec, the last one included, before
@@ -356,7 +356,7 @@ names a problem, fix what is yours to fix in the spec; what needs a fact
 changed, stop and ask the user, then stamp again.
 
 ```bash
-npx --yes --loglevel=error archgram@0.11.0 build docs/diagrams/<name>.archgram.yaml --preview
+npx --yes --loglevel=error archgram@0.12.0 build docs/diagrams/<name>.archgram.yaml --preview
 ```
 
 Add `--theme-file archgram.theme.json` when the project's root has one.
@@ -426,9 +426,9 @@ update too, where what changed comes first:
 5. **What archgram could not draw:** one line for each, when there is
    any (`references/facts.md`, What archgram could not draw).
 6. **What I need from you:** one question, only when there is one; and,
-   when the project's own archgram is older than `archgram@0.11.0`, its
+   when the project's own archgram is older than `archgram@0.12.0`, its
    version and the project's own command to upgrade it, such as
-   `npm install --save-dev archgram@0.11.0`, run only when the user says
+   `npm install --save-dev archgram@0.12.0`, run only when the user says
    so.
 
 Leave out the lists of parts and lines, the reader contract, the sizes in
