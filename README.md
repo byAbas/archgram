@@ -102,6 +102,7 @@ npx archgram build docs/diagrams/linkshort.archgram.yaml
 | `--split-themes` | Writes `<name>.light.svg` and `<name>.dark.svg`, for a page that picks one per reader |
 | `--theme-file <archgram.theme.json>` | Draws in your design system's colours, from its design tokens (W3C Design Tokens) |
 | `--system-font` | Leaves the text to the reader's font instead of embedding Geist |
+| `--preview` | Also writes a still image of each theme, `<name>.preview.light.png` and `<name>.preview.dark.png`, to see the drawing as a reader does; archgram renders it itself, with no browser |
 
 ### `archgram check <spec>`
 

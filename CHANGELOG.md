@@ -39,6 +39,16 @@ follow [Semantic Versioning](https://semver.org/).
   script reads only under the project's folder, follows no link and
   uses no network.
 
+- `archgram build --preview` also writes a still PNG of each theme beside
+  the drawing, `<name>.preview.light.png` and `<name>.preview.dark.png`,
+  rendered inside archgram with resvg: no browser, no network, only the
+  embedded fonts.
+- The `archgram` skill looks at its drawing before it reports: it builds
+  with `--preview`, critiques what a reader sees in both themes, each
+  question of its reader contract answered from the image alone, fixes
+  the spec until the drawing passes, and says what it saw. It still
+  starts no browser.
+
 ### Changed
 
 - The `archgram` skill learns the kinds of diagram it may draw from

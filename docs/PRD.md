@@ -2,7 +2,7 @@
 
 | Field   | Value      |
 |---------|------------|
-| Version | 0.40       |
+| Version | 0.41       |
 | Date    | 2026-11-19 |
 | Status  | Draft      |
 | Owner   | Abas Turabli |
@@ -130,7 +130,8 @@ same file every time.
 | 0.9 | A spec says how wide it is shown; `build` and `direction: auto` measure against it; the skill keeps a drawing's direction once chosen ([docs/features/shown-width.md](features/shown-width.md)) |
 | Planned | Four more kinds of diagram, each from its standard, in this order: sequence, with the `diagram` field that names a spec's kind; dataflow; workflow; lifecycle ([docs/features/diagram-kinds.md](features/diagram-kinds.md)) |
 | Planned | `archgram diff`: two architecture specs drawn as one diagram, with what the change added, removed and changed marked ([docs/features/diff.md](features/diff.md)) |
-| Later | The WASM package, for the browser; the PNG module, drawn from the same scene as the SVG by archgram's own rasterizer |
+| Planned | A still PNG preview of each theme (`build --preview`), rendered with resvg, and the skill looking at it before it reports; a reader test in its evaluations ([docs/features/reader-check.md](features/reader-check.md)) |
+| Later | The WASM package, for the browser |
 
 ## 6. Functional requirements
 
@@ -251,7 +252,10 @@ same file every time.
   changes as text ([docs/features/diff.md](features/diff.md)).
 - A library, usable from Rust and, later through WASM, from the browser
   (§5).
-- PNG, one file per theme, through the optional module (later, §5).
+- A still PNG of each theme beside the drawing, `build --preview`,
+  rendered inside archgram with resvg from the SVG it draws: for the skill
+  to look at the drawing, and for a page that shows no SVG
+  ([docs/features/reader-check.md](features/reader-check.md)).
 - A skill, `archgram`, in the repository's `skills/` folder, for any
   coding agent that reads the open Agent Skills format (a folder with a
   `SKILL.md`), Claude Code among them. It is installed with the `skills`
@@ -403,8 +407,11 @@ same file every time.
   edit never turns the drawing on its side; it turns one only when the
   user asks or the drawing no longer fits, and says so. A drawing that
   fits neither way is split in two.
-- The skill judges a drawing from its spec and its size. It never starts a
-  browser or takes a screenshot.
+- The skill looks at its drawing before it reports: it builds with
+  `--preview`, looks at the still image of each theme, and critiques what
+  a reader sees, each of the reader contract's questions answered from
+  the image alone, fixing the spec until the drawing passes. It never
+  starts a browser ([docs/features/reader-check.md](features/reader-check.md)).
 - When done, `archgram check` passes, the SVG is opened with the
   system's own viewer (`open`, `xdg-open`, `start`), and the skill lists
   each part with the file behind it and each edge with its line.
@@ -522,3 +529,4 @@ None.
 | 0.38    | 2026-11-19 | The skill downloads nothing the user has not agreed to: it looks for archgram without the network first, and when it finds none, it asks, offering to install the skill's version into the project or to let npx download it once; an agent's npx never asks on its own. A project's own archgram older than the skill's is drawn with, and the report says so and how to upgrade (§6.6). |
 | 0.39    | 2026-11-19 | The skill writes the facts it found in `docs/diagrams/facts.md`, with what it read and left out and the evidence behind each fact, and stops for the user's approval before it writes a spec, unless the request says to go on (§6.6, `docs/features/facts.md`). |
 | 0.40    | 2026-11-19 | Before it reads the code, the skill measures what it would read with its own script, `scripts/size.mjs`: the files git tracks, less what is never the project's own, in areas one reader takes in; it tells the user the size, asks whether to narrow a large scope, and reads area by area (§6.6, `docs/features/facts.md`). |
+| 0.41    | 2026-11-19 | The skill looks at its drawing before it reports, through a still PNG of each theme that `build --preview` renders inside archgram with resvg, and critiques what a reader sees; it still starts no browser. The PNG comes from the SVG, not from a rasterizer of archgram's own (§5, §6.5, §6.6, `docs/features/reader-check.md`). |

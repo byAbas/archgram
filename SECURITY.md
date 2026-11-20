@@ -52,6 +52,12 @@ same way:
   words, and at most 1000 sources per spec, so a spec cannot make a run
   slow or large.
 
+`build --preview` reads nothing more. It renders, inside archgram, the
+SVG it has just drawn, with only archgram's embedded fonts, never the
+system's; it fetches no image, file or data URL, starts no browser and
+uses no network, and writes the PNGs beside the drawing as it writes the
+drawing (docs/features/reader-check.md).
+
 When a file that is not a spec is read as one, a problem does not quote
 a text value from it; like a problem with any spec, it may still name a
 key or a short word it did not expect.

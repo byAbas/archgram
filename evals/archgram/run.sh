@@ -142,6 +142,47 @@ if [ "${1:-}" = __one ]; then
       }
     }' "$dir" "$start" "$end" "$((end_s - start_s))" "$status"
   printf '%s %s run-%s: exit %s, %ss\n' "$case_dir" "$config" "$k" "$status" "$((end_s - start_s))"
+
+  # The reader test (README.md here, The reader test): a fresh session that
+  # sees nothing but the light preview, in a folder of its own, answers the
+  # case's questions from the image alone, and each answer is scored by
+  # the words a right one holds.
+  questions=$(node -e '
+    const c = require(process.argv[1]).evals.find((e) => e.id === Number(process.argv[2]));
+    console.log(c.reader ? JSON.stringify(c.reader.questions) : "");' "$here/evals.json" "$id")
+  png=$(find "$dir/outputs/docs/diagrams" -name '*.preview.light.png' 2>/dev/null | sort | head -1)
+  if [ -n "$questions" ] && [ "$config" = with_skill ]; then
+    if [ -z "$png" ]; then
+      printf '{ "score": 0, "of": %s, "why": "no preview was drawn" }\n' \
+        "$(node -e 'console.log(JSON.parse(process.argv[1]).length)' "$questions")" >"$dir/reader.json"
+    else
+      mkdir "$dir/reader"
+      cp "$png" "$dir/reader/drawing.png"
+      ask=$(node -e '
+        const q = JSON.parse(process.argv[1]);
+        console.log("Read the image drawing.png in this folder. It is a diagram of a software system. Using only what the image shows, answer each question in one line, numbered. If the image does not show the answer, write: not shown.\n\n" +
+          q.map(([text], i) => `${i + 1}. ${text}`).join("\n"));' "$questions")
+      (cd "$dir/reader" && printf '%s' "$ask" | claude -p --model "$EVAL_MODEL" --setting-sources project \
+        --settings "$EVAL_OUT/settings.json" --permission-mode default --permission-prompts none \
+        --max-budget-usd 0.3 --max-turns 4 --output-format json --allowedTools "Read(./drawing.png)") \
+        >"$dir/reader/result.json" 2>"$dir/reader/stderr.log" || true
+      node -e '
+        const fs = require("fs");
+        const [questions, result, out] = process.argv.slice(1);
+        const q = JSON.parse(questions);
+        let text = "";
+        try { text = JSON.parse(fs.readFileSync(result, "utf8")).result || ""; } catch {}
+        const lines = text.split("\n");
+        const answers = q.map((_, i) => (lines.find((l) => l.trim().startsWith(`${i + 1}.`)) || "").trim());
+        const right = q.map(([, words], i) => words.some((w) => answers[i].toLowerCase().includes(w)));
+        fs.writeFileSync(out, JSON.stringify({
+          score: right.filter(Boolean).length, of: q.length,
+          answers: q.map(([question, words], i) => ({ question, answer: answers[i], expected_any_of: words, right: right[i] })),
+        }, null, 2) + "\n");' "$questions" "$dir/reader/result.json" "$dir/reader.json"
+    fi
+    printf '%s %s run-%s: reader %s\n' "$case_dir" "$config" "$k" \
+      "$(node -e 'const r=require(process.argv[1]); console.log(r.score + "/" + r.of)' "$dir/reader.json")"
+  fi
   exit 0
 fi
 
