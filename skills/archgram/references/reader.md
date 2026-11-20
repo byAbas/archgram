@@ -14,8 +14,10 @@ single node; everything else serves this.
 
 ## Who reads it
 
-Take the reader from the context: the README's audience, the document the
-diagram goes into, what the user said. Ask only when nothing tells you.
+Take the reader from what the user said, or the document they named for
+the diagram; else from the project itself, who uses it and who works on
+it. Never from a README the user did not name. Ask only when nothing tells
+you.
 
 | Reader | What they are doing | What they expect |
 |---|---|---|
@@ -25,12 +27,13 @@ diagram goes into, what the user said. Ask only when nothing tells you.
 | Stakeholder | Understanding what the system does | Few nodes, plain words, one flow from input to outcome |
 | Operator | Running or deploying it | Services, stores, external systems, what runs where |
 
-A README usually has two readers. The diagram serves the one who will
-judge it; the prose serves the other.
+A page usually has two readers. The diagram serves the one who will judge
+it; the prose serves the other.
 
 ## The reader contract
 
-Write it in three to six lines and put it in the report:
+Write it in a few lines, at the top of the diagram's section of the facts
+document (`references/facts.md`), its questions numbered, at most three:
 
 ```
 Reader: <who>
@@ -48,12 +51,16 @@ palette", "every write goes through the ledger". If the diagram would look
 the same for any system of its kind, it has not found the idea. A flow in
 the spec is how the idea moves: make the contract's main path a flow.
 
-A diagram that answers four questions well beats one that answers ten
-badly.
+One idea, and at most three questions: a fourth is usually a second
+diagram. A diagram that answers three questions well beats one that
+answers ten badly. When the user asks for more in one diagram, draw what
+they asked, and say in the report what it costs the reader.
 
 ## Questions by kind of system
 
-Start from these and keep the three to five the reader cares most about.
+Start from these and keep the one to three the reader cares most about,
+all about one phase: what runs, or how it is built, or what is set up
+before use. A question about another phase is another diagram's.
 
 - **Web app.** What happens between the user's action and the response?
   What runs in the browser, on the server, in a third-party service? Where
@@ -61,7 +68,8 @@ Start from these and keep the three to five the reader cares most about.
 - **LLM, RAG or agent systems.** What does the model see, and never see?
   Which calls are model calls, and which deterministic code? Exact or
   semantic retrieval? What stops the model inventing facts, and where?
-  What is prepared ahead (indexing) versus at question time?
+  Indexing ahead and answering at question time are two phases: two
+  diagrams, the store one writes and the other reads drawn in both.
 - **Services and events.** Which services exist and which own which data?
   What is a call, what a message on a queue? What happens when one is down?
 - **Data pipelines.** Where does data enter, change and land? Batch or
@@ -79,7 +87,7 @@ Start from these and keep the three to five the reader cares most about.
 |---|---|
 | "What happens, in order?" | One flow along the main path, `direction: right` |
 | "What is authored, built, generated, consumed?" | Frames for the stages, in flow order |
-| "What runs before use, and what at run time?" | A frame for each phase, the stores between them |
+| "What runs before use, and what at run time?" | One diagram for each phase, the store between them drawn in both |
 | "Which part owns what?" | A frame for each owner, edges only for the calls that matter |
 | "What checks what?" | A frame for the checks, each edge naming what it reads |
 
@@ -112,14 +120,18 @@ Judge what the image shows, not what the spec says it should.
    in the code? More than about 10 nodes and 12 edges, or two nodes with
    the same relations that no question tells apart
    (`references/kinds/architecture/spec.md`, Same relations, one node)?
-6. **Missing steps.** Any hop the data takes that the picture skips: an
-   embedding call, a build step, a check? Any entry point, mode, output or
-   enforcement at this level that is neither drawn nor listed as left out
+6. **Missing steps.** Follow each flow from its first step to its last:
+   where would the reader ask "how did it get here?", such as a browser
+   that comes back from a payment page it was never sent to? Any hop the
+   data takes that the picture skips: an embedding call, a build step, a
+   check? Any entry point, mode, output or enforcement at this level that
+   is neither drawn nor listed under Not drawn with its reason
    (`references/kinds/architecture/find.md`, What is easy to miss)?
-7. **Width.** No wider than keeps its text readable where it is shown:
-   1,300 px in a README, `shownWidth × 1300 / 880` elsewhere (SKILL.md,
-   step 6); over it, `build` warns with what brings it within: the other
-   direction, written in the spec, or two diagrams.
+7. **Width and counts.** No wider than keeps its text readable where it
+   is shown: 1,300 px where no place is named, `shownWidth × 1300 / 880`
+   where one is (SKILL.md, step 6); over it, `build` warns with what
+   brings it within. `build`'s counts at 0: lines that cross, lines
+   through a frame, lines running back, cards reached side by side.
 8. **Clutter.** An edge label longer than two or three words; a label on
    an edge that could be a node's note; a line that detours round the
    whole drawing; arrowheads crowding into one card, or lines crossing

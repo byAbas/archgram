@@ -150,7 +150,7 @@ if [ "${1:-}" = __one ]; then
   questions=$(node -e '
     const c = require(process.argv[1]).evals.find((e) => e.id === Number(process.argv[2]));
     console.log(c.reader ? JSON.stringify(c.reader.questions) : "");' "$here/evals.json" "$id")
-  png=$(find "$dir/outputs/docs/diagrams" -name '*.preview.light.png' 2>/dev/null | sort | head -1)
+  png=$(find "$dir/outputs/.archgram/preview" -name '*.light.png' 2>/dev/null | sort | head -1)
   if [ -n "$questions" ] && [ "$config" = with_skill ]; then
     if [ -z "$png" ]; then
       printf '{ "score": 0, "of": %s, "why": "no preview was drawn" }\n' \

@@ -701,7 +701,10 @@ fn build_says_the_size_and_direction_it_drew() {
         .next()
         .unwrap();
     assert!(out.contains(&format!("({width} × ")), "{out}");
-    assert!(out.trim_end().ends_with("px, left to right)"), "{out}");
+    assert!(
+        out.lines().any(|l| l.ends_with("px, left to right)")),
+        "{out}"
+    );
     assert!(stderr(&run).is_empty(), "{}", stderr(&run));
 
     let spec = chain_spec(&dir, 9, "auto");
@@ -892,6 +895,7 @@ fn help_after_a_command_is_the_help() {
         assert!(run.status.success(), "{args:?}: {}", stderr(&run));
         assert_eq!(stdout(&run), general, "{args:?}");
     }
+    assert!(general.contains("[--preview]"), "--help lists --preview");
 }
 
 /// A logo archgram does not carry is refused with the nearest slugs, each
@@ -902,13 +906,14 @@ fn a_missing_logo_names_each_suggestion_s_brand() {
     let dir = scratch("logo");
     std::fs::write(
         dir.join("d.archgram.yaml"),
-        "archgram: 1\ntitle: t\ndescription: d\nnodes:\n  - { id: docs, kind: service, label: Docs, tech: storybook }\n",
+        "archgram: 1\ntitle: t\ndescription: d\nnodes:\n  - { id: docs, kind: service, label: Docs, tech: storyblock }\n",
     )
     .unwrap();
     let run = archgram_in(&dir, &["check", "d.archgram.yaml"]);
     assert_eq!(run.status.code(), Some(1));
     let message = stderr(&run);
     assert!(message.contains("`storyblok` (Storyblok)"), "{message}");
+    assert!(message.contains("`storybook` (Storybook)"), "{message}");
     assert!(message.contains("leave `tech` out"), "{message}");
 }
 
@@ -1016,7 +1021,8 @@ fn root_colour(svg: &str, name: &str) -> [u8; 3] {
     [byte(0), byte(2), byte(4)]
 }
 
-/// `build --preview` writes a still PNG of each theme beside the drawing,
+/// `build --preview` writes a still PNG of each theme under
+/// `.archgram/preview/`, the scratch folder holding no `.git`,
 /// at the drawing's size, its canvas the theme's own colour and almost none
 /// of it black: what resvg draws of an SVG whose colours it cannot read
 /// (docs/features/reader-check.md). Both kinds of diagram, every example.
@@ -1042,7 +1048,7 @@ fn build_preview_draws_each_theme_as_the_drawing_shows_it() {
         ]);
         assert!(run.status.success(), "{name}: {}", stderr(&run));
         for theme in ["light", "dark"] {
-            let png = dir.join(format!("{name}.preview.{theme}.png"));
+            let png = dir.join(format!(".archgram/preview/{name}.{theme}.png"));
             assert!(
                 stdout(&run).contains(&format!("{} (the still preview, {theme})", png.display()))
             );
@@ -1113,7 +1119,91 @@ fn build_preview_draws_each_theme_as_the_drawing_shows_it() {
     ]);
     assert!(plain.status.success());
     assert!(
-        !dir.join("plain.preview.light.png").exists(),
+        !dir.join(".archgram/preview/plain.light.png").exists(),
         "no preview without --preview"
     );
+}
+
+/// In a project, the previews go under `.archgram/preview/` at its top, the
+/// folder that holds `.git`, at the drawing's own path inside it, and
+/// `.archgram/` gets a `.gitignore` of `*`, written once and never over one
+/// already there; nothing is written beside the drawing
+/// (docs/features/approved-drawing.md).
+#[test]
+fn build_preview_writes_under_the_projects_top_out_of_git() {
+    let dir = scratch("preview-top");
+    std::fs::create_dir_all(dir.join(".git")).unwrap();
+    let diagrams = dir.join("docs/diagrams");
+    std::fs::create_dir_all(&diagrams).unwrap();
+    let spec = diagrams.join("shop.json");
+    std::fs::copy(example("linkshort.json"), &spec).unwrap();
+    let run = archgram(&["build", spec.to_str().unwrap(), "--preview"]);
+    assert!(run.status.success(), "{}", stderr(&run));
+    for theme in ["light", "dark"] {
+        let png = dir.join(format!(".archgram/preview/docs/diagrams/shop.{theme}.png"));
+        assert!(png.is_file(), "{} missing", png.display());
+        assert!(stdout(&run).contains(&format!("{} (the still preview, {theme})", png.display())));
+    }
+    assert_eq!(read(&dir.join(".archgram/.gitignore")), "*\n");
+    let beside: Vec<_> = std::fs::read_dir(&diagrams)
+        .unwrap()
+        .map(|e| e.unwrap().path())
+        .filter(|p| p.extension().is_some_and(|x| x.eq_ignore_ascii_case("png")))
+        .collect();
+    assert!(beside.is_empty(), "previews beside the drawing: {beside:?}");
+
+    std::fs::write(dir.join(".archgram/.gitignore"), "kept\n").unwrap();
+    let again = archgram(&["build", spec.to_str().unwrap(), "--preview"]);
+    assert!(again.status.success(), "{}", stderr(&again));
+    assert_eq!(read(&dir.join(".archgram/.gitignore")), "kept\n");
+}
+
+/// A symlink where the previews' folder would be is refused, never
+/// followed, so a project cannot aim a preview at another folder.
+#[cfg(unix)]
+#[test]
+fn build_preview_refuses_a_symlinked_folder() {
+    let dir = scratch("preview-symlink");
+    let elsewhere = scratch("preview-elsewhere");
+    std::fs::create_dir_all(dir.join(".git")).unwrap();
+    std::os::unix::fs::symlink(&elsewhere, dir.join(".archgram")).unwrap();
+    let spec = dir.join("shop.json");
+    std::fs::copy(example("linkshort.json"), &spec).unwrap();
+    let run = archgram(&["build", spec.to_str().unwrap(), "--preview"]);
+    assert!(!run.status.success());
+    assert!(
+        stderr(&run).contains("is a symlink, not a folder"),
+        "{}",
+        stderr(&run)
+    );
+    assert_eq!(std::fs::read_dir(&elsewhere).unwrap().count(), 0);
+}
+
+/// `build` prints what makes an architecture's lines hard to follow, in a
+/// fixed form a script parses; a sequence has no such line
+/// (docs/features/approved-drawing.md).
+#[test]
+fn build_prints_the_layouts_counts() {
+    let dir = scratch("layout-counts");
+    let run = archgram(&[
+        "build",
+        &example("linkshort.json"),
+        "-o",
+        dir.join("a.svg").to_str().unwrap(),
+    ]);
+    assert!(run.status.success(), "{}", stderr(&run));
+    assert!(
+        stdout(&run).lines().any(|l| l
+            == "layout: 0 crossings, 0 lines through a frame, 0 lines running back, 1 cards reached side by side"),
+        "{}",
+        stdout(&run)
+    );
+    let seq = archgram(&[
+        "build",
+        &example("sequence-sign-in.json"),
+        "-o",
+        dir.join("s.svg").to_str().unwrap(),
+    ]);
+    assert!(seq.status.success(), "{}", stderr(&seq));
+    assert!(!stdout(&seq).contains("layout:"));
 }

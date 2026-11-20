@@ -107,8 +107,10 @@ drawing keeps a plain name; any other spec draws its own name with `.svg`.
 |---|---|---|---|---|
 | `archgram` | yes | `1` | | The spec format's version |
 | `diagram` | no | `architecture`, `sequence` | `architecture` | The kind of diagram. Without it, a spec is an architecture diagram, and every field in this section and the sections up to Sequence is its. A sequence takes the fields in Sequence, below. `archgram spec --kinds` lists the kinds this archgram draws, each with the section that holds its fields |
-| `title` | yes | text | | The diagram's name; the SVG's `<title>` |
+| `title` | yes | text | | The diagram's name; the SVG's `<title>`, and shown above the drawing as "<Kind> diagram of <title>", such as "Architecture diagram of Online Boutique": name the project, and say which part of it in `subtitle` |
 | `description` | yes | text | | The whole diagram in prose; the SVG's `<desc>`, read by screen readers |
+| `subtitle` | no | one line of text | | Shown under the visible title, in the type of a card's note: what this drawing shows of the project, such as "Placing an order" |
+| `heading` | no | `true`, `false` | `true` | Whether to show the title, and the subtitle, above the drawing (DESIGN.md, Components: Heading) |
 | `direction` | no | `right`, `down`, `auto` | `right` | The direction of the flow. `auto` lets archgram choose: left to right while it keeps its text readable where the diagram is shown (`shownWidth`), and otherwise whichever of left to right and top to bottom is narrower. It is chosen from the spec alone, so the same spec draws the same bytes, and `archgram build` says which it chose |
 | `shownWidth` | no | a number of CSS pixels, 200 to 4,000 | a README on GitHub, 880 | How wide the diagram is shown where it is read. The widest drawing that keeps its text readable there is `shownWidth × 1300 / 880`: 1,300 px in a README, 996 px for 674. `direction: auto` chooses against it, and `archgram build` warns, still drawing, when a drawing is wider; width never fails `check` (docs/features/shown-width.md) |
 | `card` | no | `horizontal`, `vertical` | `horizontal` | The card style for every node |
@@ -285,7 +287,7 @@ messages:
 | `messages` | yes | list | | At least one; their order is time's |
 | `still` | no | `numbers`, `none` | `numbers` | Each message's number leading its label, or nothing more: in a sequence the order is the meaning |
 | `look` | no | `cards`, `avatars` | `cards` | How it is drawn: `cards`, each head a card and a bar on a lifeline while its participant answers a call; `avatars`, each head a circle and no bars (How a sequence is drawn) |
-| `shownWidth`, `card`, `logo`, `palette`, `credit` | no | | | As in Top level |
+| `shownWidth`, `card`, `logo`, `palette`, `credit`, `subtitle`, `heading` | no | | | As in Top level; the visible title reads "Sequence diagram of <title>" |
 
 `nodes`, `frames`, `edges`, `flows`, `hints`, `direction` and `legend`
 are errors in a sequence: time runs down the page, and the participants'
@@ -527,7 +529,9 @@ its JSON pointer (or its line and column in YAML), when:
 - a required field is missing, a field is unknown, or a value is not one
   of those allowed;
 - `shownWidth` is not a number from 200 to 4,000;
-- a text (the title, the description, a label, a note or a flow's name)
+- `subtitle` is empty or holds a line break;
+- a text (the title, the description, the subtitle, a label, a note or a
+  flow's name)
   holds a character XML does not allow, such as a control character
   other than tab, line feed and carriage return: the SVG would not open;
 - an id is duplicated, or an edge, flow, frame or hint names an id that

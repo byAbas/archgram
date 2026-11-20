@@ -23,6 +23,34 @@ exceptions = [
   { crate = "arrayref", allow = ["BSD-2-Clause"] },
   { crate = "foldhash", allow = ["Zlib"] },
   { crate = "slotmap", allow = ["Zlib"] },
+  # Every Simple Icons logo, whatever its licence: the owner's decision on
+  # 2026-11-20 (#176), for this crate alone. Each logo's licence is in
+  # crates/archgram-icons/data/provenance.tsv.
+  { crate = "archgram-icons", allow = [
+    "AGPL-3.0-only",
+    "AGPL-3.0-or-later",
+    "Apache-2.0",
+    "BSD-3-Clause",
+    "CC-BY-2.5",
+    "CC-BY-3.0",
+    "CC-BY-4.0",
+    "CC-BY-NC-4.0",
+    "CC-BY-NC-ND-4.0",
+    "CC-BY-NC-SA-3.0",
+    "CC-BY-NC-SA-4.0",
+    "CC-BY-ND-4.0",
+    "CC-BY-SA-2.0",
+    "CC-BY-SA-2.5",
+    "CC-BY-SA-3.0",
+    "CC-BY-SA-4.0",
+    "GPL-2.0-only",
+    "GPL-2.0-or-later",
+    "GPL-3.0-only",
+    "GPL-3.0-or-later",
+    "LicenseRef-SimpleIcons-Custom",
+    "MPL-2.0",
+    "Unlicense",
+  ] },
 ]
 
 # Every version in Cargo.lock against the RustSec advisory database,

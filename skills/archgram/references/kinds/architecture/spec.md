@@ -9,6 +9,7 @@ update. The fields are in the format's short part, `spec --brief`
 ## Contents
 
 - The facts in the format
+- Writing it
 - Same relations, one node
 - How much to draw
 - Direction
@@ -28,7 +29,28 @@ it animates. Keep labels to the words a reader needs: an edge's label is
 a few words, two or three, naming the call or the data (`POST /orders`,
 `enqueue`, `read-through`); what the reader needs beyond that goes in a
 node's `note` or the report, not onto the line, since a long label
-pushes the cards apart.
+pushes the cards apart. An edge's label is the relation's `What` as the
+facts document has it, word for word: the facts script holds it to that
+(SKILL.md, step 6).
+
+The `title` is the project's name, and archgram shows it above the
+drawing as "Architecture diagram of <title>". When two diagrams of the
+project would share it, give each a one-line `subtitle` saying what it
+shows ("Placing an order"), and only then.
+
+## Writing it
+
+Three rules that `archgram check` otherwise teaches one failed check at a
+time:
+
+- Inside `{ }`, quote every `note` and `label`
+  (`note: "get, then empty"`): there a comma ends a value, and the words
+  after it read as a field.
+- An `order` hint orders the nodes of one frame, or nodes in no frame,
+  never nodes of two frames together.
+- Write `tech` only with a slug archgram carries. When `check` says it
+  does not, it names the nearest; when none is the technology, leave
+  `tech` out and name the technology in the `note`.
 
 ## Same relations, one node
 
@@ -54,7 +76,21 @@ rule. Over it:
 1. merge parts with the same relations (above);
 2. move what the contract does not ask about to "left out on purpose";
 3. split into two diagrams, each with its own contract: one per entry
-   point, per phase, or per level.
+   point, per phase, or per level, each its own section of the facts
+   document split from the approved one (`references/facts.md`, Held to
+   approval).
+
+One diagram draws one phase, the facts' `Phase` of its parts: what runs,
+how it is built, or what is set up before use. A build step drawn with
+the same arrows as a request reads as one; draw the build as a diagram of
+its own and offer it, never draw it unasked. Only when the user asks for
+both in one diagram, draw them together, and write the line `Phases:` in
+the section (`references/facts.md`).
+
+The same holds for `build`'s counts (SKILL.md, step 6): lines that cross,
+lines through a frame, lines running back and cards reached side by side
+are each 0, by the steps above, unless the user asked for what keeps
+them; then report them.
 
 Completeness means nothing the reader's questions need is missing, not
 that everything in the code is drawn. A loop (a report read by the
@@ -94,8 +130,5 @@ update cannot turn the drawing on its side.
 
 ## In the report
 
-Besides what SKILL.md, step 7, lists:
-
-- the direction written in the spec;
-- the style of architecture you recognised, by its name in
-  `references/kinds/architecture/styles.md`, or that none fitted.
+Nothing beyond SKILL.md, step 7: the direction is in the spec, and the
+style of architecture you recognised in the facts document's section.

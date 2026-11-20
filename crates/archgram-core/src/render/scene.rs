@@ -159,8 +159,10 @@ pub enum Item {
 }
 
 /// What a group gathers.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum GroupOf {
     Class(&'static str),
     Node(String),
+    /// Everything under the heading, moved down by its depth.
+    Down(f64),
 }

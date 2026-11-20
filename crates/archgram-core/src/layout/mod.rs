@@ -29,11 +29,13 @@
 
 mod acyclic;
 pub(crate) mod frames;
+pub mod heading;
 pub mod legend;
 mod order;
 mod pack;
 mod position;
 mod rank;
+pub mod report;
 mod route;
 pub mod sequence;
 
@@ -74,7 +76,11 @@ pub struct Placement {
     /// The credit's box, under everything and against the right edge, when
     /// the spec keeps it.
     pub credit: Option<Rect>,
-    /// The size of the whole drawing, from the origin: every card, path and label.
+    /// The visible title and subtitle, above the origin: the render moves
+    /// everything else down by its depth. `None` when the spec hides it.
+    pub heading: Option<heading::Heading>,
+    /// The size of the whole drawing, from the origin: every card, path and
+    /// label, and as wide as the heading.
     pub size: Size,
 }
 
@@ -92,6 +98,15 @@ pub struct Placement {
 /// does not exist), or `sizes` does not hold one size per node.
 pub fn place(spec: &Spec, sizes: &[Size]) -> Result<Placement, Vec<SpecError>> {
     let mut placement = place_units(spec, sizes)?;
+    placement.heading = heading::place(
+        spec.diagram,
+        &spec.title,
+        spec.subtitle.as_deref(),
+        spec.heading,
+    );
+    if let Some(h) = &placement.heading {
+        placement.size.w = placement.size.w.max(h.width);
+    }
     let (entries, flow_lines, size) = legend::place(spec, placement.size);
     placement.legend = entries;
     placement.flow_lines = flow_lines;
@@ -1154,6 +1169,7 @@ fn lay_out_sized(spec: &Spec, sizes: &[Size]) -> Result<(Placement, Vec<f64>), V
             legend: Vec::new(),
             flow_lines: Vec::new(),
             credit: None,
+            heading: None,
             layers: layer,
             size: Size { w, h },
         },

@@ -264,3 +264,48 @@ fn the_credit_is_drawn_unless_turned_off() {
     assert!(!off.contains("credit"), "{off}");
     assert!(!off.contains(">archgram</text>"));
 }
+
+/// Every drawing shows "<Kind> diagram of <title>" above it, and the
+/// subtitle under that; `heading: false` hides both and gives back the
+/// height they took (DESIGN.md, Components: Heading).
+#[test]
+fn the_heading_names_the_kind_and_the_project() {
+    let with = |extra: &str| {
+        let json = example("linkshort").replacen('{', &format!("{{{extra}"), 1);
+        build(&json, Options::default()).unwrap()
+    };
+    let height = |svg: &str| -> f64 {
+        let head = svg.lines().next().unwrap();
+        head.split(r#" height=""#)
+            .nth(1)
+            .unwrap()
+            .split('"')
+            .next()
+            .unwrap()
+            .parse()
+            .unwrap()
+    };
+    let shown = with(r#" "subtitle": "Every read","#);
+    assert!(shown.contains(">Architecture diagram of linkshort</text>"));
+    assert!(shown.contains(">Every read</text>"));
+    assert!(shown.contains(r#"<g transform="translate(0 "#));
+    let hidden = with(r#" "subtitle": "Every read", "heading": false,"#);
+    assert!(!hidden.contains("diagram of linkshort") && !hidden.contains("Every read"));
+    assert!(!hidden.contains("transform=\"translate(0 "));
+    assert!(height(&shown) > height(&hidden));
+
+    let sequence = std::fs::read_to_string(format!(
+        "{}/../../examples/sequence-sign-in.json",
+        env!("CARGO_MANIFEST_DIR")
+    ))
+    .unwrap();
+    let archgram_core::Diagram::Sequence(seq) = archgram_core::parse(&sequence).unwrap() else {
+        panic!("a sequence");
+    };
+    let svg =
+        archgram_core::draw_sequence(&seq, Options::default(), &archgram_core::logos::NoLogos).svg;
+    assert!(
+        svg.contains(">Sequence diagram of "),
+        "a sequence names its kind"
+    );
+}

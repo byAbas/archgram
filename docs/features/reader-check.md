@@ -2,8 +2,8 @@
 
 | Field   | Value      |
 |---------|------------|
-| Version | 0.1        |
-| Date    | 2026-11-19 |
+| Version | 0.2        |
+| Date    | 2026-11-20 |
 | Status  | Draft      |
 | Release | Planned    |
 | Issue   | [#173](https://github.com/byAbas/archgram/issues/173) |
@@ -56,9 +56,10 @@ critique of what a reader sees was answered from the spec.
 
 ### The engine
 
-- `archgram build <spec> --preview` also writes a still PNG of each theme
-  beside the drawing, `<name>.preview.light.png` and
-  `<name>.preview.dark.png`, and says it did. It works with every other
+- `archgram build <spec> --preview` also writes a still PNG of each theme,
+  `<name>.light.png` and `<name>.dark.png`, under `.archgram/preview/`
+  at the project's top, and says where
+  ([approved-drawing.md](approved-drawing.md)). It works with every other
   option of `build`, and for both kinds of diagram.
 - Each preview is rendered inside archgram, with resvg
   (https://github.com/linebender/resvg), from the SVG archgram draws in
@@ -94,8 +95,8 @@ critique of what a reader sees was answered from the spec.
 - With an archgram older than the preview, which refuses `--preview`, it
   builds without it and says in the report that it could not see the
   drawing.
-- It tells the user that the previews are for checking, not for the
-  project.
+- The previews are for checking, not for the project; git leaves their
+  folder out, so the report says nothing of them.
 
 ### The evaluations
 
@@ -152,21 +153,22 @@ critique of what a reader sees was answered from the spec.
    archgram's own scene with `tiny-skia`, or a rasterizer of archgram's
    own, would put the icons and the text in our hands, and any error there
    into the preview.
-3. **One preview per theme, beside the drawing**, so the critique sees the
-   dark theme too, and the skill's agent reads them inside the project,
-   where it asks no permission to read.
+3. **One preview per theme, inside the project**, so the critique sees the
+   dark theme too, and the skill's agent reads them where it asks no
+   permission to read; since 2026-11-20 in `.archgram/preview/`, out of
+   git ([approved-drawing.md](approved-drawing.md)).
 
 ## Open questions
 
-- Whether the layout's facts in text should follow, for agents that do
-  not read images.
+- Whether more of the layout in text should follow, for agents that do
+  not read images, beyond the counts `build` prints
+  ([approved-drawing.md](approved-drawing.md)).
 - Whether CI should compare each example's preview with a browser's
   rendering, and with what tolerance.
-- Whether the skill should leave the previews out of git itself, or only
-  tell the user.
 
 ## Changelog
 
 | Version | Date       | Change |
 |---------|------------|--------|
 | 0.1     | 2026-11-19 | First draft, from #173: `build --preview` writes a still PNG of each theme, rendered with resvg after the custom properties and the font's family are resolved; the skill's step 6 looks at it and critiques what a reader sees; the evaluations expect it, and a reader test answers each case's questions from the image alone. |
+| 0.2     | 2026-11-20 | The previews go under `.archgram/preview/` at the project's top, out of git, not beside the drawing, and the report says nothing of them; that answers whether the skill should leave them out of git (#176). |

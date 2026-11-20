@@ -82,6 +82,12 @@ components:
   credit:
     textColor: "{color.connector}"
     typography: "{typography.legend}"
+  heading:
+    textColor: "{color.text}"
+    typography: "{typography.title}"
+  heading-subtitle:
+    textColor: "{color.text-muted}"
+    typography: "{typography.subtitle}"
   signal:
     size: "{signal.dot}"
     backgroundColor: "{color.signal-core}"
@@ -339,6 +345,8 @@ and `font.mono` list a fallback stack.
   `spacing.legend` below it, left-aligned, its entries
   `spacing.legend-entry` apart, in rows `spacing.legend-row` apart no
   wider than the diagram.
+- The heading (Components: Heading) sits above everything, left-aligned,
+  `spacing.legend` over the diagram, as the legend is under it.
 - `spacing.margin` surrounds everything.
 
 A sequence lays out by its own rules (docs/features/sequence.md). Its
@@ -645,6 +653,22 @@ already says what it is, so categories have no entry. Each entry leads
 with a swatch of `legend.swatch`, `legend.swatch-gap` before its text:
 several instances a small card with two copies behind; external a small
 dashed card. A diagram with no variant draws no legend.
+
+### Heading
+
+What the drawing shows, above it: "<Kind> diagram of <title>", such as
+"Architecture diagram of Online Boutique", in a node's name's type,
+`typography.title`, and `color.text`, and under it, `spacing.label-gap`
+below, the spec's one-line subtitle in a node's detail type,
+`typography.subtitle`, and `color.text-muted`. No symbol beside it: the
+words say the kind. It takes the names' weight, not a heavier one, so
+the one weight step stays theirs (Typography). It is left-aligned at the
+margin, and everything under it moves down by its height and
+`spacing.legend`, in whole pixels, so a line keeps covering whole
+pixels. The drawing is at least as wide as it. Like every text inside
+the drawing a screen reader skips it: the SVG is named by its title and
+description. The spec turns it off (`heading: false`), and the drawing
+is then as it was without one.
 
 ### Credit
 

@@ -192,6 +192,7 @@ fn item(svg: &mut Svg, it: &Item) {
             svg.open(&match of {
                 GroupOf::Class(c) => format!(r#"<g class="{c}">"#),
                 GroupOf::Node(id) => format!(r#"<g data-node="{}">"#, escape(id)),
+                GroupOf::Down(dy) => format!(r#"<g transform="translate(0 {})">"#, num(*dy)),
             });
             for i in items {
                 item(svg, i);

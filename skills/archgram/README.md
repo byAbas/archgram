@@ -7,7 +7,10 @@ docs, or a sequence diagram of the order in which its parts call each
 other for one request. The agent reads the code and the documentation, writes a spec to
 `docs/diagrams/<name>.archgram.yaml`, and archgram lays it out and draws
 `docs/diagrams/<name>.svg` beside it, in light and dark, in archgram's
-colours or, when asked, the project's own. The report lists each part drawn with the file behind it.
+colours or, when asked, the project's own. Its report is short, about
+fifteen lines: what it drew, how exact it is, what it changed after
+looking, what it left out, and one question when it has one; each part's
+file and each line's code are in the facts document.
 
 ## Install
 
@@ -57,8 +60,16 @@ For other agents, and every other way, see
   out, and each diagram's relations with the line of code behind each.
   It stops and asks you to approve that document, unless you said to go
   on without it, and writes the spec only from facts a line of code or
-  a configuration backs.
-- It writes the spec and the SVG under `docs/diagrams/`. When the user
+  a configuration backs. Once you approve, its own `scripts/facts.mjs`
+  stamps each section of the document with the hash of its text, and,
+  before each drawing, checks every spec against it: what you approved
+  is unchanged, every relation is drawn or left out with its reason,
+  every line is one you approved under its approved label. It reads only
+  `docs/diagrams/`, writes only those stamps, and uses no network. When
+  a check fails, it stops and asks you.
+- It writes the spec and the SVG under `docs/diagrams/`, and archgram
+  writes the still previews it looks at under `.archgram/preview/`, a
+  folder git leaves out. When the user
   asks for the project's colours, it also writes `archgram.theme.json`
   at the project's root and, where the colours are not already design
   tokens, `docs/diagrams/theme/archgram.resolver.json`.

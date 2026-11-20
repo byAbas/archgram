@@ -62,6 +62,21 @@ fn version() -> Result<String, String> {
         .ok_or_else(|| "[workspace.package] has no version".into())
 }
 
+/// The logos' licences, as `archgram-icons` declares them, less the MIT of
+/// its own code, which the binary's licence already names: CC0 and every
+/// licence a logo carries of its own (#176).
+fn icons_licences() -> Result<String, String> {
+    let manifest = std::fs::read_to_string(root().join("crates/archgram-icons/Cargo.toml"))
+        .map_err(|e| e.to_string())?;
+    manifest
+        .lines()
+        .find_map(|l| l.trim().strip_prefix("license = \""))
+        .and_then(|v| v.strip_suffix('"'))
+        .and_then(|v| v.strip_prefix("MIT AND "))
+        .map(str::to_owned)
+        .ok_or_else(|| "archgram-icons has no license starting with MIT".into())
+}
+
 /// This machine's npm key, when archgram is built for it.
 fn host() -> Option<&'static str> {
     let os = match std::env::consts::OS {
@@ -120,6 +135,7 @@ fn copy(from: &Path, to: &Path) -> Result<(), String> {
 /// Writes the packages; returns the platform keys that have one.
 fn assemble(all: bool) -> Result<Vec<&'static str>, String> {
     let version = version()?;
+    let icons = icons_licences()?;
     let out = root().join("target/npm");
     if out.exists() {
         std::fs::remove_dir_all(&out).map_err(|e| format!("{}: {e}", out.display()))?;
@@ -144,8 +160,9 @@ fn assemble(all: bool) -> Result<Vec<&'static str>, String> {
                 "version": version,
                 "description": format!("The archgram binary for {os} {cpu}. Install `archgram`, which picks this one."),
                 "author": AUTHOR,
-                // The binary carries Geist (OFL) and Simple Icons' data (CC0).
-                "license": "MIT AND OFL-1.1 AND CC0-1.0",
+                // The binary carries Geist (OFL) and every Simple Icons logo,
+                // under the licences `archgram-icons` names (#176).
+                "license": format!("MIT AND OFL-1.1 AND {icons}"),
                 "repository": { "type": "git", "url": REPOSITORY },
                 "homepage": "https://archgram.dev",
                 "bugs": { "url": "https://github.com/byAbas/archgram/issues" },

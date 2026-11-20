@@ -23,7 +23,7 @@ archgram: architecture diagrams from a spec
 
 Usage:
   archgram build <spec> [-o <out.svg>] [--theme auto|light|dark | --split-themes] [--system-font]
-                     [--theme-file <archgram.theme.json>]
+                     [--theme-file <archgram.theme.json>] [--preview]
                                Draw the diagram (default output: the spec's name with .svg)
   archgram check <spec>        Check a spec and list every problem, a source the code
                                no longer has among them
@@ -50,6 +50,10 @@ Themes: auto (light, dark under the reader's dark mode; the default), light, dar
 --theme-file draws in a project's own colours: a mapping file names the
   project's DTCG resolver, its light and dark inputs, and the token for each
   role (docs/SPEC.md, Theme file).
+--preview also writes a still PNG of each theme, <name>.light.png and
+  <name>.dark.png, under .archgram/preview/ at the project's top (the nearest
+  folder above the drawing with .git), a folder git ignores. archgram draws
+  them itself: no browser, no network.
 
 A node or an edge may name what backs it, its code or a document (source, a
 path from the spec's folder). check fails, and build warns, when that is not
@@ -466,14 +470,30 @@ fn build(
             too_wide(&spec, options, drawing)
         );
     }
+    let counts = drawings.first().and_then(|(_, d)| d.layout);
     let code = write_drawings(drawings);
-    if !preview || code != ExitCode::SUCCESS {
+    if code != ExitCode::SUCCESS {
+        return code;
+    }
+    if let Some(c) = counts {
+        println!("{}", layout_line(c));
+    }
+    if !preview {
         return code;
     }
     match archgram_core::draw_themes(&spec, options, &Icons::load()) {
         Ok((light, dark)) => write_previews(&out, &light.svg, &dark.svg),
         Err(errors) => report(path, &errors),
     }
+}
+
+/// The layout's counts as `build` prints them, one line in a fixed form
+/// that a person reads and a script parses (docs/features/approved-drawing.md).
+fn layout_line(c: archgram_core::layout::report::Counts) -> String {
+    format!(
+        "layout: {} crossings, {} lines through a frame, {} lines running back, {} cards reached side by side",
+        c.crossings, c.through_frames, c.running_back, c.side_by_side
+    )
 }
 
 /// Draws a sequence (docs/features/sequence.md) into `out`, or one file
@@ -516,12 +536,18 @@ fn build_sequence(
     write_previews(&out, &light.svg, &dark.svg)
 }
 
-/// Writes the still preview of each theme beside the drawing,
-/// `<name>.preview.light.png` and `<name>.preview.dark.png`, and says what
-/// it wrote (docs/features/reader-check.md).
+/// Writes the still preview of each theme, `<name>.light.png` and
+/// `<name>.dark.png`, where [`preview_files`] says, and says what it wrote
+/// (docs/features/reader-check.md, docs/features/approved-drawing.md).
 fn write_previews(out: &Path, light: &str, dark: &str) -> ExitCode {
-    for (theme, svg) in [("light", light), ("dark", dark)] {
-        let file = out.with_extension(format!("preview.{theme}.png"));
+    let files = match preview_files(out) {
+        Ok(files) => files,
+        Err(e) => {
+            eprintln!("archgram: cannot write the previews: {e}");
+            return ExitCode::from(2);
+        }
+    };
+    for ((theme, svg), file) in [("light", light), ("dark", dark)].into_iter().zip(files) {
         let png = match preview::png(svg) {
             Ok(png) => png,
             Err(e) => {
@@ -536,6 +562,62 @@ fn write_previews(out: &Path, light: &str, dark: &str) -> ExitCode {
         println!("wrote {} (the still preview, {theme})", file.display());
     }
     ExitCode::SUCCESS
+}
+
+/// Where the previews of the drawing at `out` go, light then dark: under
+/// `.archgram/preview/` in the project's top folder, the nearest one above
+/// the drawing that holds `.git`, else the drawing's own, at the drawing's
+/// path inside it, so two drawings of one name never share a preview.
+/// `.archgram/` gets a `.gitignore` of `*` when it has none, so git leaves
+/// the folder out without a change to the project's own. A symlink on the
+/// way is refused, never followed, so a project cannot aim a preview at
+/// another folder. The folders are created; the drawing's already is.
+fn preview_files(out: &Path) -> std::io::Result<[PathBuf; 2]> {
+    let refuse = |what: &Path| {
+        std::io::Error::other(format!("{} is a symlink, not a folder", what.display()))
+    };
+    let cwd = std::env::current_dir()?;
+    let drawing = cwd.join(out);
+    let name = drawing
+        .file_name()
+        .ok_or_else(|| std::io::Error::other("the drawing has no file name"))?;
+    let folder = std::fs::canonicalize(drawing.parent().unwrap_or(&cwd))?;
+    let top = folder
+        .ancestors()
+        .find(|a| a.join(".git").exists())
+        .unwrap_or(&folder);
+    let inside = folder.strip_prefix(top).unwrap_or(Path::new(""));
+    let archgram = top.join(".archgram");
+    let mut at = archgram.clone();
+    for part in Path::new("preview").join(inside).components() {
+        if std::fs::symlink_metadata(&at).is_ok_and(|m| m.file_type().is_symlink()) {
+            return Err(refuse(&at));
+        }
+        at.push(part);
+    }
+    if std::fs::symlink_metadata(&at).is_ok_and(|m| m.file_type().is_symlink()) {
+        return Err(refuse(&at));
+    }
+    std::fs::create_dir_all(&at)?;
+    let ignore = archgram.join(".gitignore");
+    if std::fs::symlink_metadata(&ignore).is_err() {
+        use std::io::Write;
+        std::fs::OpenOptions::new()
+            .write(true)
+            .create_new(true)
+            .open(&ignore)?
+            .write_all(b"*\n")?;
+    }
+    // Said as the drawing was named: from where it ran, when it was relative.
+    let shown = |file: PathBuf| match std::fs::canonicalize(&cwd) {
+        Ok(here) if out.is_relative() => file
+            .strip_prefix(&here)
+            .map(Path::to_path_buf)
+            .unwrap_or(file),
+        _ => file,
+    };
+    let file = |theme: &str| shown(at.join(Path::new(name).with_extension(format!("{theme}.png"))));
+    Ok([file("light"), file("dark")])
 }
 
 /// Writes each drawing to its file, its folder created when missing, and

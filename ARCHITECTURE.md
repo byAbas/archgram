@@ -215,6 +215,16 @@ the units would find the same errors. The steps:
    or down, and the drawing reports its size and the direction chosen,
    which `archgram build` prints, with a warning when the drawing is
    wider than that width.
+7. Counts (`layout::report`). From the lines as laid out, never the SVG,
+   `count` says what makes them hard to follow: the distinct points where
+   a horizontal piece of one line crosses a vertical piece of another,
+   inside both; each line through a frame that holds neither of its ends,
+   once a frame; each line step 1 turned to break a cycle, which runs
+   back; and each card reached by lines from different sources whose last
+   pieces are parallel and no more than two tracks apart
+   (`2 × spacing.edge-edge`), so a reader cannot tell which comes from
+   where. `archgram build` prints them on one line in a fixed form; the
+   drawing does not change (docs/features/approved-drawing.md).
 
 A sequence (`layout::sequence`) is laid out without layers: the order
 is the spec's, so nothing is searched. Its participants become columns,
@@ -356,6 +366,14 @@ and the credit. The theme, fonts and shared styles are the
 architecture's (`styles::sequence` adds its own); its motion is described
 under Animate.
 
+Both kinds draw the heading the same way (`layout::heading`,
+`render::under_heading`): the layout measures the visible title and the
+subtitle and widens the drawing to them; the render writes them past the
+margin and moves everything else, all but the background and the
+definitions the lines refer to, down by the heading's depth in one group
+(`transform="translate(0 …)"`), so the layout's own coordinates stay as
+they were and a spec with `heading: false` draws the bytes it drew before.
+
 ### Animate
 
 Flows turn into a timeline (`motion`), in whole milliseconds. Each hop
@@ -423,6 +441,15 @@ font's family is named as the font files name it; a property with no
 value, or two, is an error. Only the embedded fonts are loaded, and no
 image is fetched. What moves is not drawn, so the PNG is the still image.
 
+The PNGs go under `.archgram/preview/` in the project's top folder, the
+nearest one above the drawing that holds `.git`, else the drawing's own,
+at the drawing's path inside it (`preview_files` in `src/main.rs`), so a
+project's previews stay out of its folders and two drawings of one name
+never share one. `.archgram/` gets a `.gitignore` of `*` when it has
+none, the way git ignores a folder without a change to the project's own
+`.gitignore` ([gitignore](https://git-scm.com/docs/gitignore)); one
+already there is kept. A symlink on the way is refused, never followed.
+
 An earlier plan kept the supply chain smaller with a rasterizer of
 archgram's own, `resvg` and `tiny-skia` weighed and left out. The owner
 chose resvg on 2026-11-19 (#173): the preview exists so the skill can
@@ -478,9 +505,12 @@ These hold for every output and are checked by tests on every change.
   names the Simple Icons tag and commit, `cargo xtask icons <tag> <commit>`
   rewrites the data from that tag alone and refuses it unless the tag is
   still at that commit, and an update is a reviewed
-  change. The data is CC0-1.0, on the allowed list for that crate; a logo
-  carrying a licence of its own other than CC0 is left out, and
-  `provenance.tsv` keeps each logo's source and brand guidelines.
+  change. Every logo is carried, whatever its licence: Simple Icons' data
+  is CC0-1.0, and a logo carrying a licence of its own keeps it, recorded
+  in `provenance.tsv` with the logo's source and brand guidelines (the
+  owner's decision, #176). The crate's `license` names every licence a
+  logo carries, a test holds the two equal, and `deny.toml` allows them
+  for that crate alone.
 - The node kinds' icons are copied, not pinned: 17 drawings from
   Hugeicons (MIT), taken once from the commit `render/icons.rs` names,
   with their numbers rounded to two decimals. Nothing fetches them again;

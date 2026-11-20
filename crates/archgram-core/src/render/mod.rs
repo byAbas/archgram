@@ -21,11 +21,12 @@ use crate::color::Rgb;
 use crate::font;
 use crate::geometry::Rect;
 use crate::layout::Placement;
+use crate::layout::heading::Heading;
 use crate::motion::Timeline;
 use crate::spec::{SignalStyle, Spec};
 use crate::tokens::{
     ARROWHEAD_LENGTH, ARROWHEAD_WIDTH, Colors, FONT_SANS, ROUNDED_CANVAS, SPACING_MARGIN,
-    STROKE_CONNECTOR, theme,
+    STROKE_CONNECTOR, TYPOGRAPHY_SUBTITLE, TYPOGRAPHY_TITLE, theme,
 };
 use scene::{Anchor, GroupOf, Item, Scene, StyleLine};
 use svg::num;
@@ -92,7 +93,7 @@ pub fn scene(
     logos: &dyn crate::logos::Logos,
 ) -> Scene {
     let w = placement.size.w + 2.0 * SPACING_MARGIN;
-    let h = placement.size.h + 2.0 * SPACING_MARGIN;
+    let h = placement.size.h + 2.0 * SPACING_MARGIN + depth(placement.heading.as_ref());
     // Every edge as drawn, moved onto the canvas, and the flows' timing
     // along them.
     let drawn = drawn_edges(placement);
@@ -116,6 +117,7 @@ pub fn scene(
     if timeline.is_some() && spec.glow && signal::glows(spec.signal) {
         items.push(glow_filters(options.mode, (w, h)));
     }
+    let under = items.len();
     // Frames first, the outermost below the ones inside it; their names go
     // over the edges, below the cards.
     let at = |r: Rect| Rect {
@@ -189,6 +191,7 @@ pub fn scene(
     if let Some(c) = placement.credit {
         items.push(credit::credit(at(c)));
     }
+    under_heading(&mut items, under, placement.heading.as_ref());
     Scene {
         width: w,
         height: h,
@@ -197,6 +200,36 @@ pub fn scene(
         style,
         items,
     }
+}
+
+/// How far a drawing's heading moves everything under it; none without one.
+fn depth(heading: Option<&Heading>) -> f64 {
+    heading.map_or(0.0, |h| h.depth)
+}
+
+/// Draws the heading above, past the margin, and moves the items from
+/// `from` on down by its depth, in one group: the background and what the
+/// lines refer to stay where they are (DESIGN.md, Components: Heading).
+fn under_heading(items: &mut Vec<Item>, from: usize, heading: Option<&Heading>) {
+    let Some(h) = heading else {
+        return;
+    };
+    let moved = items.split_off(from);
+    let text = |class: &str, at: Rect, style: &crate::tokens::TextStyle, words: &str| Item::Text {
+        class: class.to_owned(),
+        x: OFFSET + at.x,
+        y: SPACING_MARGIN + at.y + font::baseline_in_line(style),
+        anchor: Anchor::Start,
+        text: words.to_owned(),
+    };
+    items.push(text("title", h.title_box, &TYPOGRAPHY_TITLE, &h.title));
+    if let Some((words, at)) = &h.subtitle {
+        items.push(text("sub", *at, &TYPOGRAPHY_SUBTITLE, words));
+    }
+    items.push(Item::Group {
+        of: GroupOf::Down(h.depth),
+        items: moved,
+    });
 }
 
 /// The glow's blur, over the whole canvas `size` large: measured against a

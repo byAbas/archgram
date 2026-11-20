@@ -131,6 +131,7 @@ same file every time.
 | Planned | Four more kinds of diagram, each from its standard, in this order: sequence, with the `diagram` field that names a spec's kind; dataflow; workflow; lifecycle ([docs/features/diagram-kinds.md](features/diagram-kinds.md)) |
 | Planned | `archgram diff`: two architecture specs drawn as one diagram, with what the change added, removed and changed marked ([docs/features/diff.md](features/diff.md)) |
 | Planned | A still PNG preview of each theme (`build --preview`), rendered with resvg, and the skill looking at it before it reports; a reader test in its evaluations ([docs/features/reader-check.md](features/reader-check.md)) |
+| Planned | Every drawing titled; `build` counts what makes its lines hard to follow; the previews kept out of git; every Simple Icons logo; the skill held by a script to the facts the user approved, one idea a drawing, and a short report ([docs/features/approved-drawing.md](features/approved-drawing.md)) |
 | Later | The WASM package, for the browser |
 
 ## 6. Functional requirements
@@ -197,6 +198,9 @@ same file every time.
   roles, through a mapping file; the colours must keep the same contrast
   as archgram's own, in both themes.
 - Output is self-contained: no script, no external file, no web font.
+- Every drawing shows its title above it, "<Kind> diagram of <title>",
+  and an optional one-line subtitle under it; the spec hides both
+  ([docs/features/approved-drawing.md](features/approved-drawing.md)).
 - A small "by archgram" credit sits in the drawing's bottom-right corner,
   faint and hidden from screen readers; the spec turns it off.
 
@@ -243,17 +247,21 @@ same file every time.
   each with the section that holds its format and the question it
   answers, so whoever writes a spec learns from the command which kinds
   it may name.
-- `archgram build` says the size it drew and the direction, and warns,
-  still drawing, when it is wider than keeps its text readable where it
-  is shown (§6.2).
+- `archgram build` says the size it drew and the direction, and counts
+  what makes its lines hard to follow: lines that cross, lines through a
+  frame they neither start nor end in, lines against the main direction,
+  and cards reached side by side by lines from different sources. It
+  warns, still drawing, when it is wider than keeps its text readable
+  where it is shown (§6.2).
 - `archgram diff` draws two architecture specs, a change's before and
   after, as one diagram: each part the change added, removed or changed
   carries a mark, in one layout of both, and the command prints the same
   changes as text ([docs/features/diff.md](features/diff.md)).
 - A library, usable from Rust and, later through WASM, from the browser
   (§5).
-- A still PNG of each theme beside the drawing, `build --preview`,
-  rendered inside archgram with resvg from the SVG it draws: for the skill
+- A still PNG of each theme, `build --preview`, in `.archgram/preview/`
+  at the project's top, a folder git ignores by a `.gitignore` of its
+  own, rendered inside archgram with resvg from the SVG it draws: for the skill
   to look at the drawing, and for a page that shows no SVG
   ([docs/features/reader-check.md](features/reader-check.md)).
 - A skill, `archgram`, in the repository's `skills/` folder, for any
@@ -318,6 +326,13 @@ same file every time.
   the request says to go on without; the spec is written from the
   approved document, only its facts that a line of code or a
   configuration backs ([docs/features/facts.md](features/facts.md)).
+- A script of the skill's holds every spec to the approved facts before
+  each build: what was approved stays as it was, every approved part and
+  relation is drawn in some diagram, every line is an approved relation
+  under its approved label, and a relation the code backs but no diagram
+  draws is left out with its reason. When one fails, the skill stops and
+  asks. A split into more diagrams needs no new approval when the script
+  passes ([docs/features/approved-drawing.md](features/approved-drawing.md)).
 - It draws what a document describes when the user names the document:
   a pattern on a docs page, a system in a design doc or an article.
   Without a named document it draws from the code. From a document, a
@@ -394,14 +409,21 @@ same file every time.
   adapters, microservices, a pipeline, a plugin host and others) and
   looks for that style's parts; a system that follows none is drawn from
   the general rules alone.
-- A drawing holds what a reader takes in within thirty seconds, about ten
-  nodes and twelve edges: parts with the same relations, which no question
+- The user's request decides what is drawn, how many diagrams, which
+  phase and which level; the limits below hold where it says nothing,
+  and where one conflicts with it, the skill draws what was asked and
+  reports the limit's numbers. A drawing holds what a reader takes in
+  within thirty seconds: one idea, one phase (what runs, or how it is
+  built), at most three questions, `build`'s counts at 0, about ten nodes
+  and twelve edges: parts with the same relations, which no question
   tells apart, are one node naming them all; what is still over goes to
   a second diagram, or is left out and said so.
 - A drawing keeps its text readable where it is shown: at most 1,300 px
   wide in a README on GitHub, and `shownWidth × 1300 / 880` where the
   user or the project says it is shown elsewhere, which the skill writes
-  as `shownWidth`. The skill leaves the first drawing's direction to
+  as `shownWidth`. Where the user names no place, the skill uses the
+  default and says the place was not named; it never assumes a README.
+  The skill leaves the first drawing's direction to
   archgram (`auto`) unless the user asks for one, reads the size from
   `build`, then writes the direction archgram chose into the spec, so an
   edit never turns the drawing on its side; it turns one only when the
@@ -413,8 +435,11 @@ same file every time.
   the image alone, fixing the spec until the drawing passes. It never
   starts a browser ([docs/features/reader-check.md](features/reader-check.md)).
 - When done, `archgram check` passes, the SVG is opened with the
-  system's own viewer (`open`, `xdg-open`, `start`), and the skill lists
-  each part with the file behind it and each edge with its line.
+  system's own viewer (`open`, `xdg-open`, `start`), and the skill
+  reports in about fifteen lines: each drawing and what it shows, how
+  exact it is, what it changed after looking, what it left out, what
+  archgram could not draw, and at most one question. Each part's file
+  and each line's code stay in the facts document, not in the report.
 
 ## 7. Node vocabulary
 
@@ -427,9 +452,9 @@ A node may name its technology (`tech: postgresql`, a Simple Icons slug);
 archgram then shows the technology's logo, so a reader knows the
 technology at a glance. Where the logo goes and in what colour is in
 DESIGN.md (Components: Technology logo). Logos come from a pinned Simple
-Icons release, CC0 data; a logo under a licence of its own is left out.
-The brands' guidelines stay with whoever publishes a diagram, and
-archgram records each logo's source and guidelines for them.
+Icons release, every logo it holds, each with its licence. The brands'
+guidelines and the logos' licences stay with whoever publishes a diagram,
+and archgram records each logo's source, guidelines and licence for them.
 
 Each other kind of diagram has its own vocabulary, from its standard: a
 sequence's participants and messages, a lifecycle's states and
@@ -463,7 +488,8 @@ docs/SPEC.md once built.
   [what backs a diagram](features/sources.md#success-criteria),
   [where a diagram is shown](features/shown-width.md#success-criteria),
   [more kinds of diagram](features/diagram-kinds.md#success-criteria),
-  [what a change does to the architecture](features/diff.md#success-criteria).
+  [what a change does to the architecture](features/diff.md#success-criteria),
+  [what was approved, drawn to be followed](features/approved-drawing.md#success-criteria).
 
 ## 9. Non-goals
 
@@ -530,3 +556,4 @@ None.
 | 0.39    | 2026-11-19 | The skill writes the facts it found in `docs/diagrams/facts.md`, with what it read and left out and the evidence behind each fact, and stops for the user's approval before it writes a spec, unless the request says to go on (§6.6, `docs/features/facts.md`). |
 | 0.40    | 2026-11-19 | Before it reads the code, the skill measures what it would read with its own script, `scripts/size.mjs`: the files git tracks, less what is never the project's own, in areas one reader takes in; it tells the user the size, asks whether to narrow a large scope, and reads area by area (§6.6, `docs/features/facts.md`). |
 | 0.41    | 2026-11-19 | The skill looks at its drawing before it reports, through a still PNG of each theme that `build --preview` renders inside archgram with resvg, and critiques what a reader sees; it still starts no browser. The PNG comes from the SVG, not from a rasterizer of archgram's own (§5, §6.5, §6.6, `docs/features/reader-check.md`). |
+| 0.42    | 2026-11-20 | Planned: every drawing titled; `build` counts crossings, lines through a frame, lines against the direction and side-by-side arrivals; the previews in `.archgram/preview/`, out of git; every Simple Icons logo, each with its licence, the owner's decision; the skill held by a script to the approved facts, the user's request before its limits, one idea and one phase a drawing, a report of about fifteen lines, no README assumed (§5, §6.3, §6.5, §6.6, §7, §8, `docs/features/approved-drawing.md`, #176). |

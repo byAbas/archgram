@@ -55,8 +55,10 @@ same way:
 `build --preview` reads nothing more. It renders, inside archgram, the
 SVG it has just drawn, with only archgram's embedded fonts, never the
 system's; it fetches no image, file or data URL, starts no browser and
-uses no network, and writes the PNGs beside the drawing as it writes the
-drawing (docs/features/reader-check.md).
+uses no network, and writes the PNGs under `.archgram/preview/` at the
+project's top, refusing a symlink on the way as it refuses one at the
+drawing, and a `.gitignore` of `*` in `.archgram/` when it has none
+(docs/features/reader-check.md, docs/features/approved-drawing.md).
 
 When a file that is not a spec is read as one, a problem does not quote
 a text value from it; like a problem with any spec, it may still name a

@@ -85,7 +85,9 @@ one file.
 
 Draws the diagram. A spec named `<name>.archgram.yaml` (or `.yml`,
 `.json`) draws `<name>.svg` beside it. It says the size it drew and the
-direction, and warns, still drawing, when the drawing is wider than keeps
+direction, then, for an architecture, what makes its lines hard to
+follow: `layout: 0 crossings, 0 lines through a frame, 0 lines running
+back, 0 cards reached side by side`. It warns, still drawing, when the drawing is wider than keeps
 its text readable where it is shown: 1,300 px in a README on GitHub, or
 the ratio of `shownWidth` when the spec says it is shown elsewhere. With
 `direction: auto` in the spec, archgram keeps left to right while it
@@ -102,7 +104,7 @@ npx archgram build docs/diagrams/linkshort.archgram.yaml
 | `--split-themes` | Writes `<name>.light.svg` and `<name>.dark.svg`, for a page that picks one per reader |
 | `--theme-file <archgram.theme.json>` | Draws in your design system's colours, from its design tokens (W3C Design Tokens) |
 | `--system-font` | Leaves the text to the reader's font instead of embedding Geist |
-| `--preview` | Also writes a still image of each theme, `<name>.preview.light.png` and `<name>.preview.dark.png`, to see the drawing as a reader does; archgram renders it itself, with no browser |
+| `--preview` | Also writes a still image of each theme, `<name>.light.png` and `<name>.dark.png`, to see the drawing as a reader does, under `.archgram/preview/` at the project's top (the nearest folder above the drawing that holds `.git`), at the drawing's path inside it; `.archgram/` gets a `.gitignore` of `*`, so git leaves it out. archgram renders it itself, with no browser |
 
 ### `archgram check <spec>`
 
@@ -148,8 +150,9 @@ Print the version, or every command and option.
 The `archgram` skill lets a coding agent draw a project's architecture from
 its code, or the sequence of one request: it reads the code and the docs, writes the spec in
 `docs/diagrams/`, checks and draws it with `npx archgram`, in archgram's
-colours or, when you ask, your project's own, and lists each part it drew
-with the file behind it. It asks before it downloads anything: it runs
+colours or, when you ask, your project's own, and reports in a few lines
+what it drew and how exact it is, each part's file and each line's code
+kept in the facts document you approve. It asks before it downloads anything: it runs
 the archgram your project lists, or the skill's version already on your
 machine, and otherwise asks whether to install that version into your
 project or to let npx download it once. It is
@@ -291,4 +294,6 @@ when the system does.
 ## License
 
 [MIT](https://github.com/byAbas/archgram/blob/main/LICENSE). The embedded font, Geist, is under the SIL Open Font
-License; technology logos come from Simple Icons, CC0.
+License; technology logos come from Simple Icons, CC0, except those that
+carry a license of their own, each named in
+`crates/archgram-icons/data/provenance.tsv`.

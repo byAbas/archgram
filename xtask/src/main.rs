@@ -5,7 +5,8 @@
 //! the tag under `target/`, refused unless the tag is at `commit`, since a
 //! tag can be moved and the commit cannot; its `data/simple-icons.json` for titles and licences,
 //! `slugs.md` for each title's slug, and `icons/<slug>.svg` for its path.
-//! An icon that carries a licence of its own other than CC0 is left out.
+//! Every icon is kept; one under a licence of its own has it recorded in
+//! `provenance.tsv`, its type and, for a custom one, its address.
 //!
 //! `fonts` writes the fonts archgram embeds (`crates/archgram-core/fonts/`)
 //! from Geist's release files in `fonts/source/`: every character each one
@@ -154,13 +155,12 @@ fn write_icons(tag: &str, pinned: &str) -> Result<String, String> {
         entries.iter().filter_map(|e| e["slug"].as_str()).collect();
     let mut rows = Vec::new();
     let mut provenance = Vec::new();
-    let mut left_out = 0;
+    let mut licensed = 0;
     for entry in entries {
         let title = entry["title"].as_str().ok_or("an icon without a title")?;
         let licence = entry["license"]["type"].as_str();
         if licence.is_some_and(|l| l != "CC0-1.0") {
-            left_out += 1;
-            continue;
+            licensed += 1;
         }
         let slug = if let Some(s) = entry["slug"].as_str() {
             s.to_owned()
@@ -181,10 +181,11 @@ fn write_icons(tag: &str, pinned: &str) -> Result<String, String> {
             .ok_or(format!("`{title}` has no colour"))?;
         rows.push(format!("{slug}\t{title}\t{hex}\t{path}"));
         provenance.push(format!(
-            "{slug}\t{}\t{}\t{}",
+            "{slug}\t{}\t{}\t{}\t{}",
             entry["source"].as_str().unwrap_or(""),
             entry["guidelines"].as_str().unwrap_or(""),
-            licence.unwrap_or("")
+            licence.unwrap_or(""),
+            entry["license"]["url"].as_str().unwrap_or("")
         ));
     }
     rows.sort();
@@ -205,12 +206,12 @@ fn write_icons(tag: &str, pinned: &str) -> Result<String, String> {
     write(
         "RELEASE",
         format!(
-            "simple-icons {tag}\ncommit {commit}\nicons {}\nleft out (a licence other than CC0) {left_out}\n",
+            "simple-icons {tag}\ncommit {commit}\nicons {}\nunder a licence of their own, other than CC0 {licensed}\n",
             rows.len()
         ),
     )?;
     Ok(format!(
-        "icons: {} from simple-icons {tag} ({commit}); {left_out} left out for a licence other than CC0",
+        "icons: {} from simple-icons {tag} ({commit}); {licensed} under a licence of their own, other than CC0",
         rows.len()
     ))
 }
