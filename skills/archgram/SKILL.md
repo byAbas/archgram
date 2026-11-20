@@ -1,6 +1,6 @@
 ---
 name: archgram
-description: Draws a project's software architecture as an animated SVG with archgram, for its README and docs, from the code and documentation, or from a document the user names (a docs page, a design doc, an article). Writes a spec in docs/diagrams/, checks and draws it with the archgram command, in the project's own colours when asked, then opens the drawing and lists each part with the file behind it. Also draws a sequence diagram, the order in which the parts call each other for one request, and what comes back, such as a sign-in or a checkout, in phases. Use it whenever the user wants an architecture, system, data-flow, pipeline, sequence or "how it works" diagram, the steps of a request, a diagram for a README, or an existing archgram diagram updated after the code changed or `archgram check` says its code is gone, even if they only say "draw how this works".
+description: Draws a project's software architecture as an animated SVG with archgram, for its README and docs, from the code and documentation, or from a document the user names (a docs page, a design doc, an article). Writes a spec in docs/diagrams/, checks and draws it with the archgram command, in the project's own colours when asked, then opens the drawing and reports, briefly, how exact it is. Also draws a sequence diagram, the order in which the parts call each other for one request, and what comes back, such as a sign-in or a checkout, in phases. Use it whenever the user wants an architecture, system, data-flow, pipeline, sequence or "how it works" diagram, the steps of a request, a diagram for a README, or an existing archgram diagram updated after the code changed or `archgram check` says its code is gone, even if they only say "draw how this works".
 license: MIT
 compatibility: Requires Node 22 or later, with npx.
 ---
@@ -10,8 +10,17 @@ compatibility: Requires Node 22 or later, with npx.
 archgram lays out the boxes, routes the lines, animates the flows and
 draws light and dark in one SVG. Your work is what it cannot do: decide
 what the reader must learn, find the facts in the code, and write them as
-a spec. If the user said what to draw (a flow, a part of the system, a
-direction), draw that.
+a spec. In this order:
+
+1. **Accuracy never bends:** nothing is drawn that the approved facts do
+   not hold, not even when asked.
+2. **Then the user's request:** what to draw, how many diagrams, which
+   phase, which level, which direction. If they said it, draw that.
+3. **Then the limits** this skill sets for a drawing a reader follows
+   (one idea, one phase, `build`'s counts at 0, the width), only where the
+   request says nothing. Where a limit and the request disagree, draw
+   what was asked, and give the limit's numbers in the report, with one
+   line on the cleaner way; never take it unasked.
 
 Run each command on its own, as it is written here: not joined to another
 with `&&`, `;` or a pipe, and not inside a loop. An agent may approve the
@@ -24,7 +33,7 @@ Progress:
 - [ ] archgram found, or the user asked
 - [ ] The kind of diagram
 - [ ] 1. Reader contract
-- [ ] 2. Facts written in the facts document, and approved
+- [ ] 2. Facts written in the facts document, approved and stamped
 - [ ] 3. The spec format, from archgram itself
 - [ ] 4. Spec written and checked
 - [ ] 5. The project's colours, when asked
@@ -119,10 +128,11 @@ of that kind.
 ## 1. Decide who reads it
 
 Read `references/reader.md` and write the reader contract: who reads the
-diagram, the three to five questions they must answer from it alone, the
+diagram, the questions they must answer from it alone, at most three, the
 one idea it must make obvious, and what is left out on purpose. Everything
-after this is checked against it. Take the reader from the context (the
-README's audience, the user's words); ask only when nothing tells you.
+after this is checked against it. Take the reader from the user's words,
+else from the project itself (who uses it, who works on it); ask only when
+nothing tells you. Never take it from a README the user did not name.
 The contract goes into the facts document, at the top of this diagram's
 layer (step 2).
 
@@ -189,6 +199,19 @@ change the document, and ask again; on an update, ask about what
 changed. Write no spec until they approve. When the request itself says
 to go on without stopping, such as "no need to check the facts with me",
 go on, and say in the report that the facts were not approved.
+
+Once they approve, stamp the document with the skill's own
+`scripts/facts.mjs`, from the project's root, so what they approved cannot
+change unseen:
+
+```bash
+node <the skill's folder>/scripts/facts.mjs approve
+```
+
+When the request said to go on without asking, add `--not-asked`. Stamp
+again only after the user approves a change. Approved text is never
+edited afterwards: a change the drawing needs goes into a new section,
+or back to the user (`references/facts.md`, Held to approval).
 
 An open question stops the drawing either way. Ask the user, and only
 then, when the architecture is unclear: the README describes a part the
@@ -264,11 +287,19 @@ the source the document gives it, in the format as the kind's `spec.md`
 a reader takes in. A fact the document does not hold is not drawn: find
 it, add it to the document and have it approved first.
 
-Say where the drawing is shown when it is not a README on GitHub: a docs
-site, a blog, a wiki, any page that shows it narrower. Write that width
-as `shownWidth`, in CSS pixels, the place at its widest, from the user's
-words or the page's own styles; ask only when nothing tells you. A
-drawing shown in two places takes the narrower.
+Where the drawing is shown is a fact like the others: take it from the
+user's words. When they name a place narrower than a README on GitHub (a
+docs site, a blog, a wiki), write its width as `shownWidth`, in CSS
+pixels, the place at its widest, from their words or the page's own
+styles; a drawing shown in two places takes the narrower. When they name
+no place, write in the facts that it was not said, leave `shownWidth`
+out, so archgram keeps its default width, and never call the place a
+README.
+
+The `title` names the project, and archgram shows it above the drawing as
+"Architecture diagram of <title>". Write a `subtitle`, one line of what
+this drawing shows ("Placing an order"), only when two of the project's
+diagrams would otherwise share a title; the facts script holds you to it.
 
 Put the facts document's sources, its files and lines or a named
 document's sentences, in the spec wherever the format has a place for
@@ -298,7 +329,7 @@ archgram draws in black and white by default, and so does the diagram
 unless the user asks for colours: the project's own ("in our colours",
 "match our design system") or colours they name. The colours are theirs
 to choose, as the parts are: a theme guessed from the styling code
-changes how their README looks without their asking. When they ask, read
+changes how their pages look without their asking. When they ask, read
 `references/theme.md`, which says where archgram's colour goes, where to
 look (design tokens, then the styling code, then colours the user gave)
 and how to hand them to archgram with `--theme-file`. Otherwise leave the
@@ -309,6 +340,21 @@ before: keep drawing with it.
 
 ## 6. Draw, look at it, critique, open
 
+Before each build, hold every spec to the approved facts:
+
+```bash
+node <the skill's folder>/scripts/facts.mjs verify
+```
+
+It checks that the approved text is unchanged, that every approved
+relation is drawn or listed as not drawn with its reason, that every edge
+is an approved relation under its approved label, that diagrams split from
+one approved diagram answer all of its questions, that one diagram draws
+one phase unless the user asked for more, and that diagrams sharing a
+title have subtitles. When it passes, go on without asking again. When it
+names a problem, fix what is yours to fix in the spec; what needs a fact
+changed, stop and ask the user, then stamp again.
+
 ```bash
 npx --yes --loglevel=error archgram@0.11.0 build docs/diagrams/<name>.archgram.yaml --preview
 ```
@@ -316,21 +362,35 @@ npx --yes --loglevel=error archgram@0.11.0 build docs/diagrams/<name>.archgram.y
 Add `--theme-file archgram.theme.json` when the project's root has one.
 The drawing lands beside the spec as `docs/diagrams/<name>.svg`, and
 `build` says its size and the direction it chose: `wrote … (588 × 740 px,
-top to bottom)`. `--preview` also writes a still image of each theme
-beside it, `<name>.preview.light.png` and `<name>.preview.dark.png`,
-which archgram renders itself: no browser, no network.
+top to bottom)`. `--preview` also writes a still image of each theme,
+which archgram renders itself, no browser and no network, under
+`.archgram/preview/` at the project's top; read each from the path
+`build` prints for it.
 A drawing wider than keeps its text readable where it is shown, 1,300 px
-in a README on GitHub (which shows an image about 880 px wide) or
-`shownWidth × 1300 / 880` elsewhere, is still drawn, and `build` warns
+where no place is named (archgram's default, for a page about 880 px
+wide, as a README on GitHub shows an image) or `shownWidth × 1300 / 880`, is still drawn, and `build` warns
 with what would bring it within: the other direction, with the width it
 would draw, or two diagrams. Do what it says: write that direction in the
-spec, or split the diagram in two, check each, and build again.
+spec, or, unless the user asked for one diagram, split it in two, each
+with its own section split from the approved one, check each, and build
+again. When they asked for one, keep one, and give the width in the
+report.
+
+For an architecture, `build` then counts what makes the lines hard to
+follow: `layout: 0 crossings, 0 lines through a frame, 0 lines running
+back, 0 cards reached side by side`. Hold each at 0: try the other
+direction, an `order` hint, merging parts with the same relations, moving
+what the contract does not ask about to "left out on purpose", or a split
+(the kind's `spec.md`, How much to draw), and build again. Keep what the
+user asked for over a count, and give in the report any count still above
+0.
 
 Look at both previews, as the reader will see the drawing, and run the
 critique in `references/reader.md` on what you see, not on the spec:
-answer each of the contract's questions from the image alone, and find
-where the one idea's parts stand, where arrows crowd or cross, and what
-is hard to read in either theme. Fix what it finds in the spec, build
+answer each of the contract's questions from the image alone, follow each
+flow from its first step to its last, and find where the one idea's parts
+stand, where arrows crowd or cross, and what is hard to read in either
+theme. Fix what it finds in the spec, build
 again with `--preview`, and look again, until it passes; say in the
 report what you saw and what you changed. Never start a browser,
 headless or not: the previews are what you look at. Once the drawing
@@ -341,42 +401,41 @@ An archgram older than the preview refuses `--preview`: build without it,
 critique from the spec and the size as well as you can, and say in the
 report that you could not see the drawing.
 
-The previews are for checking, not for the project: tell the user they
-can delete them, or leave them out of git.
+The previews are for checking, not for the project: archgram keeps them
+in `.archgram/preview/`, which git leaves out by a `.gitignore` of its
+own, so they need no word in the report.
 
 Then open the drawing for the user, once, with the system's own viewer:
 `open` on macOS, `xdg-open` on Linux, `start ""` on Windows.
 
 ## 7. Report
 
-Tell the user, briefly, all of the following, on an update too: what
-changed comes first there, and the rest still follows.
+Report in about fifteen lines, in this order and nothing else, on an
+update too, where what changed comes first:
 
-- the reader contract, and how the drawing answers it;
-- the facts document's path, and that the user approved it, or that the
-  request said to go on without it;
-- where it is drawn to be shown (a README, or `shownWidth`), and its
-  size;
-- each part drawn, one line each, with the file (or the sentence) behind
-  it, or that no file backs it (a browser, a person), and each edge, one
-  line each, with the line (or the sentence) that makes it, those an
-  update left unchanged included;
-- what the kind's `spec.md` adds to the report, or puts in place of the
-  parts and edges (a sequence's participants and messages);
-- on an update, what changed in the spec and why, starting with what
-  `archgram check` said had lost its code;
-- where the colours came from, or that they are archgram's own and the
-  project's can be asked for;
-- what you saw in the previews, the answer to each contract question
-  the image gave, and what you changed after looking;
-- what the diagram still does not show;
-- when the project's own archgram is older than `archgram@0.11.0`: its
-  version, that this skill was released with `archgram@0.11.0`, and the
-  project's own command to upgrade it, such as
-  `npm install --save-dev archgram@0.11.0`; upgrade it only when the
-  user says so;
-- the line for the README, with alt text that tells the whole flow in
-  words: `![<the flow in one sentence>](docs/diagrams/<name>.svg)`.
+1. **What was drawn:** one line for each drawing, its path and what it
+   shows.
+2. **How exact:** that every box and line is backed by the code, with
+   `archgram check`'s count; the facts document's path; and whether the
+   user approved it, or the request said to go on without it. A source
+   the drawing gained for an approved relation, one line.
+3. **What changed after looking:** at most three points, from the
+   previews and the critique.
+4. **Not shown:** at most three points, the most important first, and
+   `build`'s counts when one is above 0, with the cleaner way in a line.
+5. **What archgram could not draw:** one line for each, when there is
+   any (`references/facts.md`, What archgram could not draw).
+6. **What I need from you:** one question, only when there is one; and,
+   when the project's own archgram is older than `archgram@0.11.0`, its
+   version and the project's own command to upgrade it, such as
+   `npm install --save-dev archgram@0.11.0`, run only when the user says
+   so.
+
+Leave out the lists of parts and lines, the reader contract, the sizes in
+pixels, the colours unless the user asked for them, and a line for a
+README unless the user asked to edit one: they are in the facts document
+and the spec. What the kind's `spec.md` adds to the report goes into these
+points, not after them.
 
 Edit the README, or commit, only when the user asks; the project's own
 rules (AGENTS.md, CLAUDE.md, CONTRIBUTING) decide how.

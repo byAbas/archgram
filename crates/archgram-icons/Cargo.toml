@@ -4,8 +4,10 @@ description = "Technology logos for archgram, from a pinned release of Simple Ic
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
-# The code is archgram's; the logos' data is Simple Icons', released as CC0.
-license = "MIT AND CC0-1.0"
+# The code is archgram's (MIT); the logos' data is Simple Icons', CC0, and
+# every licence a logo carries of its own, each recorded in
+# data/provenance.tsv (#176). A test holds this list to that file.
+license = "MIT AND CC0-1.0 AND AGPL-3.0-only AND AGPL-3.0-or-later AND Apache-2.0 AND BSD-3-Clause AND CC-BY-2.5 AND CC-BY-3.0 AND CC-BY-4.0 AND CC-BY-NC-4.0 AND CC-BY-NC-ND-4.0 AND CC-BY-NC-SA-3.0 AND CC-BY-NC-SA-4.0 AND CC-BY-ND-4.0 AND CC-BY-SA-2.0 AND CC-BY-SA-2.5 AND CC-BY-SA-3.0 AND CC-BY-SA-4.0 AND GPL-2.0-only AND GPL-2.0-or-later AND GPL-3.0-only AND GPL-3.0-or-later AND LicenseRef-SimpleIcons-Custom AND MPL-2.0 AND Unlicense"
 
 [dependencies]
 archgram-core = { path = "../archgram-core" }

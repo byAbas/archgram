@@ -114,7 +114,12 @@ https://github.com/simple-icons/simple-icons
 
 The technology logos' paths, titles and brand colours. The data is released
 under CC0 1.0 Universal: https://creativecommons.org/publicdomain/zero/1.0/
-Icons that Simple Icons lists under another license are left out.
+except for the icons Simple Icons lists under a license of their own, 212
+in this release (among them JavaScript, MIT; Rust, CC-BY-SA-4.0; Vue.js,
+CC-BY-NC-SA-4.0). Each of those keeps its license, named for each logo in
+crates/archgram-icons/data/provenance.tsv: its SPDX identifier, or "custom"
+with the address of the brand's own terms. Whoever publishes a diagram
+with such a logo follows its license.
 
 Each logo is a trademark of its owner. Its use in a diagram does not imply
 that the owner endorses archgram or the diagram.

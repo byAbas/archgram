@@ -34,6 +34,12 @@ pub struct Sequence {
     pub title: String,
     /// The whole diagram in prose, written as the SVG's `<desc>`.
     pub description: String,
+    /// One line shown under the visible title (docs/SPEC.md, Top level).
+    #[serde(default)]
+    pub subtitle: Option<String>,
+    /// Whether the drawing shows its title, and the subtitle, above it.
+    #[serde(default = "default_true")]
+    pub heading: bool,
     /// How wide the diagram is shown, in CSS pixels; a README on GitHub
     /// when absent.
     #[serde(default, rename = "shownWidth")]
@@ -293,6 +299,9 @@ impl Sequence {
             diagram: DiagramKind::Architecture,
             title: self.title.clone(),
             description: self.description.clone(),
+            // The sequence lays out and draws its own heading.
+            subtitle: None,
+            heading: false,
             direction: crate::spec::Direction::Right,
             shown_width: self.shown_width,
             card: self.card,
@@ -596,6 +605,7 @@ pub fn validate(seq: &Sequence) -> Vec<SpecError> {
             archgram: seq.archgram,
             title: &seq.title,
             description: &seq.description,
+            subtitle: seq.subtitle.as_deref(),
             shown_width: seq.shown_width,
             palette: &seq.palette,
         }),
@@ -668,6 +678,9 @@ impl<'a> Validator<'a> {
             ("/title".into(), &s.title),
             ("/description".into(), &s.description),
         ];
+        if let Some(sub) = &s.subtitle {
+            texts.push(("/subtitle".into(), sub.as_str()));
+        }
         for (i, p) in s.participants.iter().enumerate() {
             texts.push((format!("/participants/{i}/label"), &p.label));
             if let Some(note) = &p.note {

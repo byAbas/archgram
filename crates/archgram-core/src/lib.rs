@@ -53,6 +53,9 @@ pub struct Drawing {
     pub height: f64,
     /// Right or down: the spec's own direction, or what `auto` came to.
     pub direction: Direction,
+    /// What makes its lines hard to follow (docs/features/approved-drawing.md);
+    /// `None` for a sequence, whose messages run straight across.
+    pub layout: Option<layout::report::Counts>,
 }
 
 /// A spec of any kind, read and checked (docs/features/diagram-kinds.md).
@@ -232,6 +235,7 @@ pub fn draw_with(
         width: scene.width,
         height: scene.height,
         direction: spec.direction,
+        layout: Some(layout::report::count(&spec, &placement)),
     })
 }
 
@@ -298,6 +302,7 @@ pub fn draw_themes(
             width: scene.width,
             height: scene.height,
             direction: spec.direction,
+            layout: Some(layout::report::count(&spec, &placement)),
         }
     };
     Ok((theme(render::Mode::Light), theme(render::Mode::Dark)))
@@ -323,6 +328,7 @@ pub fn draw_sequence(
         width: scene.width,
         height: scene.height,
         direction: Direction::Down,
+        layout: None,
     }
 }
 
@@ -347,6 +353,7 @@ pub fn draw_sequence_themes(
             width: scene.width,
             height: scene.height,
             direction: Direction::Down,
+            layout: None,
         }
     };
     (theme(render::Mode::Light), theme(render::Mode::Dark))

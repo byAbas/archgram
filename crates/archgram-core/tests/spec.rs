@@ -528,3 +528,23 @@ fn an_order_hint_stays_within_one_frame() {
     let e = errors(&spec_with(nodes, rest));
     assert_eq!(pointers(&e), ["/hints/order/1"]);
 }
+
+/// A subtitle is one line with words in it (docs/SPEC.md, Validation).
+#[test]
+fn a_subtitle_is_one_line_of_words() {
+    for (subtitle, says) in [("  ", "empty"), ("one\ntwo", "one line")] {
+        let json = spec_with(
+            TWO,
+            &format!(r#", "subtitle": {}"#, serde_json::json!(subtitle)),
+        );
+        let found = errors(&json);
+        assert_eq!(pointers(&found), ["/subtitle"], "{subtitle:?}");
+        assert!(found[0].message.contains(says), "{}", found[0].message);
+    }
+    let fine = parse_spec(&spec_with(TWO, r#", "subtitle": "Placing an order""#)).unwrap();
+    assert_eq!(fine.subtitle.as_deref(), Some("Placing an order"));
+    assert!(
+        fine.heading,
+        "the heading is shown unless the spec hides it"
+    );
+}

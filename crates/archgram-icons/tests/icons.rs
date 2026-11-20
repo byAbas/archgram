@@ -51,3 +51,35 @@ fn a_wrong_slug_is_refused_with_the_nearest() {
         errors[0].message
     );
 }
+
+/// Every logo is carried, whatever its licence, and the crate's licence
+/// names every licence a logo carries (`data/provenance.tsv`), so what it
+/// declares is what it ships (#176).
+#[test]
+fn every_logo_is_carried_and_its_licence_declared() {
+    let icons = Icons::load();
+    for slug in [
+        "javascript",
+        "rust",
+        "openjdk",
+        "gnubash",
+        "php",
+        "vuedotjs",
+    ] {
+        assert!(icons.get(slug).is_some(), "{slug}");
+    }
+    let declared: Vec<&str> = env!("CARGO_PKG_LICENSE").split(" AND ").collect();
+    let provenance = include_str!("../data/provenance.tsv");
+    let mut rows = 0;
+    for line in provenance.lines() {
+        rows += 1;
+        let licence = line.split('\t').nth(3).expect("a licence column");
+        let spdx = match licence {
+            "" => "CC0-1.0",
+            "custom" => "LicenseRef-SimpleIcons-Custom",
+            other => other,
+        };
+        assert!(declared.contains(&spdx), "{line}: {spdx} not declared");
+    }
+    assert_eq!(rows, icons.len(), "one provenance row for each logo");
+}

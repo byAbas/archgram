@@ -115,6 +115,9 @@ pub struct Layout {
     pub phases: Vec<Phase>,
     pub legend: Vec<legend::Entry>,
     pub credit: Option<Rect>,
+    /// The visible title and subtitle, above the origin, as an
+    /// architecture's (`layout::heading`).
+    pub heading: Option<super::heading::Heading>,
     pub size: Size,
 }
 
@@ -1023,12 +1026,21 @@ pub fn place(seq: &Sequence, logos: &dyn Logos) -> Layout {
         phases,
         legend: Vec::new(),
         credit: None,
+        heading: super::heading::place(
+            seq.diagram,
+            &seq.title,
+            seq.subtitle.as_deref(),
+            seq.heading,
+        ),
         size: Size {
             w: width,
             h: bottom,
         },
         spec,
     };
+    if let Some(h) = &layout.heading {
+        layout.size.w = layout.size.w.max(h.width);
+    }
     let (entries, size) =
         legend::place_sequence(&layout.spec, &kinds(&layout.messages), layout.size);
     layout.legend = entries;

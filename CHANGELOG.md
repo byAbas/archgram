@@ -41,17 +41,54 @@ follow [Semantic Versioning](https://semver.org/).
   `*.pem`, `.npmrc` and the rest of the list archgram refuses as a
   source), not even to count its lines.
 
-- `archgram build --preview` also writes a still PNG of each theme beside
-  the drawing, `<name>.preview.light.png` and `<name>.preview.dark.png`,
-  rendered inside archgram with resvg: no browser, no network, only the
-  embedded fonts.
+- Every drawing shows what it is above it, "Architecture diagram of
+  <title>" or "Sequence diagram of <title>", and an optional one-line
+  `subtitle` under that, in the type of a card's name and note; the spec
+  hides both with `heading: false`. The SVG's title and description are
+  unchanged.
+- Every Simple Icons logo can be drawn, 3,463 in all: the 212 that carry a
+  license of their own, such as JavaScript, Rust, OpenJDK, GNU Bash, PHP
+  and Vue.js, are no longer left out. Each one's license is named in
+  `crates/archgram-icons/data/provenance.tsv` and in
+  `THIRD-PARTY-LICENSES`; whoever publishes a diagram with one follows it.
+- `archgram build` also prints, for an architecture, what makes its lines
+  hard to follow, on one line a script can read: `layout: 0 crossings, 0
+  lines through a frame, 0 lines running back, 0 cards reached side by
+  side`. Lines that cross, a line through a frame holding neither of its
+  ends, a line closing a cycle, and a card reached by lines from
+  different sources arriving side by side. The drawing is unchanged.
+- `archgram build --preview` also writes a still PNG of each theme,
+  `<name>.light.png` and `<name>.dark.png`, rendered inside archgram with
+  resvg: no browser, no network, only the embedded fonts. They go under
+  `.archgram/preview/` at the project's top, the nearest folder above the
+  drawing that holds `.git`, at the drawing's path inside it, and
+  `.archgram/` gets a `.gitignore` of `*`, so git leaves them out without
+  a change to your `.gitignore`. `archgram --help` lists `--preview`.
 - The `archgram` skill looks at its drawing before it reports: it builds
   with `--preview`, critiques what a reader sees in both themes, each
   question of its reader contract answered from the image alone, fixes
-  the spec until the drawing passes, and says what it saw. It still
+  the spec until the drawing passes, and says what it changed. It still
   starts no browser.
 
 ### Changed
+
+- The `archgram` skill holds every drawing to the facts you approved:
+  its own `scripts/facts.mjs` stamps the facts document on approval and,
+  before each build, checks that what you approved is unchanged, that
+  every relation is drawn or left out with its reason, and that every
+  line is one you approved under its approved label. A diagram split
+  after approval needs no new approval when it passes; anything else
+  stops and asks you.
+- The skill puts your request first, then its limits for a drawing a
+  reader follows: one idea, at most three questions, one phase (what
+  runs, how it is built, or what is set up), and `build`'s counts at 0.
+  Where your request and a limit disagree, it draws what you asked and
+  reports the numbers.
+- The skill's report is about fifteen lines: what it drew, how exact it
+  is, what it changed after looking, what it left out, what archgram
+  could not draw, and one question when it has one. Each part's file and
+  each line's code stay in the facts document. It no longer says a
+  drawing is for a README unless you named one.
 
 - The `archgram` skill learns the kinds of diagram it may draw from
   `archgram spec --kinds`, and from `spec --section top-level` with an

@@ -10,6 +10,9 @@ use serde::de::{self, Deserializer, SeqAccess, Visitor};
 /// A whole diagram.
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 #[serde(deny_unknown_fields)]
+// Each bool is a switch the spec format itself holds (`legend`, `glow`,
+// `credit`, `heading`), read as written.
+#[allow(clippy::struct_excessive_bools)]
 pub struct Spec {
     /// The spec format's version. Only `1` exists.
     pub archgram: u32,
@@ -21,6 +24,12 @@ pub struct Spec {
     pub title: String,
     /// The whole diagram in prose, written as the SVG's `<desc>`.
     pub description: String,
+    /// One line shown under the visible title (docs/SPEC.md, Top level).
+    #[serde(default)]
+    pub subtitle: Option<String>,
+    /// Whether the drawing shows its title, and the subtitle, above it.
+    #[serde(default = "default_true")]
+    pub heading: bool,
     #[serde(default)]
     pub direction: Direction,
     /// How wide the diagram is shown, in CSS pixels; a README on GitHub
@@ -123,6 +132,17 @@ impl DiagramKind {
     /// prints them. A test holds it to the kinds a spec may name, so a kind
     /// cannot be drawn without being listed.
     pub const ALL: [DiagramKind; 2] = [DiagramKind::Architecture, DiagramKind::Sequence];
+
+    /// The visible title of a diagram of this kind named `title`:
+    /// "Architecture diagram of Online Boutique" (docs/SPEC.md, Top level).
+    #[must_use]
+    pub fn heading(self, title: &str) -> String {
+        let kind = match self {
+            DiagramKind::Architecture => "Architecture",
+            DiagramKind::Sequence => "Sequence",
+        };
+        format!("{kind} diagram of {}", title.trim())
+    }
 
     /// The value a spec's `diagram` takes for this kind.
     #[must_use]

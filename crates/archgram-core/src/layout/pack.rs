@@ -217,6 +217,7 @@ fn plain_grid(spec: &Spec, unit: &[usize], sizes: &[Size], limit: f64) -> Placem
         legend: Vec::new(),
         flow_lines: Vec::new(),
         credit: None,
+        heading: None,
         size,
     }
 }
@@ -293,6 +294,7 @@ fn framed_grid(spec: &Spec, unit: &[usize], sizes: &[Size], limit: f64) -> Optio
         legend: Vec::new(),
         flow_lines: Vec::new(),
         credit: None,
+        heading: None,
         size: Size {
             w: inner.w,
             h: inner.h,
@@ -379,6 +381,7 @@ pub fn pack(
         legend: Vec::new(),
         flow_lines: Vec::new(),
         credit: None,
+        heading: None,
         size: Size::default(),
     };
 

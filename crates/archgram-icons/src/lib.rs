@@ -2,12 +2,13 @@
 //! release of Simple Icons: `data/icons.tsv`, one logo per line (slug,
 //! title, brand colour, the path on a 24 by 24 grid), sorted by slug and written by
 //! `cargo xtask icons <tag> <commit>`. `data/RELEASE` names the release and commit;
-//! `data/provenance.tsv` each logo's source and brand guidelines. Logos
-//! that carry a licence of their own other than CC0 are left out.
+//! `data/provenance.tsv` each logo's source, brand guidelines and, for a
+//! logo that carries one of its own, its licence: every logo is carried.
 //!
 //! The logos are brands' trademarks. archgram draws them in one neutral
 //! colour to name a technology, as Simple Icons intends; whoever publishes
-//! a diagram follows each brand's guidelines (`provenance.tsv`).
+//! a diagram follows each brand's guidelines and each logo's licence
+//! (`provenance.tsv`).
 
 use archgram_core::logos::Logos;
 

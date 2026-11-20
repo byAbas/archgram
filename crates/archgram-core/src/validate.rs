@@ -75,6 +75,7 @@ impl<'a> Validator<'a> {
             archgram: s.archgram,
             title: &s.title,
             description: &s.description,
+            subtitle: s.subtitle.as_deref(),
             shown_width: s.shown_width,
             palette: &s.palette,
         }));
@@ -99,6 +100,9 @@ impl<'a> Validator<'a> {
             ("/title".into(), &s.title),
             ("/description".into(), &s.description),
         ];
+        if let Some(sub) = &s.subtitle {
+            texts.push(("/subtitle".into(), sub.as_str()));
+        }
         for (i, n) in s.nodes.iter().enumerate() {
             texts.push((format!("/nodes/{i}/label"), &n.label));
             if let Some(note) = &n.note {
@@ -516,6 +520,7 @@ pub(crate) struct Common<'a> {
     pub archgram: u32,
     pub title: &'a str,
     pub description: &'a str,
+    pub subtitle: Option<&'a str>,
     pub shown_width: Option<f64>,
     pub palette: &'a str,
 }
@@ -540,6 +545,19 @@ pub(crate) fn top_level(c: &Common<'_>) -> Vec<SpecError> {
             "/description",
             "the description is empty; it is what screen readers announce",
         ));
+    }
+    if let Some(sub) = c.subtitle {
+        if sub.trim().is_empty() {
+            errors.push(SpecError::at(
+                "/subtitle",
+                "the subtitle is empty; leave it out, or say in one line what the drawing shows",
+            ));
+        } else if sub.contains(['\n', '\r']) {
+            errors.push(SpecError::at(
+                "/subtitle",
+                "the subtitle is one line; it holds a line break",
+            ));
+        }
     }
     // A width outside this is a typo, not a place: a column narrower
     // than a phone, or wider than a wall.

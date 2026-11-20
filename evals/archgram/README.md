@@ -46,6 +46,11 @@ empty cache and no archgram at all.
 The skill looks at its drawing before it reports: it builds with
 `--preview` and critiques the still images, so a case that draws expects
 that, and still that no browser was started (docs/features/reader-check.md).
+It holds each drawing to the approved facts with its `scripts/facts.mjs`,
+and reports in about fifteen lines, each part's file and each line's code
+kept in the facts document, so a case that draws expects both, and, where
+the prompt names no README, no README in the report
+(docs/features/approved-drawing.md).
 
 ## The reader test
 

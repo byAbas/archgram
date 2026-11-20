@@ -19,7 +19,9 @@ From the diagram's layer of the facts document (`references/facts.md`):
 its Participants, its Messages in the order the code runs, its Branches
 as fragments, and phases for its steps. A sequence has no `direction` and no
 `flows`: it is drawn top to bottom, numbers its messages and moves on its
-own, one phase at a time, so leave `still` out too.
+own, one phase at a time, so leave `still` out too. Inside `{ }`, quote
+every `label` and `note` (`label: "find user, then check"`): there a comma
+ends a value, and the words after it read as a field.
 
 ## Phases
 
@@ -41,10 +43,9 @@ the report.
 
 ## In the report
 
-In place of the parts and edges SKILL.md, step 7, lists: each
-participant with its file, and each message in order with the line (or
-the sentence) that makes it, and what was split or left out past about
-15 messages.
+Under "Not shown" (SKILL.md, step 7): what was split or left out past
+about 15 messages. Each participant's file and each message's line stay
+in the facts document.
 
 ## An example
 

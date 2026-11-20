@@ -41,7 +41,7 @@ pub fn scene(
     logos: &dyn crate::logos::Logos,
 ) -> Scene {
     let width = layout.size.w + 2.0 * SPACING_MARGIN;
-    let height = layout.size.h + 2.0 * SPACING_MARGIN;
+    let height = layout.size.h + 2.0 * SPACING_MARGIN + super::depth(layout.heading.as_ref());
     let at = |r: Rect| Rect {
         x: r.x + OFFSET,
         y: r.y + OFFSET,
@@ -380,6 +380,8 @@ pub fn scene(
     if let Some(c) = layout.credit {
         items.push(credit::credit(at(c)));
     }
+    // Everything but the background goes under the heading.
+    super::under_heading(&mut items, 1, layout.heading.as_ref());
     Scene {
         width,
         height,
@@ -859,6 +861,11 @@ pub fn text_runs(layout: &Layout, logos: &dyn crate::logos::Logos) -> Vec<(Face,
         .into_iter()
         .map(|(w, t)| ((font::Family::Sans, w), t.into_owned()))
         .collect();
+    runs.extend(
+        crate::layout::heading::runs(layout.heading.as_ref())
+            .into_iter()
+            .map(|(w, t)| ((font::Family::Sans, w), t)),
+    );
     runs.extend(
         layout
             .legend

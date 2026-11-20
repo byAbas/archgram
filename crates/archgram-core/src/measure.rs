@@ -170,6 +170,15 @@ pub fn text_runs_with<'a>(
     logos: &'a dyn Logos,
 ) -> Vec<(u16, std::borrow::Cow<'a, str>)> {
     let mut runs = Vec::new();
+    if spec.heading {
+        runs.push((
+            TYPOGRAPHY_TITLE.weight,
+            spec.diagram.heading(&spec.title).into(),
+        ));
+        if let Some(sub) = &spec.subtitle {
+            runs.push((TYPOGRAPHY_SUBTITLE.weight, sub.trim().into()));
+        }
+    }
     for node in &spec.nodes {
         runs.push((TYPOGRAPHY_TITLE.weight, node.label.as_str().into()));
         if let Some(note) = note_line(node, spec.logo, logos).text {
