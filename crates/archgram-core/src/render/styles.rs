@@ -4,9 +4,9 @@
 
 use crate::render::scene::{Decl, Paint, Rule};
 use crate::tokens::{
-    DASH_EDGE, DASH_EXTERNAL, DASH_FRAGMENT, DASH_FRAME, DASH_LIFELINE, DASH_OPERAND, DASH_REPLY,
-    GRID_OPACITY, Role, STROKE_CARD, STROKE_CONNECTOR, STROKE_FRAME, STROKE_MESSAGE,
-    TYPOGRAPHY_FRAGMENT, TYPOGRAPHY_FRAME_LABEL, TYPOGRAPHY_LEGEND, TYPOGRAPHY_MESSAGE,
+    DASH_EDGE, DASH_FRAGMENT, DASH_FRAME, DASH_LIFELINE, DASH_OPERAND, DASH_REPLY, GRID_OPACITY,
+    Role, STROKE_CARD, STROKE_CONNECTOR, STROKE_FRAME, STROKE_MESSAGE, TYPOGRAPHY_FRAGMENT,
+    TYPOGRAPHY_FRAME_LABEL, TYPOGRAPHY_HEADING, TYPOGRAPHY_LEGEND, TYPOGRAPHY_MESSAGE,
     TYPOGRAPHY_MESSAGE_NUMBER, TYPOGRAPHY_MESSAGE_REPLY, TYPOGRAPHY_PHASE, TYPOGRAPHY_SUBTITLE,
     TYPOGRAPHY_TITLE,
 };
@@ -34,6 +34,12 @@ use Paint::{None as NoPaint, Role as R};
 pub fn shapes() -> Vec<Rule> {
     let mut out = vec![
         rule(".title", &[Font(TYPOGRAPHY_TITLE), Fill(R(Role::Text))]),
+        // The drawing's visible title, in Geist SemiBold (DESIGN.md,
+        // Components: Heading).
+        rule(
+            ".heading-title",
+            &[Font(TYPOGRAPHY_HEADING), Fill(R(Role::Text))],
+        ),
         rule(
             ".sub",
             &[Font(TYPOGRAPHY_SUBTITLE), Fill(R(Role::TextMuted))],
@@ -49,13 +55,11 @@ pub fn shapes() -> Vec<Rule> {
         ),
         rule(
             ".card.external",
-            &[
-                Fill(R(Role::Canvas)),
-                Stroke(R(Role::Connector)),
-                Dash(DASH_EXTERNAL),
-            ],
+            &[Fill(R(Role::Badge)), Stroke(R(Role::Connector))],
         ),
         rule(".badge", &[Fill(R(Role::Badge))]),
+        // An external card is tinted, so its badge takes the card's own fill.
+        rule(".badge.external", &[Fill(R(Role::Card))]),
         rule(".logo", &[Fill(R(Role::TextMuted))]),
     ];
     out.extend(

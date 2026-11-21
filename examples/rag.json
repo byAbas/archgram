@@ -5,14 +5,14 @@
   "direction": "right",
   "nodes": [
     { "id": "cvs", "kind": "file", "label": "CV PDFs", "note": "30 files", "frame": "prep" },
-    { "id": "extract", "kind": "model", "label": "Gemini", "note": "extracts profile", "tech": "googlegemini", "variant": "external", "frame": "prep" },
+    { "id": "extract", "kind": "llm", "label": "Profile extractor", "note": "extracts profile", "tech": "googlegemini", "variant": "external", "frame": "prep" },
     { "id": "fieldcheck", "kind": "check", "label": "Field check", "note": "page per fact", "frame": "prep" },
     { "id": "embed", "kind": "model", "label": "Embedding", "note": "each chunk", "variant": "external", "frame": "prep" },
     { "id": "index", "kind": "storage", "label": "data/index", "note": "JSON, in memory" },
     { "id": "vectors", "kind": "vector-store", "label": "Pinecone", "note": "chunk vectors", "variant": "external" },
     { "id": "chat", "kind": "browser", "label": "Chat screen", "frame": "ask" },
     { "id": "route", "kind": "service", "label": "POST /api/ask", "note": "no CV text in the prompt", "frame": "ask" },
-    { "id": "llm", "kind": "model", "label": "Gemini", "note": "tool-calling loop", "tech": "googlegemini", "variant": "external", "frame": "ask" },
+    { "id": "llm", "kind": "llm", "label": "Answer writer", "note": "tool-calling loop", "tech": "googlegemini", "variant": "external", "frame": "ask" },
     { "id": "tools", "kind": "tool", "label": "Exact tools", "note": "find, count, get", "frame": "ask" },
     { "id": "search", "kind": "tool", "label": "search_cv_text", "note": "BM25 + vectors", "frame": "ask" },
     { "id": "answercheck", "kind": "check", "label": "Answer check", "note": "ids and pages", "frame": "ask" }

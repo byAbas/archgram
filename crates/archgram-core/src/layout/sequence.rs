@@ -11,7 +11,7 @@ use std::f64::consts::FRAC_1_SQRT_2;
 use crate::font::text_width;
 use crate::geometry::{Point, Rect, Size};
 use crate::logos::Logos;
-use crate::measure::{card_sizes_with, lines_in, note_line, text_width_of};
+use crate::measure::{card_sizes_with, kind_line, lines_in, text_width_of};
 use crate::render::refusal::mark_reach;
 use crate::sequence::{Look, Operator, Sequence, SequenceStill, Step};
 use crate::spec::{LogoPlace, Spec, Variant};
@@ -314,7 +314,7 @@ pub fn numbers(steps: &[Step<'_>]) -> Vec<String> {
 /// Each head's footprint and how far it reaches left of the lifeline, as
 /// `look` draws it: in `cards` a node card, every front card as wide as
 /// the widest so the columns line up; in `avatars` the circle, the logo's
-/// chip on its edge, and the name and note under it, centred on the
+/// chip on its edge, and the name and kind under it, centred on the
 /// lifeline.
 fn heads(look: Look, seq: &Sequence, spec: &Spec, logos: &dyn Logos) -> Vec<(Size, f64)> {
     let copies = |v: Variant| {
@@ -361,7 +361,7 @@ fn heads(look: Look, seq: &Sequence, spec: &Spec, logos: &dyn Logos) -> Vec<(Siz
                     .max(chip)
                     .max(text / 2.0)
                     .ceil();
-                let note = if note_line(n, spec.logo, logos).text.is_some() {
+                let kind = if kind_line(n, spec.logo, logos).is_drawn() {
                     line_height()
                 } else {
                     0.0
@@ -370,7 +370,7 @@ fn heads(look: Look, seq: &Sequence, spec: &Spec, logos: &dyn Logos) -> Vec<(Siz
                     + AVATAR_SIZE
                     + AVATAR_LABEL_GAP
                     + TYPOGRAPHY_TITLE.size * TYPOGRAPHY_TITLE.line_height
-                    + note;
+                    + kind;
                 (Size { w: 2.0 * half, h }, half)
             })
             .collect(),

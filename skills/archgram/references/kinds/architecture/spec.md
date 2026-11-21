@@ -28,7 +28,7 @@ the layer's flows, the path the contract's questions follow, a flow, so
 it animates. Keep labels to the words a reader needs: an edge's label is
 a few words, two or three, naming the call or the data (`POST /orders`,
 `enqueue`, `read-through`); what the reader needs beyond that goes in a
-node's `note` or the report, not onto the line, since a long label
+node's name or the report, not onto the line, since a long label
 pushes the cards apart. An edge's label is the relation's `What` as the
 facts document has it, word for word: the facts script holds it to that
 (SKILL.md, step 6).
@@ -40,8 +40,7 @@ shows ("Placing an order"), and only then.
 
 ## Writing it
 
-Three rules that `archgram check` otherwise teaches one failed check at a
-time:
+Four rules that `archgram check` otherwise teaches one check at a time:
 
 - Inside `{ }`, quote every `note` and `label`
   (`note: "get, then empty"`): there a comma ends a value, and the words
@@ -50,7 +49,12 @@ time:
   never nodes of two frames together.
 - Write `tech` only with a slug archgram carries. When `check` says it
   does not, it names the nearest; when none is the technology, leave
-  `tech` out and name the technology in the `note`.
+  `tech` out and name the technology in the node's name, which no logo
+  then repeats (`Pinecone vectors`).
+- A node with a logo is named for what it does here, not for its
+  technology, which the logo already shows: `Payments` with `tech:
+  stripe`, `App database` with `tech: postgresql`, never `Stripe` or
+  `Postgres`. `check` warns of a name that only repeats its logo's.
 
 ## Same relations, one node
 
@@ -58,11 +62,12 @@ Whatever the architecture, parts the reader need not tell apart can be
 one node, and the drawing says so without knowing the style: two parts
 are the same to the reader when the same nodes lead into them and they
 lead to the same nodes. Tokens, a rules document and source code that
-one command reads and another writes are one node, "design sources",
-with their names in its note; a config file only a third command writes
-stays its own. Merge only parts at the same level, and name the merged
-node after what they are for, not after one of them. Each merged node's
-note names the parts it stands for.
+one command reads and another writes are one node, "design sources"; a
+config file only a third command writes stays its own. Merge only parts
+at the same level, and name the merged node after what they are for, not
+after one of them. Each merged node's `note` names the parts it stands
+for: the note is never drawn, but the facts script reads it to find each
+part (SKILL.md, step 6), and the report lists them for the reader.
 
 Keep a part apart, even with the same relations, when a question in the
 reader contract is about it, or when it is the one idea.

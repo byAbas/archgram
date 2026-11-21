@@ -109,14 +109,14 @@ drawing keeps a plain name; any other spec draws its own name with `.svg`.
 | `diagram` | no | `architecture`, `sequence` | `architecture` | The kind of diagram. Without it, a spec is an architecture diagram, and every field in this section and the sections up to Sequence is its. A sequence takes the fields in Sequence, below. `archgram spec --kinds` lists the kinds this archgram draws, each with the section that holds its fields |
 | `title` | yes | text | | The diagram's name; the SVG's `<title>`, and shown above the drawing as "<Kind> diagram of <title>", such as "Architecture diagram of Online Boutique": name the project, and say which part of it in `subtitle` |
 | `description` | yes | text | | The whole diagram in prose; the SVG's `<desc>`, read by screen readers |
-| `subtitle` | no | one line of text | | Shown under the visible title, in the type of a card's note: what this drawing shows of the project, such as "Placing an order" |
+| `subtitle` | no | one line of text | | Shown under the visible title, in the type of a card's second line: what this drawing shows of the project, such as "Placing an order" |
 | `heading` | no | `true`, `false` | `true` | Whether to show the title, and the subtitle, above the drawing (DESIGN.md, Components: Heading) |
 | `direction` | no | `right`, `down`, `auto` | `right` | The direction of the flow. `auto` lets archgram choose: left to right while it keeps its text readable where the diagram is shown (`shownWidth`), and otherwise whichever of left to right and top to bottom is narrower. It is chosen from the spec alone, so the same spec draws the same bytes, and `archgram build` says which it chose |
 | `shownWidth` | no | a number of CSS pixels, 200 to 4,000 | a README on GitHub, 880 | How wide the diagram is shown where it is read. The widest drawing that keeps its text readable there is `shownWidth × 1300 / 880`: 1,300 px in a README, 996 px for 674. `direction: auto` chooses against it, and `archgram build` warns, still drawing, when a drawing is wider; width never fails `check` (docs/features/shown-width.md) |
 | `card` | no | `horizontal`, `vertical` | `horizontal` | The card style for every node |
-| `logo` | no | `corner`, `inline`, `chip`, `icon` | `corner` | Where technology logos go: the card's corner, before the note (or the technology's name), a chip on the icon, or in place of the icon |
+| `logo` | no | `corner`, `inline`, `chip`, `icon` | `corner` | Where technology logos go: the card's corner, before its kind on the second line, a chip on the icon, or in place of the icon |
 | `palette` | no | a palette name | `mono` | The palette; light and dark are chosen when rendering |
-| `legend` | no | `true`, `false` | `true` | Whether to draw the legend, when the diagram has one (DESIGN.md, Components: Legend) |
+| `legend` | no | `true`, `false` | `true` | Whether to draw the legend under the diagram: each kind of node it uses, with its icon, then, on a row of its own, what a card's look means, several instances and external (DESIGN.md, Components: Legend) |
 | `signal` | no | `wire`, `spark`, `arc`, `comet`, `dot`, `pulse`, `current` | `wire` | How a flow's signal is drawn along the lines (DESIGN.md, Components: Signal) |
 | `still` | no | `none`, `legend`, `numbers` | `none` | What the still image shows of the flows, where nothing moves: nothing more, each flow in words under the legend, or each step's number on its lines |
 | `border` | no | `spark`, `drain`, `ring`, `afterglow` | `spark` | How a lit card's border is drawn from the arrow that reaches it: both ways round with a dot on each growing end, then draining toward the arrow that leaves, once round clockwise, or fading while the card is lit (DESIGN.md, Components: Signal) |
@@ -141,8 +141,8 @@ Examples.
 |---|---|---|
 | `id` | yes | Lowercase letters, digits and hyphens; unique among nodes and frames |
 | `kind` | yes | One of the kinds below; decides the icon and the category |
-| `label` | yes | The card's title |
-| `note` | no | The card's subtitle: one short line |
+| `label` | yes | The card's name, its first line, with its kind under it (DESIGN.md, Components: Node card). With a `tech`, it says what the part does here, never only the technology's name, which the logo shows: "Payments" with `stripe`, not "Stripe". `check` and `build` warn of a name that only repeats its logo's |
+| `note` | no | Never drawn: one short line on the node for whoever reads the spec, such as the parts a merged node stands for. What the reader of the drawing needs goes in the name or an edge's label |
 | `tech` | no | A technology, by its Simple Icons slug (`postgresql`, `redis`, `react`); shows its logo. Lowercase letters, digits and `_` |
 | `variant` | no | `single` (default), `multi` (several instances), `external` (not ours) |
 | `frame` | no | The id of the frame the node sits in |
@@ -152,10 +152,18 @@ Kinds, by category:
 
 | Category | Kinds |
 |---|---|
-| Core | `service`, `database`, `queue`, `cache`, `storage`, `users` |
-| AI and LLM | `model`, `vector-store`, `tool`, `agent` |
+| Core | `service`, `auth`, `database`, `queue`, `cache`, `storage`, `users` |
+| AI and LLM | `llm`, `model`, `vector-store`, `tool`, `agent` |
 | Build and tooling | `file`, `script`, `generated`, `check` |
 | Clients | `browser`, `mobile`, `desktop` |
+
+A card's second line, and the legend, name each kind in words: Service,
+Auth, Database, Queue, Cache, Storage, Users, LLM, AI model, Vector
+store, Tool, Agent, File, Script, Generated, Validator, Browser, Mobile
+app, Desktop app. `auth` is what lets a request in or keeps it out at run
+time: a guard, a session check, an identity provider. `llm` is a model
+that writes text; `model` is any other, such as one that embeds. `check`
+is a check in the build or the tooling: a linter, a test, a gate.
 
 ## Frames
 
@@ -701,14 +709,14 @@ flows:
   "direction": "right",
   "nodes": [
     { "id": "cvs", "kind": "file", "label": "CV PDFs", "note": "30 files", "frame": "prep" },
-    { "id": "extract", "kind": "model", "label": "Gemini", "note": "extracts profile", "tech": "googlegemini", "variant": "external", "frame": "prep" },
+    { "id": "extract", "kind": "llm", "label": "Profile extractor", "note": "extracts profile", "tech": "googlegemini", "variant": "external", "frame": "prep" },
     { "id": "fieldcheck", "kind": "check", "label": "Field check", "note": "page per fact", "frame": "prep" },
     { "id": "embed", "kind": "model", "label": "Embedding", "note": "each chunk", "variant": "external", "frame": "prep" },
     { "id": "index", "kind": "storage", "label": "data/index", "note": "JSON, in memory" },
     { "id": "vectors", "kind": "vector-store", "label": "Pinecone", "note": "chunk vectors", "variant": "external" },
     { "id": "chat", "kind": "browser", "label": "Chat screen", "frame": "ask" },
     { "id": "route", "kind": "service", "label": "POST /api/ask", "note": "no CV text in the prompt", "frame": "ask" },
-    { "id": "llm", "kind": "model", "label": "Gemini", "note": "tool-calling loop", "tech": "googlegemini", "variant": "external", "frame": "ask" },
+    { "id": "llm", "kind": "llm", "label": "Answer writer", "note": "tool-calling loop", "tech": "googlegemini", "variant": "external", "frame": "ask" },
     { "id": "tools", "kind": "tool", "label": "Exact tools", "note": "find, count, get", "frame": "ask" },
     { "id": "search", "kind": "tool", "label": "search_cv_text", "note": "BM25 + vectors", "frame": "ask" },
     { "id": "answercheck", "kind": "check", "label": "Answer check", "note": "ids and pages", "frame": "ask" }

@@ -13,47 +13,63 @@ use crate::tokens::{
     TYPOGRAPHY_TITLE,
 };
 
-/// What a card's second line shows.
-#[derive(Debug, Clone, Copy)]
-pub struct NoteLine<'a> {
+/// What a card's second line shows: its kind.
+#[derive(Debug, Clone)]
+pub struct KindLine<'a> {
     /// The logo leading it, when logos go inline.
     pub logo: Option<&'a str>,
-    /// Its text: the note, or with an inline logo and no note, the
-    /// technology's name (empty when the logos give none).
-    pub text: Option<&'a str>,
+    /// Its text, the kind's name; none for a card named as its kind.
+    pub text: Option<std::borrow::Cow<'a, str>>,
 }
 
-/// A card's second line: its note, led by its technology's logo when logos
-/// go inline; with no note, an inline logo brings the technology's name.
+impl KindLine<'_> {
+    /// Whether the card draws a second line: its kind, or an inline logo
+    /// alone on a card named as its kind.
+    #[must_use]
+    pub fn is_drawn(&self) -> bool {
+        self.text.is_some() || self.logo.is_some()
+    }
+}
+
+/// A card's second line: its kind, led by its technology's logo when logos
+/// go inline. A node's `note` is never drawn (docs/SPEC.md, Nodes).
 #[must_use]
-pub fn note_line<'a>(node: &'a Node, place: LogoPlace, logos: &'a dyn Logos) -> NoteLine<'a> {
+pub fn kind_line<'a>(node: &'a Node, place: LogoPlace, logos: &'a dyn Logos) -> KindLine<'a> {
     let tech = node.tech.as_deref();
     let logo = if place == LogoPlace::Inline {
         tech.and_then(|t| logos.path(t))
     } else {
         None
     };
-    let text = node
-        .note
-        .as_deref()
-        .or_else(|| logo.map(|_| tech.and_then(|t| logos.title(t)).unwrap_or_default()));
-    NoteLine { logo, text }
+    // The second line is the card's kind, written under its name as C4
+    // writes each element's type; a card named as its kind says it once.
+    let named_as_kind = node
+        .label
+        .trim()
+        .eq_ignore_ascii_case(node.kind.legend_name());
+    let text = (!named_as_kind).then(|| std::borrow::Cow::Borrowed(node.kind.legend_name()));
+    KindLine { logo, text }
+}
+
+/// The card's title: its name.
+#[must_use]
+pub fn card_title(node: &Node) -> &str {
+    &node.label
 }
 
 /// The width of a card's widest line of text, an inline logo included.
 pub(crate) fn text_width_of(node: &Node, place: LogoPlace, logos: &dyn Logos) -> f64 {
-    let title_width = text_width(&node.label, &TYPOGRAPHY_TITLE);
-    let line = note_line(node, place, logos);
-    let lead = if line.logo.is_some() {
-        CARD_LOGO_INLINE + CARD_LOGO_INLINE_GAP
-    } else {
-        0.0
+    let title_width = text_width(card_title(node), &TYPOGRAPHY_TITLE);
+    let line = kind_line(node, place, logos);
+    let kind_width = match (line.logo, line.text.as_deref()) {
+        (Some(_), Some(t)) => {
+            CARD_LOGO_INLINE + CARD_LOGO_INLINE_GAP + text_width(t, &TYPOGRAPHY_SUBTITLE)
+        }
+        (Some(_), None) => CARD_LOGO_INLINE,
+        (None, Some(t)) => text_width(t, &TYPOGRAPHY_SUBTITLE),
+        (None, None) => 0.0,
     };
-    let note_width = line
-        .text
-        .map_or(0.0, |n| text_width(n, &TYPOGRAPHY_SUBTITLE))
-        + lead;
-    title_width.max(note_width)
+    title_width.max(kind_width)
 }
 
 /// Where a horizontal card's text starts, from the card's left edge: padding,
@@ -153,7 +169,7 @@ pub fn label_size(label: &str) -> Size {
 }
 
 /// Every piece of text the drawing shows, with the weight it is set in, in
-/// drawing order: node titles and notes, edge labels, frame names in the
+/// drawing order: node names and kinds, edge labels, frame names in the
 /// capitals they are drawn in, then the legend's entries. The font subset
 /// and the check for characters the font lacks both read this list, so
 /// neither can miss a text the other covers.
@@ -172,7 +188,7 @@ pub fn text_runs_with<'a>(
     let mut runs = Vec::new();
     if spec.heading {
         runs.push((
-            TYPOGRAPHY_TITLE.weight,
+            crate::tokens::TYPOGRAPHY_HEADING.weight,
             spec.diagram.heading(&spec.title).into(),
         ));
         if let Some(sub) = &spec.subtitle {
@@ -180,9 +196,9 @@ pub fn text_runs_with<'a>(
         }
     }
     for node in &spec.nodes {
-        runs.push((TYPOGRAPHY_TITLE.weight, node.label.as_str().into()));
-        if let Some(note) = note_line(node, spec.logo, logos).text {
-            runs.push((TYPOGRAPHY_SUBTITLE.weight, note.into()));
+        runs.push((TYPOGRAPHY_TITLE.weight, card_title(node).into()));
+        if let Some(kind) = kind_line(node, spec.logo, logos).text {
+            runs.push((TYPOGRAPHY_SUBTITLE.weight, kind));
         }
     }
     for edge in &spec.edges {
@@ -324,25 +340,30 @@ mod tests {
     }
 
     #[test]
-    fn a_long_note_widens_the_card_too() {
+    fn a_note_is_never_drawn_and_the_kind_is_the_second_line() {
         let short = card_size(
-            &node("API", Some("x")),
+            &node("API", None),
             CardStyle::Horizontal,
             LogoPlace::Corner,
             &NoLogos,
-        )
-        .w;
-        let long = card_size(
-            &node(
-                "API",
-                Some("three replicas behind the load balancer in eu-west-1"),
-            ),
-            CardStyle::Horizontal,
-            LogoPlace::Corner,
-            &NoLogos,
-        )
-        .w;
-        assert!(long > short);
+        );
+        let noted = node(
+            "API",
+            Some("three replicas behind the load balancer in eu-west-1"),
+        );
+        assert_eq!(
+            card_size(&noted, CardStyle::Horizontal, LogoPlace::Corner, &NoLogos),
+            short
+        );
+        let line = kind_line(&noted, LogoPlace::Corner, &NoLogos);
+        assert_eq!(line.text.as_deref(), Some(noted.kind.legend_name()));
+        // A card named as its kind says it once.
+        let named_as_kind = node(noted.kind.legend_name(), None);
+        assert!(
+            kind_line(&named_as_kind, LogoPlace::Corner, &NoLogos)
+                .text
+                .is_none()
+        );
     }
 
     #[test]
@@ -374,23 +395,24 @@ mod tests {
     }
 
     #[test]
-    fn an_inline_logo_leads_the_note_or_brings_the_name() {
+    fn an_inline_logo_leads_the_kind_and_widens_the_card_by_itself() {
         use std::collections::BTreeMap;
         let logos: BTreeMap<String, String> =
             [("redis".to_owned(), "M0 0h24v24H0z".to_owned())].into();
         let mut n = node("Jobs", None);
         n.tech = Some("redis".into());
-        // No note, and a set without names: the logo alone leads the line.
-        let line = note_line(&n, LogoPlace::Inline, &logos);
-        assert!(line.logo.is_some() && line.text == Some(""));
-        // With a note, the logo leads it, and the card grows by the logo.
-        n.note = Some("a long stream of every click".into());
-        let chip = card_size(&n, CardStyle::Horizontal, LogoPlace::Chip, &logos).w;
-        let inline = card_size(&n, CardStyle::Horizontal, LogoPlace::Inline, &logos).w;
+        let line = kind_line(&n, LogoPlace::Inline, &logos);
+        assert!(line.logo.is_some());
+        assert_eq!(line.text.as_deref(), Some(n.kind.legend_name()));
+        // A kind line wider than the name: its text grows by the logo.
+        n.label = "J".into();
+        n.kind = crate::spec::Kind::VectorStore;
+        let chip = text_width_of(&n, LogoPlace::Chip, &logos);
+        let inline = text_width_of(&n, LogoPlace::Inline, &logos);
         assert!(
-            (inline - chip - (CARD_LOGO_INLINE + CARD_LOGO_INLINE_GAP)).abs() <= 1.0,
+            (inline - chip - (CARD_LOGO_INLINE + CARD_LOGO_INLINE_GAP)).abs() < 1e-9,
             "{chip} {inline}"
         );
-        assert!(note_line(&n, LogoPlace::Chip, &logos).logo.is_none());
+        assert!(kind_line(&n, LogoPlace::Chip, &logos).logo.is_none());
     }
 }

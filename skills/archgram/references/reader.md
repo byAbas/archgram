@@ -103,7 +103,7 @@ Judge what the image shows, not what the spec says it should.
 1. **Contract.** Answer each question from the preview alone, and write
    the answer down. A question the image cannot answer is a gap: fix the
    spec, not the answer.
-2. **The one idea.** Is it visible without reading any note? Its parts
+2. **The one idea.** Is it visible without reading the report? Its parts
    stand where the eye lands, near the middle or on the main path, not
    pushed to an edge, and the lines that carry it are not lost among
    others.
@@ -113,8 +113,8 @@ Judge what the image shows, not what the spec says it should.
 4. **Edges.** Does every edge have the line of code that makes it, and
    mean the same kind of thing (a call, data moving)? Open each line you
    cite and check it does what the edge says: a line number read from
-   memory drifts. "Contains", "configures" and "references" are frames or
-   notes, not edges.
+   memory drifts. "Contains", "configures" and "references" are frames,
+   or said in the report, not edges.
 5. **Level of detail.** Is an implementation detail shown while a
    load-bearing idea is missing? Is anything there only because it exists
    in the code? More than about 10 nodes and 12 edges, or two nodes with
@@ -133,11 +133,11 @@ Judge what the image shows, not what the spec says it should.
    brings it within. `build`'s counts at 0: lines that cross, lines
    through a frame, lines running back, cards reached side by side.
 8. **Clutter.** An edge label longer than two or three words; a label on
-   an edge that could be a node's note; a line that detours round the
+   an edge that could be part of a node's name; a line that detours round the
    whole drawing; arrowheads crowding into one card, or lines crossing
    where another order would not; a frame that groups nothing a reader
    needs.
-9. **Both themes.** Every label, note and logo readable on the light and
+9. **Both themes.** Every name, kind, label and logo readable on the light and
    on the dark preview; a logo or a colour that disappears on one of
    them is named in the report.
 10. **Honest gaps.** What the diagram still does not show. Say it in the

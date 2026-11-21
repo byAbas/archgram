@@ -13,8 +13,8 @@ pub trait Logos {
     /// Every slug in the set, for suggesting one when a name is wrong.
     fn slugs(&self) -> Vec<&str>;
 
-    /// The technology's name, shown beside an inline logo on a card without
-    /// a note.
+    /// The technology's name, for a suggestion and for a card's name that
+    /// only repeats it.
     fn title(&self, _slug: &str) -> Option<&str> {
         None
     }

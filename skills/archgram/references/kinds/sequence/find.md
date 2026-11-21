@@ -36,7 +36,9 @@ who sends the request. List them left to right in the order the request
 first reaches them, so most lines point right on the way in and left on
 the way back. Give each its kind, its technology's logo (`tech`) and,
 when a file backs it, that file as its `source`; a system you call but do
-not own is `variant: external`.
+not own is `variant: external`. With a logo, name it for what it does here
+(`Users` with `tech: postgresql`), not for the technology the logo
+already shows.
 
 ## Messages in the order the code runs
 

@@ -32,7 +32,34 @@ pub fn legend(entries: &[Entry], flow_lines: &[FlowLine]) -> Option<Item> {
             rx: Some(h / 4.0),
         };
         match e.swatch {
+            Swatch::Kind(kind) => {
+                let scale = b.w / crate::render::icons::GRID;
+                items.push(Item::Icon {
+                    class: format!(
+                        "icon {}",
+                        crate::render::card::category_class(kind.category())
+                    ),
+                    place: crate::render::scene::Place {
+                        x: b.x,
+                        y: b.y,
+                        scale,
+                    },
+                    stroke_width: crate::tokens::STROKE_ICON / scale,
+                    shapes: crate::render::icons::icon(kind),
+                });
+            }
             Swatch::External => items.push(rect("card external", b.x, b.y, b.w, b.h)),
+            Swatch::Boundary => items.push(rect("frame", b.x, b.y, b.w, b.h)),
+            Swatch::Sometimes => {
+                let middle = b.y + b.h / 2.0;
+                items.push(Item::Path {
+                    id: None,
+                    class: "edge dashed".into(),
+                    place: None,
+                    d: format!("M{} {}H{}", num(b.x), num(middle), num(b.right())),
+                    arrowhead: false,
+                });
+            }
             Swatch::Multi => {
                 let d = stack_step();
                 let (w, h) = (b.w - 2.0 * d, b.h - 2.0 * d);

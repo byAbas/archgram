@@ -129,7 +129,7 @@ that the owner endorses archgram or the diagram.
 Hugeicons, free Stroke Rounded set (commit 9c48f3723dfb243909fa83501aa7c6423ab972c0)
 https://github.com/hugeicons/hugeicons
 
-The node kinds' icons: 17 of its drawings, copied into
+The node kinds' icons: 19 of its drawings, copied into
 crates/archgram-core/src/render/icons.rs with their numbers rounded to two
 decimals. Their license:
 

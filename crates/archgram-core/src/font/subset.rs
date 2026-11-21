@@ -13,7 +13,8 @@
 //! - layout tables dropped (`GSUB`, `GPOS`, `GDEF`): archgram sets text
 //!   without kerning or ligatures, matching how it measures;
 //! - `name` reduced to the family, style, copyright and licence entries,
-//!   which the SIL Open Font License asks to travel with the font;
+//!   which the SIL Open Font License asks to travel with the font, and the
+//!   typographic family, so each weight is one family's;
 //! - `post` reduced to version 3 (no glyph names).
 //!
 //! Table layouts follow the OpenType specification (learn.microsoft.com/typography/opentype/spec).
@@ -399,8 +400,10 @@ fn cmap(mapped: &[(u32, u16)]) -> Vec<u8> {
 
 /// The `name` records to keep: copyright (0), family (1), subfamily (2),
 /// unique id (3), full name (4), version (5), PostScript name (6), licence
-/// description (13) and licence URL (14).
-const KEPT_NAMES: [u16; 9] = [0, 1, 2, 3, 4, 5, 6, 13, 14];
+/// description (13), licence URL (14), and the typographic family (16) and
+/// subfamily (17), by which a renderer finds Geist Medium and Semi Bold as
+/// weights of "Geist" rather than families of their own.
+const KEPT_NAMES: [u16; 11] = [0, 1, 2, 3, 4, 5, 6, 13, 14, 16, 17];
 
 /// A version 0 `name` table with only the kept records.
 fn name(table: &[u8]) -> Result<Vec<u8>, SubsetError> {

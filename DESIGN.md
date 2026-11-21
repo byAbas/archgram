@@ -34,7 +34,8 @@ components:
     typography: "{typography.subtitle}"
     width: "{label.max-width}"
   node-external:
-    backgroundColor: "{color.canvas}"
+    backgroundColor: "{color.badge}"
+    borderColor: "{color.connector}"
     textColor: "{color.text}"
     rounded: "{rounded.card}"
   icon-badge:
@@ -84,7 +85,7 @@ components:
     typography: "{typography.legend}"
   heading:
     textColor: "{color.text}"
-    typography: "{typography.title}"
+    typography: "{typography.heading}"
   heading-subtitle:
     textColor: "{color.text-muted}"
     typography: "{typography.subtitle}"
@@ -196,8 +197,10 @@ signal passes, a step that refuses it. There are no shadows, no gradients
 and no glow but a signal's faint one. The shapes
 carry the meaning, following the conventions architecture diagrams have
 settled on: every kind of thing has its own icon, several instances of a
-thing are stacked cards, a thing we do not own has a dashed border, and a
-boundary (a VPC, a trust zone) is a dashed frame.
+thing are stacked cards, a thing we do not own is a card tinted grey and
+edged solid, and a boundary (a VPC, a trust zone) is a dashed frame. A
+dash means a boundary, never a card, as the generators readers already
+know draw it.
 
 This document holds the rules and the reasons. It holds no values. Every
 value is a design token in `design-system/tokens/`, named here by its id
@@ -288,16 +291,18 @@ Rules:
 - A project's own tokens may fill the roles instead of a palette
   (docs/SPEC.md, Theme file); they are held to every rule here, and an
   import that misses a contrast is refused.
-- An external node keeps its category's icon hue; its dashed border, not
-  a grey icon, says it is not ours.
+- An external node keeps its category's icon hue; its tinted card, not a
+  grey icon, says it is not ours.
 
 ## Typography
 
-Four styles from `font.sans`:
+Five styles from `font.sans`:
 
-- `typography.title`: a node's name. The one weight step in the diagram,
-  so names are read first.
-- `typography.subtitle`: a node's detail line and a technology name.
+- `typography.heading`: the drawing's visible title, the one style
+  heavier than a node's name and larger, so the eye reads it first.
+- `typography.title`: a node's name, a weight step over the text inside
+  the diagram, so names are read before kinds and labels.
+- `typography.subtitle`: a node's kind, under its name.
 - `typography.frame-label`: a frame's name, in capitals with open letter
   spacing, so it reads as a label for a region, not as a node.
 - `typography.legend`: the legend's entries.
@@ -342,11 +347,12 @@ and `font.mono` list a fallback stack.
 - A frame contains its nodes with `spacing.frame-padding` on every side
   and room at the top for its name (`spacing.frame-label`).
 - The legend (Components: Legend) sits under the diagram,
-  `spacing.legend` below it, left-aligned, its entries
+  `spacing.section` below it, left-aligned, its entries
   `spacing.legend-entry` apart, in rows `spacing.legend-row` apart no
   wider than the diagram.
 - The heading (Components: Heading) sits above everything, left-aligned,
-  `spacing.legend` over the diagram, as the legend is under it.
+  `spacing.section` over the diagram, as the legend is under it, so the
+  three stand apart evenly.
 - `spacing.margin` surrounds everything.
 
 A sequence lays out by its own rules (docs/features/sequence.md). Its
@@ -425,11 +431,10 @@ say "several instances" rather than "raised".
   one S curve.
 - Strokes: `stroke.card` for card edges, `stroke.icon` for icon lines,
   `stroke.connector` for edges, `stroke.frame` for frames.
-- Three dash patterns in an architecture diagram, never mixed up:
-  `dash.external` marks a node we do not own; `dash.frame` marks a
-  boundary; `dash.edge` marks an edge taken only sometimes. The frame's
-  dash is longer, so a dashed card inside a dashed frame stays
-  distinguishable. A sequence has four of its own: `dash.lifeline`, the
+- Two dash patterns in an architecture diagram, never mixed up:
+  `dash.frame` marks a boundary; `dash.edge` marks an edge taken only
+  sometimes. A card is never dashed: an external one is tinted instead
+  (Components: Variants). A sequence has four of its own: `dash.lifeline`, the
   faintest, for a lifeline; `dash.reply` for a reply; `dash.operand`
   between a fragment's operands; and, in the `avatars` look,
   `dash.fragment` for a fragment's frame. Each has one meaning in the
@@ -440,8 +445,11 @@ say "several instances" rather than "raised".
 ### Node card
 
 The unit of every diagram: a card (`node-card` or `node-card-vertical`)
-with an icon in a badge (`icon-badge`, `icon-badge-vertical`), a title and
-an optional subtitle (`node-subtitle`).
+with an icon in a badge (`icon-badge`, `icon-badge-vertical`), its name,
+and under the name its kind (`node-subtitle`), as C4 writes each element's
+type under its name ([C4 notation](https://c4model.com/diagrams/notation)).
+A card named as its kind ("Browser") says it once. A node's note is never
+drawn: the card stays two lines.
 
 The icon says what the thing is; the category says which icon role its
 lines take (in `mono`, one colour for all). Which kinds each category
@@ -461,11 +469,13 @@ Each kind has one icon from the free Stroke Rounded set of
 | Kind | Hugeicons icon |
 |---|---|
 | service | `code-square` |
+| auth | `shield-check` |
 | database | `database` |
 | queue | `queue-02` |
 | cache | `flash` |
 | storage | `bucket` |
 | users | `user` |
+| llm | `bubble-chat-spark` |
 | model | `sparkle` |
 | vector store | `database-search` |
 | tool | `wrench-01` |
@@ -473,7 +483,7 @@ Each kind has one icon from the free Stroke Rounded set of
 | file | `file-empty-02` |
 | script | `command-line` |
 | generated file | `ai-file` |
-| check | `shield-check` |
+| check | `check-list` |
 | browser | `app-window-mac` |
 | mobile | `smart-phone-01` |
 | desktop | `computer` |
@@ -484,8 +494,10 @@ Each kind has one icon from the free Stroke Rounded set of
 - **Multi-node**: two copies of the card's outline behind it, each offset
   by `card.multi-offset` up and to the right. Several instances of the same
   thing: replicas, a cluster, a pool.
-- **External** (`node-external`): the card filled with the canvas colour
-  and edged with `dash.external`. A system we call but do not own.
+- **External** (`node-external`): the card filled with `color.badge`,
+  edged solid in `color.connector`, its icon's badge in `color.card`, so
+  it stands apart from our own white cards at a glance. A system we call
+  but do not own.
 
 ### Technology logo
 
@@ -495,8 +507,7 @@ one of four places, chosen per diagram:
 - **Corner** (`logo-corner`, the default): in the card's top-right corner.
   The card keeps room for it beside the title, so the two never meet.
 - **Inline** (`logo-inline`): leading the card's second line,
-  `card.logo-inline-gap` before the note; a card without a note shows the
-  technology's name there instead.
+  `card.logo-inline-gap` before the kind.
 - **Chip** (`logo-chip`): in a small round chip on the icon badge's lower
   right corner, edged like a card.
 - **Icon** (`logo-icon`): in the badge, in place of the kind's icon, at
@@ -646,25 +657,33 @@ still image keeps the plain pill.
 
 ### Legend
 
-Generated from what the diagram uses: one entry per variant present
-(several instances, external), in `typography.legend` and
-`color.text-muted`. Colour tells no category apart, and each kind's icon
-already says what it is, so categories have no entry. Each entry leads
-with a swatch of `legend.swatch`, `legend.swatch-gap` before its text:
-several instances a small card with two copies behind; external a small
-dashed card. A diagram with no variant draws no legend.
+Generated from what the diagram uses, in `typography.legend` and
+`color.text-muted`, under the diagram, in two groups. First, each kind
+of node the diagram draws, in the order the spec first uses it: its
+icon, as its card shows it, and the kind's name ("Service", "Database").
+Then, on a row of its own, what a card's or a line's look means: several
+instances, external, a boundary when a frame is drawn and a path taken only
+sometimes when an edge is dashed, each present one, as C4 asks a legend
+to explain shapes, borders and line styles
+([C4 notation](https://c4model.com/diagrams/notation)). A sequence adds
+the kinds of message it draws to that second group. Each entry leads with its swatch,
+`legend.swatch-gap` before its text: a kind its icon, a third taller
+than `legend.swatch`; several instances a small card with two copies
+behind; external a small tinted card; a boundary a small dashed frame;
+a path taken only sometimes a short dashed line. The spec turns the legend off
+(`legend: false`).
 
 ### Heading
 
 What the drawing shows, above it: "<Kind> diagram of <title>", such as
-"Architecture diagram of Online Boutique", in a node's name's type,
-`typography.title`, and `color.text`, and under it, `spacing.label-gap`
-below, the spec's one-line subtitle in a node's detail type,
-`typography.subtitle`, and `color.text-muted`. No symbol beside it: the
-words say the kind. It takes the names' weight, not a heavier one, so
-the one weight step stays theirs (Typography). It is left-aligned at the
-margin, and everything under it moves down by its height and
-`spacing.legend`, in whole pixels, so a line keeps covering whole
+"Architecture diagram of Online Boutique", in `typography.heading` and
+`color.text`, and under it, `spacing.label-gap` below, the spec's
+one-line subtitle in a node's kind's type, `typography.subtitle`, and
+`color.text-muted`. No symbol beside it: the words say the kind. It is
+the one text heavier and larger than a node's name, in Geist's own Semi
+Bold, never a faked bold, so it reads first (Typography). It is
+left-aligned at the margin, and everything under it moves down by its
+height and `spacing.section`, in whole pixels, so a line keeps covering whole
 pixels. The drawing is at least as wide as it. Like every text inside
 the drawing a screen reader skips it: the SVG is named by its title and
 description. The spec turns it off (`heading: false`), and the drawing
@@ -718,9 +737,9 @@ refusal plays (Motion), so the red comes with the refusal that causes it.
   the circle's lower right edge, in a chip as a vertical card's
   (`logo-chip`); with `logo: icon`, the logo takes the icon's place and
   no chip is drawn. The name is under the circle, `avatar.label-gap`
-  below it, in `typography.title`, and a note under the name in
-  `node-subtitle`. An external participant's circle is edged with
-  `dash.external`; several instances, two circles' outlines behind it,
+  below it, in `typography.title`, and its kind under the name in
+  `node-subtitle`. An external participant's circle is tinted as an
+  external card is (`node-external`); several instances, two circles' outlines behind it,
   offset by `card.multi-offset` up and to the right.
 
 **Activation** (`activation`), in `cards` only. While a participant

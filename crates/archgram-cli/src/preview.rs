@@ -23,6 +23,7 @@ pub fn png(svg: &str) -> Result<Vec<u8>, String> {
     for data in [
         archgram_core::font::REGULAR,
         archgram_core::font::MEDIUM,
+        archgram_core::font::SEMIBOLD,
         archgram_core::font::MONO_REGULAR,
         archgram_core::font::MONO_MEDIUM,
     ] {
