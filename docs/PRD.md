@@ -2,7 +2,7 @@
 
 | Field   | Value      |
 |---------|------------|
-| Version | 0.43       |
+| Version | 0.44       |
 | Date    | 2026-11-21 |
 | Status  | Draft      |
 | Owner   | Abas Turabli |
@@ -312,7 +312,7 @@ same file every time.
   following the imports. Where the code and the documentation disagree,
   or the architecture is unclear, it asks the user.
 - Before it reads the code, it measures what it would read with a
-  script of its own, `scripts/size.mjs`, run with Node: the files git
+  command of its own, `archgram-size`, run with Node: the files git
   tracks, less what is never the project's own, in areas no larger than
   one reader takes in, as small, medium or large. It reads no file
   outside the project, follows no link and uses no network. It tells the
@@ -326,7 +326,8 @@ same file every time.
   the request says to go on without; the spec is written from the
   approved document, only its facts that a line of code or a
   configuration backs ([docs/features/facts.md](features/facts.md)).
-- A script of the skill's holds every spec to the approved facts before
+- A command of the skill's, `archgram-facts`, holds every spec to the
+  approved facts before
   each build: what was approved stays as it was, every approved part and
   relation is drawn in some diagram, every line is an approved relation
   under its approved label, and a relation the code backs but no diagram
@@ -386,7 +387,12 @@ same file every time.
 - It works on its own: everything it needs is in its folder or comes from
   archgram, which the project already has or the user agrees to
   download; its plugin manifest only lets Claude Code take the same
-  folder as a plugin.
+  folder as a plugin. Its folder holds text and its icon alone: the
+  commands it runs, `archgram-size` and `archgram-facts`, are Node
+  scripts of its own that ship in the `archgram` npm package beside the
+  launcher, run through npx at the skill's version as archgram is, since
+  Anthropic's directory refuses scripts in a plugin from an organization
+  it has not Verified.
   Its text changes only by review, like the code.
 - Its evaluations live beside it: that it is chosen when asked for an
   architecture diagram and not otherwise, that it draws a project it is
@@ -562,3 +568,4 @@ None.
 | 0.41    | 2026-11-19 | The skill looks at its drawing before it reports, through a still PNG of each theme that `build --preview` renders inside archgram with resvg, and critiques what a reader sees; it still starts no browser. The PNG comes from the SVG, not from a rasterizer of archgram's own (§5, §6.5, §6.6, `docs/features/reader-check.md`). |
 | 0.42    | 2026-11-20 | Planned: every drawing titled; `build` counts crossings, lines through a frame, lines against the direction and side-by-side arrivals; the previews in `.archgram/preview/`, out of git; every Simple Icons logo, each with its licence, the owner's decision; the skill held by a script to the approved facts, the user's request before its limits, one idea and one phase a drawing, a report of about fifteen lines, no README assumed (§5, §6.3, §6.5, §6.6, §7, §8, `docs/features/approved-drawing.md`, #176). |
 | 0.43    | 2026-11-21 | The notation follows C4: a card is its name and its kind, never its note; a name with a logo says what the part does, and `check` warns of one that repeats the logo; an external system is a grey card edged solid, a dash marks only a boundary; the legend names each kind drawn and the boundary (§7). |
+| 0.44    | 2026-11-21 | The skill's two scripts, `archgram-size` and `archgram-facts`, ship in the `archgram` npm package, not in the skill's folder, which holds text and its icon alone: Anthropic's directory refused 0.11.0 for `scripts/size.mjs`, accepting scripts only from Verified organizations (§6.6). |

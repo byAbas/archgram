@@ -1,10 +1,11 @@
 #!/usr/bin/env node
 // Holds the archgram skill's drawings to the facts the user approved
 // (SKILL.md, step 2 and step 6; references/facts.md, Held to approval).
-// Run it from the project's root:
+// It ships in the archgram npm package as `archgram-facts`, outside the
+// skill's folder, which holds text alone. Run it from the project's root:
 //
-//   node <the skill's folder>/scripts/facts.mjs approve [--not-asked]
-//   node <the skill's folder>/scripts/facts.mjs verify
+//   npx --package archgram@X.Y.Z archgram-facts approve [--not-asked]
+//   npx --package archgram@X.Y.Z archgram-facts verify
 //
 // `approve` stamps each section of docs/diagrams/facts.md with the hash of
 // its text, once the user has approved it (`--not-asked` when the request
@@ -361,4 +362,4 @@ function edgesOf(file, parts) {
 const [command, flag] = process.argv.slice(2);
 if (command === 'approve' && (!flag || flag === '--not-asked')) approve(flag === '--not-asked');
 else if (command === 'verify' && !flag) verify();
-else fail('use: facts.mjs approve [--not-asked] | facts.mjs verify');
+else fail('use: archgram-facts approve [--not-asked] | archgram-facts verify');

@@ -1,4 +1,5 @@
-// The archgram skill's facts script, skills/archgram/scripts/facts.mjs,
+// The archgram skill's facts script, packages/archgram/skill/facts.mjs
+// (`archgram-facts` in the npm package),
 // with Node's own test runner: `node --test scripts/skill-facts.test.mjs`.
 // Each test writes a facts document and specs into a temporary project,
 // approves the document, and reads what `verify` says.
@@ -11,7 +12,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const script = path.join(path.dirname(fileURLToPath(import.meta.url)), '../skills/archgram/scripts/facts.mjs');
+const script = path.join(path.dirname(fileURLToPath(import.meta.url)), '../packages/archgram/skill/facts.mjs');
 
 function project(files) {
   const dir = mkdtempSync(path.join(tmpdir(), 'archgram-facts-'));

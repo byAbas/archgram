@@ -2,7 +2,7 @@
 
 | Field   | Value      |
 |---------|------------|
-| Version | 0.1        |
+| Version | 0.2        |
 | Date    | 2026-11-20 |
 | Status  | Draft      |
 | Release | Planned    |
@@ -120,8 +120,9 @@ architecture of this project", the user approving the facts as asked:
   limits below apply; where a limit conflicts with what was asked, the
   skill draws what was asked and reports the limit's numbers with one
   line on the cleaner way.
-- **Held to approval, by a script.** On approval, a script of the skill's
-  stamps each approved part of `docs/diagrams/facts.md`. Before each
+- **Held to approval, by a command.** On approval, the skill's
+  `archgram-facts`, a Node script in the `archgram` npm package beside
+  the launcher, not in the skill's folder, stamps each approved part of `docs/diagrams/facts.md`. Before each
   build, it checks, and the skill stops and asks when one fails:
   - the approved text is unchanged; a split adds a diagram of its own,
     "split from" the approved one, naming the questions it answers;
@@ -227,3 +228,4 @@ None.
 | Version | Date       | Change |
 |---------|------------|--------|
 | 0.1     | 2026-11-20 | First draft, from #176: a visible title; `build`'s layout report; previews in `.archgram/preview/`; every Simple Icons logo; the skill held to the approved facts by a script, one idea and one phase per drawing, a short report, the place shown taken from the user. |
+| 0.2     | 2026-11-20 | The facts script ships in the `archgram` npm package as `archgram-facts`, with `archgram-size`, since Anthropic's directory refuses scripts in a plugin from an organization that is not Verified. |

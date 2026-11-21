@@ -46,7 +46,7 @@ empty cache and no archgram at all.
 The skill looks at its drawing before it reports: it builds with
 `--preview` and critiques the still images, so a case that draws expects
 that, and still that no browser was started (docs/features/reader-check.md).
-It holds each drawing to the approved facts with its `scripts/facts.mjs`,
+It holds each drawing to the approved facts with `archgram-facts`,
 and reports in about fifteen lines, each part's file and each line's code
 kept in the facts document, so a case that draws expects both, and, where
 the prompt names no README, no README in the report
@@ -92,7 +92,8 @@ sh evals/archgram/run.sh --out ~/archgram-evals/iteration-1 --repeat 3 --jobs 4 
   turned off for the runs, so neither side gets help the other does not.
 - **Unattended:** reading, writing in the copy, archgram at the skill's
   version, looked for (`npx --no --offline`) or run, and the skill's
-  sizing script (`scripts/size.mjs`) run without a prompt; anything else is denied
+  sizing and facts commands from that package (`archgram-size`,
+  `archgram-facts`) run without a prompt; anything else is denied
   (`--permission-prompts none`), which also takes away the tool that asks
   the user a question, so a question is asked in the run's reply. The
   system's viewer is denied too, so a case expects the skill to try to

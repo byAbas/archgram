@@ -14,7 +14,8 @@ Switch on the git hooks once in each clone, `git config core.hooksPath
 (`scripts/check-change`). A Claude Code session switches them on itself,
 and refuses a command that would skip them (`.claude/settings.json`).
 Node is needed only for the tests of the npm launcher and of the skill's
-scripts (`skills/archgram/scripts/size.mjs` and `facts.mjs`). Work on the version in
+commands in the npm package (`packages/archgram/skill/size.mjs` and
+`facts.mjs`). Work on the version in
 `.nvmrc`. The launcher itself supports the versions `engines` allows in
 `packages/archgram/package.json`, and CI tests it on several of them
 (`.github/workflows/ci.yml`).

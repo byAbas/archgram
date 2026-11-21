@@ -28,7 +28,7 @@
         "README.md is left unchanged",
         "docs/diagrams/facts.md exists, and every source in the spec is one the document gives, beside a fact at evidence 1 or 2",
         "The report is under 20 lines, names each drawing's path and docs/diagrams/facts.md, and holds no table of parts or lines",
-        "The run stamped the facts with scripts/facts.mjs approve --not-asked and ran scripts/facts.mjs verify before each build, which passed"
+        "The run stamped the facts with `archgram-facts approve --not-asked` and ran `archgram-facts verify` before each build, which passed"
       ]
     },
     {
@@ -64,7 +64,7 @@
         "No browser was started; the run built with --preview, looked at both previews before reporting, and the report says what it changed after looking, or that nothing needed it",
         "The run tried to open the finished SVG with the system's viewer (`open`, `xdg-open` or `start`); the runner denies the command, so the attempt is what counts",
         "The report is under 20 lines, names each drawing's path and docs/diagrams/facts.md, and holds no table of parts or lines",
-        "The run stamped the facts with scripts/facts.mjs approve --not-asked and ran scripts/facts.mjs verify before each build, which passed",
+        "The run stamped the facts with `archgram-facts approve --not-asked` and ran `archgram-facts verify` before each build, which passed",
         "Neither the report nor the facts document calls the place a README: the prompt names none"
       ]
     },
@@ -103,7 +103,7 @@
         "The run tried to open the finished SVG with the system's viewer (`open`, `xdg-open` or `start`); the runner denies the command, so the attempt is what counts",
         "README.md is left unchanged",
         "The report is under 20 lines, names each drawing's path and docs/diagrams/facts.md, and holds no table of parts or lines",
-        "The run stamped the facts with scripts/facts.mjs approve --not-asked and ran scripts/facts.mjs verify before each build, which passed"
+        "The run stamped the facts with `archgram-facts approve --not-asked` and ran `archgram-facts verify` before each build, which passed"
       ]
     },
     {
@@ -129,7 +129,7 @@
         "The run tried to open the finished SVG with the system's viewer (`open`, `xdg-open` or `start`); the runner denies the command, so the attempt is what counts",
         "README.md is left unchanged",
         "The report is under 20 lines, names each drawing's path and docs/diagrams/facts.md, and holds no table of parts or lines",
-        "The run stamped the facts with scripts/facts.mjs approve --not-asked and ran scripts/facts.mjs verify before each build, which passed"
+        "The run stamped the facts with `archgram-facts approve --not-asked` and ran `archgram-facts verify` before each build, which passed"
       ]
     },
     {
@@ -156,7 +156,7 @@
         "No browser was started; the run built with --preview, looked at both previews before reporting, and the report says what it changed after looking, or that nothing needed it",
         "The run tried to open the finished SVG with the system's viewer (`open`, `xdg-open` or `start`); the runner denies the command, so the attempt is what counts",
         "The report is under 20 lines, names each drawing's path and docs/diagrams/facts.md, and holds no table of parts or lines",
-        "The run stamped the facts with scripts/facts.mjs approve --not-asked and ran scripts/facts.mjs verify before each build, which passed",
+        "The run stamped the facts with `archgram-facts approve --not-asked` and ran `archgram-facts verify` before each build, which passed",
         "Neither the report nor the facts document calls the place a README: the prompt names none"
       ]
     },
@@ -184,7 +184,7 @@
         "No browser was started; the run built with --preview, looked at both previews before reporting, and the report says what it changed after looking, or that nothing needed it",
         "docs/diagrams/facts.md exists after the repair: the run created it from the spec's parts and sources, since the project had none, and the removed part is not in it",
         "The report is under 20 lines, names each drawing's path and docs/diagrams/facts.md, and holds no table of parts or lines",
-        "The run stamped the facts with scripts/facts.mjs approve --not-asked and ran scripts/facts.mjs verify before each build, which passed",
+        "The run stamped the facts with `archgram-facts approve --not-asked` and ran `archgram-facts verify` before each build, which passed",
         "Neither the report nor the facts document calls the place a README: the prompt names none"
       ]
     },
@@ -203,7 +203,7 @@
         "The report says the colours came from src/styles.css",
         "The run asked the user no question",
         "The report is under 20 lines, names each drawing's path and docs/diagrams/facts.md, and holds no table of parts or lines",
-        "The run stamped the facts with scripts/facts.mjs approve --not-asked and ran scripts/facts.mjs verify before each build, which passed"
+        "The run stamped the facts with `archgram-facts approve --not-asked` and ran `archgram-facts verify` before each build, which passed"
       ]
     },
     {
@@ -227,7 +227,7 @@
         "The run tried to open the finished SVG with the system's viewer (`open`, `xdg-open` or `start`); the runner denies the command, so the attempt is what counts",
         "README.md is left unchanged",
         "The report is under 20 lines, names each drawing's path and docs/diagrams/facts.md, and holds no table of parts or lines",
-        "The run stamped the facts with scripts/facts.mjs approve --not-asked and ran scripts/facts.mjs verify before each build, which passed"
+        "The run stamped the facts with `archgram-facts approve --not-asked` and ran `archgram-facts verify` before each build, which passed"
       ]
     },
     {
@@ -253,7 +253,7 @@
         "No browser was started; the run built with --preview, looked at both previews before reporting, and the report says what it changed after looking, or that nothing needed it",
         "The run tried to open the finished SVG with the system's viewer (`open`, `xdg-open` or `start`); the runner denies the command, so the attempt is what counts",
         "The report is under 20 lines, names each drawing's path and docs/diagrams/facts.md, and holds no table of parts or lines",
-        "The run stamped the facts with scripts/facts.mjs approve --not-asked and ran scripts/facts.mjs verify before each build, which passed"
+        "The run stamped the facts with `archgram-facts approve --not-asked` and ran `archgram-facts verify` before each build, which passed"
       ]
     },
     {
