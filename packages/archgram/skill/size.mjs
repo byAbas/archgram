@@ -2,9 +2,11 @@
 // Measures what the archgram skill would read of a project, before it reads
 // any of it (SKILL.md, Size the scope): the files git tracks, less what
 // references/ignore.md leaves out, in areas no larger than one reader's
-// budget. Run it from the project's root:
+// budget. It ships in the archgram npm package as `archgram-size`, outside
+// the skill's folder, which holds text alone. Run it from the project's
+// root:
 //
-//   node <the skill's folder>/scripts/size.mjs [--budget TOKENS] [PATH ...]
+//   npx --package archgram@X.Y.Z archgram-size [--budget TOKENS] [PATH ...]
 //
 // PATHs narrow it to the scope, folders or files under the project; with
 // none it measures the whole project. It prints Markdown: what it would
@@ -86,7 +88,7 @@ const WHY = {
 
 function usage(message) {
   process.stderr.write(
-    `size.mjs: ${message}\n\nUsage: node size.mjs [--budget TOKENS] [PATH ...]\n`,
+    `archgram-size: ${message}\n\nUsage: archgram-size [--budget TOKENS] [PATH ...]\n`,
   );
   process.exit(2);
 }
@@ -132,11 +134,21 @@ function git(root, argv, input) {
   });
 }
 
+// Whether git lists the project: inside a work tree, and not in a folder
+// the enclosing repository ignores, where `git ls-files --others` stops
+// with an error (`directory entry not superset of prefix`). Such a folder
+// is walked as one with no git.
 function inGit(root) {
   try {
-    return git(root, ['rev-parse', '--is-inside-work-tree']).trim() === 'true';
+    if (git(root, ['rev-parse', '--is-inside-work-tree']).trim() !== 'true') return 'none';
   } catch {
-    return false;
+    return 'none';
+  }
+  try {
+    git(root, ['check-ignore', '-q', '.']);
+    return 'ignored';
+  } catch {
+    return 'git';
   }
 }
 
@@ -312,7 +324,8 @@ function main() {
   const root = process.cwd();
   const { budget, paths } = args(process.argv.slice(2));
   const within = scope(root, paths);
-  const git_ = inGit(root);
+  const where = inGit(root);
+  const git_ = where === 'git';
 
   let tracked;
   let ignored = [];
@@ -359,7 +372,8 @@ function main() {
   lines.push(`Read: ${total.files} files, ${total.lines} lines, about ${tokens(total.bytes)} tokens (bytes / ${BYTES_PER_TOKEN}, an estimate)`);
   lines.push(`One reader's budget: about ${budget} tokens`);
   lines.push(`Size: ${size}, ${parts.length} ${parts.length === 1 ? 'area' : 'areas'}`);
-  if (!git_) lines.push('Not a git repository: what .gitignore and .gitattributes say was not applied');
+  if (where === 'none') lines.push('Not a git repository: what .gitignore and .gitattributes say was not applied');
+  if (where === 'ignored') lines.push('In a folder its git repository ignores: walked as a folder, what .gitignore and .gitattributes say was not applied');
   lines.push('');
   lines.push('## Areas');
   lines.push('');

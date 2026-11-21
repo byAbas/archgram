@@ -2,8 +2,8 @@
 
 | Field   | Value      |
 |---------|------------|
-| Version | 0.3        |
-| Date    | 2026-11-19 |
+| Version | 0.4        |
+| Date    | 2026-11-20 |
 | Status  | Draft      |
 | Release | Planned    |
 | Issue   | [#165](https://github.com/byAbas/archgram/issues/165) |
@@ -275,7 +275,11 @@ that is not generated.
     reads only under the project's folder, follows no symbolic link,
     prints no file's contents and uses no network. Its test,
     `scripts/skill-size.test.mjs`, runs in CI on the Node versions the
-    launcher is tested on.
+    launcher is tested on. Since 2026-11-20 it ships in the `archgram`
+    npm package as `archgram-size`, `packages/archgram/skill/size.mjs`,
+    no longer in the skill's folder: Anthropic's directory accepts only
+    text and images in a plugin from an organization it has not Verified
+    (#176).
 
 ## Open questions
 
@@ -283,10 +287,6 @@ that is not generated.
   Recommended: always.
 - Which model each agent runs on. To be measured on Kubernetes: the
   session's model against Sonnet, for accuracy and tokens.
-- Whether sizing moves into archgram, as `archgram survey`, from the
-  skill's script, `scripts/size.mjs` (Decided, 12). The command would be
-  tested on every system CI builds, but reads every file's size and
-  header, and so changes `SECURITY.md` (What archgram reads).
 - The limits between a small, a medium and a large scope, to be
   measured, not guessed. A first guess, to replace: about 100,000 tokens
   for one scanner.
@@ -311,3 +311,4 @@ that is not generated.
 | 0.1     | 2026-11-19 | First draft, from #165: one skill that takes the kind first, measures the scope, scans it with read-only sub-agents in clean contexts, verifies every cited line and writes the facts as a document the user approves before the spec; a core layer and a layer per kind, with evidence levels; what is not read, in three layers; `archgram spec --kinds`, built from `DiagramKind`. Open: the verifier, the models, where sizing lives, its limits, the document's place, the PRD. |
 | 0.2     | 2026-11-19 | The document is one for the project, `docs/diagrams/facts.md`, its core once and a layer per diagram; the skill stops for the user's approval of it before a spec, unless the request says to go on (Decided, 10 and 11). The PRD points here (§6.6). |
 | 0.3     | 2026-11-19 | Sizing is a script in the skill, `scripts/size.mjs`, tested in CI; whether it moves into archgram stays open (Decided, 12). |
+| 0.4     | 2026-11-20 | The sizing script ships in the `archgram` npm package as `archgram-size`, outside the skill's folder, and stays JavaScript rather than moving into the archgram binary; the open question is closed (Decided, 12). |

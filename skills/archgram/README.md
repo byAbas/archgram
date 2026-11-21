@@ -39,8 +39,9 @@ For other agents, and every other way, see
   the npm registry. You choose to install it into the project, pinned by
   its lockfile, or to let npx download it once, and it does neither
   until you answer.
-- Before it reads the code, it runs its own `scripts/size.mjs` with
-  Node, from the project's root: it lists what git tracks (`git ls-files`,
+- Before it reads the code, it runs its sizing command, `archgram-size`,
+  which the archgram npm package carries beside archgram, from the
+  project's root: it lists what git tracks (`git ls-files`,
   `git check-attr`), counts the lines of what it would read, and prints
   the size, the areas and what it leaves out. It reads only under the
   project's folder, follows no symbolic link, prints no file's contents,
@@ -60,8 +61,8 @@ For other agents, and every other way, see
   out, and each diagram's relations with the line of code behind each.
   It stops and asks you to approve that document, unless you said to go
   on without it, and writes the spec only from facts a line of code or
-  a configuration backs. Once you approve, its own `scripts/facts.mjs`
-  stamps each section of the document with the hash of its text, and,
+  a configuration backs. Once you approve, its facts command,
+  `archgram-facts`, from the same package, stamps each section of the document with the hash of its text, and,
   before each drawing, checks every spec against it: what you approved
   is unchanged, every relation is drawn or left out with its reason,
   every line is one you approved under its approved label. It reads only

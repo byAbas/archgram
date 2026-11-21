@@ -32,12 +32,16 @@
     "url": "https://github.com/byAbas/archgram/issues"
   },
   "bin": {
-    "archgram": "bin/archgram.js"
+    "archgram": "bin/archgram.js",
+    "archgram-size": "skill/size.mjs",
+    "archgram-facts": "skill/facts.mjs"
   },
   "main": "./bin/archgram.js",
   "files": [
     "bin/archgram.js",
-    "lib/platform.js"
+    "lib/platform.js",
+    "skill/size.mjs",
+    "skill/facts.mjs"
   ],
   "engines": {
     "node": ">=22"

@@ -36,7 +36,7 @@ before leaves:
 ignores them or what they hold is generated: in some projects they hold
 source, such as build scripts. Look before you leave one out.
 
-The skill's `scripts/size.mjs` leaves out the same, from git's own lists
+The skill's sizing command, `archgram-size`, leaves out the same, from git's own lists
 and `git check-attr`, and prints each with its layer (SKILL.md, step 2).
 Everything left out goes into the facts document's coverage, with the
 layer that left it out (`references/facts.md`, The core layer), so the

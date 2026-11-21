@@ -1,4 +1,5 @@
-// The archgram skill's sizing script, skills/archgram/scripts/size.mjs,
+// The archgram skill's sizing script, packages/archgram/skill/size.mjs
+// (`archgram-size` in the npm package),
 // with Node's own test runner: `node --test scripts/skill-size.test.mjs`.
 // Each test builds a small project in a temporary folder, a git repository
 // unless it says otherwise, and reads what the script prints.
@@ -11,7 +12,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const script = path.join(path.dirname(fileURLToPath(import.meta.url)), '../skills/archgram/scripts/size.mjs');
+const script = path.join(path.dirname(fileURLToPath(import.meta.url)), '../packages/archgram/skill/size.mjs');
 
 function project(files, { git = true } = {}) {
   const dir = mkdtempSync(path.join(tmpdir(), 'archgram-size-'));
@@ -181,4 +182,16 @@ test('a file that commonly holds secrets is left out by its name, never opened',
     .reduce((n, l) => n + Number(l.split('|')[2].trim()), 0);
   assert.equal(secret, files.length, `${files.length} secret files, each left out:\n${left}`);
   assert.ok(!out.includes('TOKEN'), 'nothing of a secret is printed');
+});
+
+test('a project in a folder its enclosing repository ignores is walked, not refused', (t) => {
+  const outer = project({ '.gitignore': 'inner/\n', 'top.js': 't();\n' });
+  const inner = path.join(outer, 'inner');
+  mkdirSync(path.join(inner, 'src'), { recursive: true });
+  writeFileSync(path.join(inner, 'src/app.js'), 'run();\n');
+  t.after(() => rmSync(outer, { recursive: true, force: true }));
+  const { code, out, err } = size(inner);
+  assert.equal(code, 0, err);
+  assert.match(out, /^In a folder its git repository ignores/m);
+  assert.match(out, /^Read: 1 files, /m, 'src/app.js, and nothing of the enclosing repository');
 });

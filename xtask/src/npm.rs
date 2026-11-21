@@ -199,6 +199,12 @@ fn assemble(all: bool) -> Result<Vec<&'static str>, String> {
         &source.join("lib/platform.js"),
         &dir.join("lib/platform.js"),
     )?;
+    // The skill's own commands, kept here, outside the plugin's folder: the
+    // directory accepts only text and images in a plugin from an
+    // organization that is not Verified (docs/features/approved-drawing.md).
+    for script in ["skill/size.mjs", "skill/facts.mjs"] {
+        copy(&source.join(script), &dir.join(script))?;
+    }
     // npm shows the launcher's README, a copy of the repository's, kept
     // by hand as Turborepo keeps its own; a copy that has fallen behind
     // stops the build.
@@ -338,6 +344,35 @@ fn smoke(written: &[&str]) -> Result<(), String> {
         "npx archgram build: the same {} bytes as the binary",
         a.len()
     );
+    smoke_skill(&scratch)
+}
+
+/// The skill's own commands, from the same package: each must run, as
+/// the skill runs it, and say what it is (packages/archgram/skill/).
+fn smoke_skill(scratch: &Path) -> Result<(), String> {
+    let size = run(
+        scratch,
+        "npx",
+        &["--no", "--package", "archgram", "archgram-size"],
+    )?;
+    if !String::from_utf8_lossy(&size).starts_with("# What the archgram skill would read") {
+        return Err("`archgram-size` printed no sizing".into());
+    }
+    let facts = Command::new("npx")
+        .args(["--no", "--package", "archgram", "archgram-facts", "verify"])
+        .current_dir(scratch)
+        .output()
+        .map_err(|e| format!("npx: {e}"))?;
+    // No facts document in the scratch project: it must say so and exit 2.
+    if facts.status.code() != Some(2)
+        || !String::from_utf8_lossy(&facts.stderr).contains("docs/diagrams/facts.md is not there")
+    {
+        return Err(format!(
+            "`archgram-facts verify` did not refuse a project without facts: {}",
+            String::from_utf8_lossy(&facts.stderr)
+        ));
+    }
+    println!("npx archgram-size and archgram-facts: they run from the package");
     Ok(())
 }
 

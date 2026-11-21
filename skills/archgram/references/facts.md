@@ -51,7 +51,7 @@ under `## The project`:
 - **Coverage**: `| Folder | Read | Why |`: every top-level folder, and any
   folder below it left out, with `yes` or `no`, and why: the reason
   `references/ignore.md` gives, or that the diagram did not need it. The
-  areas and the left-out rows `scripts/size.mjs` prints (SKILL.md,
+  areas and the left-out rows `archgram-size` prints (SKILL.md,
   step 2) are where it starts.
 
 ## A diagram's layer
@@ -111,12 +111,12 @@ Open each line before writing it: a line number read from memory drifts.
 
 ## Held to approval
 
-Once the user approves the document, `scripts/facts.mjs`, run as
-`approve`, writes under each `## ` heading a stamp of that section's text
+Once the user approves the document, `archgram-facts approve` writes
+under each `## ` heading a stamp of that section's text
 (`<!-- approved: sha256:… -->`). Approved text is then never edited
-without the user: before each build, `scripts/facts.mjs`, run as
-`verify`, holds the document and every spec beside it to the stamps
-(SKILL.md, step 6).
+without the user: before each build, `archgram-facts verify` holds the
+document and every spec beside it to the stamps (SKILL.md, step 6). Both
+come with the archgram package, as `archgram-size` does.
 
 A diagram split after approval, because it is too wide or does more than
 one thing, needs no new approval when it draws only what was approved.

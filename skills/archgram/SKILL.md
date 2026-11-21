@@ -84,6 +84,12 @@ goes by what you read there, never by a guess.
   - let npx download it once, now: the commands below then run as they
     are written.
 
+A project's own archgram older than the skill's version has neither
+`archgram-size` nor `archgram-facts`: npx says it cannot find them. Then
+read the project as `references/ignore.md` says without the measure, keep
+the facts document unstamped, and say in the report that no command held
+the drawing to the facts.
+
 Keep `--loglevel=error` in every command: it keeps npm's own warnings,
 such as those about a pnpm project's `.npmrc`, out of archgram's output,
 and changes nothing else. If `npx` is missing, or cannot find that
@@ -142,11 +148,11 @@ Read `references/facts.md`, `references/ignore.md` and the kind's
 `find.md` (`references/kinds/<kind>/find.md`).
 
 Before reading the code, measure what you would read, with the skill's
-own `scripts/size.mjs` (the skill's folder is the one this SKILL.md is
-in), run with Node from the project's root:
+sizing command, which the archgram package carries beside archgram
+itself, run from the project's root:
 
 ```bash
-node <the skill's folder>/scripts/size.mjs
+npx --yes --loglevel=error --package archgram@0.12.0 archgram-size
 ```
 
 It reads the files git tracks, leaves out what `references/ignore.md`
@@ -200,12 +206,12 @@ changed. Write no spec until they approve. When the request itself says
 to go on without stopping, such as "no need to check the facts with me",
 go on, and say in the report that the facts were not approved.
 
-Once they approve, stamp the document with the skill's own
-`scripts/facts.mjs`, from the project's root, so what they approved cannot
-change unseen:
+Once they approve, stamp the document with the skill's facts command,
+which the archgram package carries too, from the project's root, so what
+they approved cannot change unseen:
 
 ```bash
-node <the skill's folder>/scripts/facts.mjs approve
+npx --yes --loglevel=error --package archgram@0.12.0 archgram-facts approve
 ```
 
 When the request said to go on without asking, add `--not-asked`. Stamp
@@ -343,7 +349,7 @@ before: keep drawing with it.
 Before each build, hold every spec to the approved facts:
 
 ```bash
-node <the skill's folder>/scripts/facts.mjs verify
+npx --yes --loglevel=error --package archgram@0.12.0 archgram-facts verify
 ```
 
 It checks that the approved text is unchanged, that every approved

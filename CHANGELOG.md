@@ -42,6 +42,19 @@ follow [Semantic Versioning](https://semver.org/).
   what a reader needs in a name, an edge's label or the report rather
   than a note, and keeps a merged node's parts in its note for the facts
   check.
+- The `archgram` skill's two scripts ship in the `archgram` npm package,
+  as `archgram-size` and `archgram-facts`, and the skill runs them
+  through npx at its own version, as it runs archgram. Its folder holds
+  only text and its icon, as Anthropic's directory asks of a plugin from
+  an organization it has not Verified, which refused 0.11.0 for
+  `scripts/size.mjs`; 0.12.0 carries the same scripts.
+
+### Fixed
+
+- The skill's sizing no longer stops with git's error "directory entry
+  not superset of prefix" when the project sits in a folder its
+  enclosing git repository ignores: it walks that folder as one with no
+  git, and says so.
 
 ## [0.12.0] - 2026-11-20
 

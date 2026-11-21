@@ -191,7 +191,7 @@ fn the_skill_frontmatter_is_plain_yaml() {
 
 /// Every file the skill names by its path from the skill's root, as the
 /// Agent Skills format asks (`references/kinds/architecture/find.md`,
-/// `scripts/size.mjs`), is there, so moving a file cannot leave the skill
+/// `references/facts.md`), is there, so moving a file cannot leave the skill
 /// pointing at nothing. A
 /// path with a placeholder (`references/kinds/<kind>/find.md`) names no
 /// one file.
@@ -293,4 +293,48 @@ fn the_skill_looks_for_archgram_before_it_downloads() {
         "{}: between looking and the first download, the skill does not say it asks the user",
         path.display()
     );
+}
+
+/// The plugin's folder holds only what Anthropic's directory accepts from
+/// an organization that is not Verified: Markdown, text, JSON, YAML and a
+/// PNG, JPEG, GIF, WebP or ICO image, none starting with `#!`. A script the
+/// skill runs ships in the npm package instead (`packages/archgram/skill/`).
+#[test]
+fn the_plugin_holds_only_text_and_images() {
+    // What git tracks, as the directory reads the commit, not the folder
+    // (a `.DS_Store` beside it is no file of the plugin's).
+    let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+    let listed = std::process::Command::new("git")
+        .args(["ls-files", "-z", "--", "skills/archgram"])
+        .current_dir(&root)
+        .output()
+        .expect("git runs");
+    let files: Vec<PathBuf> = listed
+        .stdout
+        .split(|&b| b == 0)
+        .filter(|f| !f.is_empty())
+        .map(|f| root.join(String::from_utf8_lossy(f).as_ref()))
+        .collect();
+    assert!(!files.is_empty(), "git lists the skill's files");
+    for file in &files {
+        let extension = file
+            .extension()
+            .and_then(|e| e.to_str())
+            .unwrap_or_default()
+            .to_ascii_lowercase();
+        assert!(
+            [
+                "md", "txt", "json", "yaml", "yml", "png", "jpg", "jpeg", "gif", "webp", "ico"
+            ]
+            .contains(&extension.as_str()),
+            "{} is not a file the directory accepts in the plugin",
+            file.display()
+        );
+        let head = std::fs::read(file).unwrap();
+        assert!(
+            !head.starts_with(b"#!"),
+            "{} starts with #!",
+            file.display()
+        );
+    }
 }
