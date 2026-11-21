@@ -21,8 +21,8 @@
     },
     {
       "id": "extract",
-      "kind": "model",
-      "label": "Gemini",
+      "kind": "llm",
+      "label": "Profile extractor",
       "note": "extracts profile",
       "variant": "external",
       "frame": "prep",
@@ -77,8 +77,8 @@
     },
     {
       "id": "llm",
-      "kind": "model",
-      "label": "Gemini",
+      "kind": "llm",
+      "label": "Answer writer",
       "note": "tool-calling loop",
       "variant": "external",
       "frame": "ask",

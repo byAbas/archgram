@@ -6,6 +6,43 @@ follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- Two kinds of node: `auth`, what lets a request in or keeps it out at
+  run time (a guard, a session check, an identity provider), with a
+  shield; and `llm`, a model that writes text, with a chat bubble and a
+  spark. `model` stays for any other model, such as one that embeds.
+- `archgram check` and `build` warn of a card whose name only repeats
+  its logo's, such as "Stripe" with `tech: stripe`: the logo already
+  says which technology it is, so the name should say what the part does
+  here ("Payments"). It is a warning, never a failure: the spec still
+  passes and the drawing is still made.
+- The legend names each kind of node the drawing uses, with its icon, in
+  the order the spec first uses it; then, on a row of its own, several
+  instances, external, a boundary when a frame is drawn and a path taken
+  only sometimes when an edge is dashed, as C4 asks a legend to explain
+  shapes, borders and line styles.
+
+### Changed
+
+- A card reads as C4 writes an element: its name, and its kind under it
+  ("Payments", "Service"). A card named as its kind ("Browser") says it
+  once. A node's `note` is no longer drawn; it stays in the spec for
+  whoever reads it. What the reader needs goes in the name or on an
+  edge. With `logo: inline` the logo leads the kind, and no longer
+  brings the technology's name.
+- An external system is a grey card edged solid, its badge in the card's
+  colour, as C4-PlantUML draws one; a dashed line now marks only a
+  boundary, a frame, never a card.
+- `check`'s name in the card and the legend is "Validator", with a
+  checklist; the shield it had is `auth`'s.
+- The heading is larger, in Geist's own Semi Bold, so it reads first,
+  and it, the diagram and the legend stand 40 px apart.
+- The `archgram` skill names a part with a logo for what it does, puts
+  what a reader needs in a name, an edge's label or the report rather
+  than a note, and keeps a merged node's parts in its note for the facts
+  check.
+
 ## [0.12.0] - 2026-11-20
 
 ### Added

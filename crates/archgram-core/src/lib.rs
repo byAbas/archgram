@@ -87,6 +87,75 @@ impl Diagram {
             Diagram::Sequence(seq) => sequence::check_logos(seq, logos),
         }
     }
+
+    /// Each card whose name only repeats the name of the logo it carries,
+    /// located at its label: the logo already says which technology it is,
+    /// so the name should say what it does here (docs/SPEC.md, Nodes).
+    /// A warning, never a reason the spec fails.
+    #[must_use]
+    pub fn names_repeating_logos(&self, logos: &dyn logos::Logos) -> Vec<SpecError> {
+        let cards: Vec<(String, &str, Option<&str>)> = match self {
+            Diagram::Architecture(spec) => spec
+                .nodes
+                .iter()
+                .enumerate()
+                .map(|(i, n)| {
+                    (
+                        format!("/nodes/{i}/label"),
+                        n.label.as_str(),
+                        n.tech.as_deref(),
+                    )
+                })
+                .collect(),
+            Diagram::Sequence(seq) => seq
+                .participants
+                .iter()
+                .enumerate()
+                .map(|(i, p)| {
+                    (
+                        format!("/participants/{i}/label"),
+                        p.label.as_str(),
+                        p.tech.as_deref(),
+                    )
+                })
+                .collect(),
+        };
+        cards
+            .into_iter()
+            .filter_map(|(pointer, label, tech)| {
+                let tech = tech?;
+                logos.path(tech)?;
+                let title = logos.title(tech).unwrap_or(tech);
+                repeats_logo(label, title, tech).then(|| {
+                    SpecError::at(
+                        pointer,
+                        format!(
+                            "the name \"{label}\" only repeats what its {title} logo shows; name what it does here"
+                        ),
+                    )
+                })
+            })
+            .collect()
+    }
+}
+
+/// Whether every word of `label` is a word of the logo's `title` or `slug`,
+/// or the start of one ("Postgres" of "PostgreSQL"), or one with more
+/// after it.
+fn repeats_logo(label: &str, title: &str, slug: &str) -> bool {
+    let words = |s: &str| -> Vec<String> {
+        s.split(|c: char| !c.is_alphanumeric())
+            .filter(|w| !w.is_empty())
+            .map(str::to_lowercase)
+            .collect()
+    };
+    let brand: Vec<String> = words(title).into_iter().chain(words(slug)).collect();
+    let named = words(label);
+    let part = |w: &String, b: &String| {
+        let long = |x: &String| x.chars().count() >= 3;
+        w == b || (long(w) && long(b) && (b.starts_with(w.as_str()) || w.starts_with(b.as_str())))
+    };
+    !named.is_empty() && named.iter().all(|w| brand.iter().any(|b| part(w, b)))
 }
 
 /// What a spec says of its kind, read before the spec itself, so the spec
@@ -404,4 +473,34 @@ pub fn uncovered_characters(spec: &Spec, logos: &dyn logos::Logos) -> Vec<char> 
             .into_iter()
             .map(|(w, t)| ((font::Family::Sans, w), t.into_owned())),
     )
+}
+
+#[cfg(test)]
+mod tests {
+    use super::repeats_logo;
+
+    #[test]
+    fn a_name_that_only_repeats_its_logo_is_found() {
+        assert!(repeats_logo("Stripe", "Stripe", "stripe"));
+        assert!(repeats_logo("Postgres", "PostgreSQL", "postgresql"));
+        assert!(repeats_logo("Gemini", "Google Gemini", "googlegemini"));
+        assert!(repeats_logo("Traefik", "Traefik Proxy", "traefikproxy"));
+    }
+
+    #[test]
+    fn a_name_that_says_more_than_its_logo_is_not() {
+        assert!(!repeats_logo("Payments", "Stripe", "stripe"));
+        assert!(!repeats_logo("lib/payments/stripe.ts", "Stripe", "stripe"));
+        assert!(!repeats_logo(
+            "Gemini embedding",
+            "Google Gemini",
+            "googlegemini"
+        ));
+        assert!(!repeats_logo("API", "FastAPI", "fastapi"));
+        assert!(
+            !repeats_logo("Google", "Go", "go"),
+            "a short word is no start"
+        );
+        assert!(!repeats_logo("", "Stripe", "stripe"));
+    }
 }

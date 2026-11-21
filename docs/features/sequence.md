@@ -231,8 +231,8 @@ themes, are in [docs/samples/sequence/](../samples/sequence/).
 | Fragment frame | Solid, rounded | Dashed, rounded |
 | Operator and guard | A pill on the frame's top edge, at the left | A pill at the middle of the frame's top edge |
 
-An external participant's head has a dashed edge in both, as an external
-node's card does.
+An external participant's head is tinted grey and edged solid in both,
+as an external node's card is.
 
 Where both looks part from UML's notation, as archgram's own drawing of
 its symbols (diagram-kinds.md, Decided 5):

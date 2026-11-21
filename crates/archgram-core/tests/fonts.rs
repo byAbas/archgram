@@ -3,12 +3,15 @@
 //! its outline and the line's metrics, and the files are exactly what the
 //! task writes.
 
-use archgram_core::font::{MEDIUM, MONO_MEDIUM, MONO_REGULAR, REGULAR, characters, subset::subset};
+use archgram_core::font::{
+    MEDIUM, MONO_MEDIUM, MONO_REGULAR, REGULAR, SEMIBOLD, characters, subset::subset,
+};
 
 /// Each embedded file, by its source's name.
-const FACES: [(&str, &[u8]); 4] = [
+const FACES: [(&str, &[u8]); 5] = [
     ("Geist-Regular", REGULAR),
     ("Geist-Medium", MEDIUM),
+    ("Geist-SemiBold", SEMIBOLD),
     ("GeistMono-Regular", MONO_REGULAR),
     ("GeistMono-Medium", MONO_MEDIUM),
 ];

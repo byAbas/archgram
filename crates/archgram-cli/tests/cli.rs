@@ -1088,13 +1088,20 @@ fn build_preview_draws_each_theme_as_the_drawing_shows_it() {
             }
 
             let canvas = root_colour(&svg, "--canvas");
-            let middle_left = image
-                .pixel(image.width() / 100 + 2, image.height() / 2)
-                .unwrap();
-            assert_eq!(
-                [middle_left.red(), middle_left.green(), middle_left.blue()],
-                canvas,
-                "{name} {theme}: the canvas is not the theme's"
+            // A block near the middle of the left edge, not one pixel: the
+            // canvas's grid dots, 1.5 px wide, may fall on any one of them.
+            let (x0, y0) = (image.width() / 100 + 2, image.height() / 2);
+            let near: Vec<[u8; 3]> = (0..5)
+                .flat_map(|dy| (0..5).map(move |dx| (x0 + dx, y0 + dy)))
+                .map(|(x, y)| {
+                    let p = image.pixel(x, y).unwrap();
+                    [p.red(), p.green(), p.blue()]
+                })
+                .collect();
+            let on_canvas = near.iter().filter(|p| **p == canvas).count();
+            assert!(
+                on_canvas >= 16,
+                "{name} {theme}: the canvas is not the theme's {canvas:?}: {near:?}"
             );
             let black = image
                 .pixels()

@@ -23,11 +23,11 @@ pub fn category_class(c: Category) -> &'static str {
     }
 }
 
-/// The two lines a card may carry: its title and, when given, its note,
-/// with the logo that leads the note when logos go inline.
+/// The two lines a card may carry: its name and, unless the name is its
+/// kind's, its kind, with the logo that leads the kind when logos go inline.
 struct Lines<'a> {
     title: &'a str,
-    note: Option<&'a str>,
+    kind: Option<&'a str>,
     inline: Option<&'a str>,
     brand: Option<&'a Brand>,
 }
@@ -60,22 +60,23 @@ impl Lines<'_> {
         TYPOGRAPHY_TITLE.size * TYPOGRAPHY_TITLE.line_height
     }
 
-    fn note_height() -> f64 {
+    fn kind_height() -> f64 {
         TYPOGRAPHY_SUBTITLE.size * TYPOGRAPHY_SUBTITLE.line_height
     }
 
     /// The height of the text block.
     fn height(&self) -> f64 {
         Self::title_height()
-            + if self.note.is_some() {
-                Self::note_height()
+            + if self.kind.is_some() || self.inline.is_some() {
+                Self::kind_height()
             } else {
                 0.0
             }
     }
 
     /// Writes the lines with the block's top at `top`, anchored at `x`. An
-    /// inline logo leads the note line, the pair anchored as one.
+    /// inline logo leads the kind line, the pair anchored as one; on a card
+    /// named as its kind, the logo is the line alone.
     fn write(&self, out: &mut Vec<Item>, x: f64, top: f64, anchor: Anchor) {
         let text = |class: &str, x: f64, y: f64, anchor: Anchor, text: &str| Item::Text {
             class: class.to_owned(),
@@ -91,15 +92,24 @@ impl Lines<'_> {
             anchor,
             self.title,
         ));
-        let Some(note) = self.note else { return };
-        let note_top = top + Self::title_height();
-        let note_y = note_top + baseline_in_line(&TYPOGRAPHY_SUBTITLE);
+        let kind_top = top + Self::title_height();
+        let kind_y = kind_top + baseline_in_line(&TYPOGRAPHY_SUBTITLE);
         let Some(logo) = self.inline else {
-            out.push(text("sub", x, note_y, anchor, note));
+            if let Some(kind) = self.kind {
+                out.push(text("sub", x, kind_y, anchor, kind));
+            }
             return;
         };
-        let lead = CARD_LOGO_INLINE + CARD_LOGO_INLINE_GAP;
-        let whole = lead + crate::font::text_width(note, &TYPOGRAPHY_SUBTITLE);
+        let (lead, whole) = match self.kind {
+            Some(kind) => {
+                let lead = CARD_LOGO_INLINE + CARD_LOGO_INLINE_GAP;
+                (
+                    lead,
+                    lead + crate::font::text_width(kind, &TYPOGRAPHY_SUBTITLE),
+                )
+            }
+            None => (CARD_LOGO_INLINE, CARD_LOGO_INLINE),
+        };
         let start = if anchor == Anchor::Start {
             x
         } else {
@@ -107,11 +117,13 @@ impl Lines<'_> {
         };
         let place = Place {
             x: start,
-            y: note_top + (Self::note_height() - CARD_LOGO_INLINE) / 2.0,
+            y: kind_top + (Self::kind_height() - CARD_LOGO_INLINE) / 2.0,
             scale: CARD_LOGO_INLINE / GRID,
         };
         logo_path(out, "logo", place, logo, self.brand);
-        out.push(text("sub", start + lead, note_y, Anchor::Start, note));
+        if let Some(kind) = self.kind {
+            out.push(text("sub", start + lead, kind_y, Anchor::Start, kind));
+        }
     }
 }
 
@@ -134,10 +146,10 @@ pub fn card(
     let r = outline(&mut out, node, r);
     let hue = category_class(node.kind.category());
 
-    let second = crate::measure::note_line(node, place, logos);
+    let second = crate::measure::kind_line(node, place, logos);
     let lines = Lines {
-        title: &node.label,
-        note: second.text,
+        title: crate::measure::card_title(node),
+        kind: second.text.as_deref(),
         inline: second.logo,
         brand,
     };
@@ -201,7 +213,7 @@ pub fn card(
 /// `node`'s head in a sequence's `avatars` look, in its footprint `r`
 /// (DESIGN.md, Components: Sequence): a circle `avatar.size` across, edged
 /// as a card, the kind's icon in its middle, the logo in a chip on its
-/// lower right edge, and the name and note under it. Several instances
+/// lower right edge, and the name and kind under it. Several instances
 /// show two circles' outlines behind it, up and to the right.
 pub fn avatar(
     node: &Node,
@@ -277,10 +289,10 @@ pub fn avatar(
             brand,
         );
     }
-    let second = crate::measure::note_line(node, place, logos);
+    let second = crate::measure::kind_line(node, place, logos);
     Lines {
-        title: &node.label,
-        note: second.text,
+        title: crate::measure::card_title(node),
+        kind: second.text.as_deref(),
         inline: second.logo,
         brand,
     }
@@ -422,7 +434,11 @@ fn badge_with_icon(
     brand: Option<&Brand>,
 ) {
     out.push(Item::Rect {
-        class: "badge".into(),
+        class: if node.variant == crate::spec::Variant::External {
+            "badge external".into()
+        } else {
+            "badge".into()
+        },
         x: badge.x,
         y: badge.y,
         w: badge.w,

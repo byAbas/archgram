@@ -70,21 +70,6 @@
   },
   "dash": {
     "$type": "strokeStyle",
-    "external": {
-      "$value": {
-        "dashArray": [
-          {
-            "value": 5,
-            "unit": "px"
-          },
-          {
-            "value": 4,
-            "unit": "px"
-          }
-        ],
-        "lineCap": "butt"
-      }
-    },
     "frame": {
       "$value": {
         "dashArray": [
@@ -288,7 +273,7 @@
     },
     "logo-inline": {
       "$value": "{card.logo-chip}",
-      "$description": "A logo leading a card's note line, as tall as the note's letters."
+      "$description": "A logo leading a card's kind line, as tall as its letters."
     },
     "logo-inline-gap": {
       "$value": {
@@ -412,7 +397,14 @@
         "value": 28,
         "unit": "px"
       },
-      "$description": "Between the diagram and its legend below it."
+      "$description": "Above the credit, the small line under everything else."
+    },
+    "section": {
+      "$value": {
+        "value": 40,
+        "unit": "px"
+      },
+      "$description": "Between the heading and the diagram, and between the diagram and the legend: one gap, so the three stand apart evenly."
     },
     "legend-entry": {
       "$value": {

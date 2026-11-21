@@ -2,8 +2,8 @@
 
 | Field   | Value      |
 |---------|------------|
-| Version | 0.41       |
-| Date    | 2026-11-19 |
+| Version | 0.43       |
+| Date    | 2026-11-21 |
 | Status  | Draft      |
 | Owner   | Abas Turabli |
 
@@ -444,13 +444,17 @@ same file every time.
 ## 7. Node vocabulary
 
 Every kind has three variants: single, multi-node (several instances,
-drawn as stacked boxes) and external (a system we do not own, drawn with
-a dashed border). The kinds, in four categories, are in docs/SPEC.md
+drawn as stacked boxes) and external (a system we do not own, drawn as
+a card tinted grey and edged solid; a dash marks a boundary only). The kinds, in four categories, are in docs/SPEC.md
 (Nodes).
 
 A node may name its technology (`tech: postgresql`, a Simple Icons slug);
 archgram then shows the technology's logo, so a reader knows the
-technology at a glance. Where the logo goes and in what colour is in
+technology at a glance. A card reads as C4 writes an element: its name,
+and its kind under it; with a logo, the name says what the part does
+here ("Payments"), since the logo already says which technology it is,
+and `check` warns of a name that only repeats it. A node's note is never
+drawn, so a card stays two lines. Where the logo goes and in what colour is in
 DESIGN.md (Components: Technology logo). Logos come from a pinned Simple
 Icons release, every logo it holds, each with its licence. The brands'
 guidelines and the logos' licences stay with whoever publishes a diagram,
@@ -557,3 +561,4 @@ None.
 | 0.40    | 2026-11-19 | Before it reads the code, the skill measures what it would read with its own script, `scripts/size.mjs`: the files git tracks, less what is never the project's own, in areas one reader takes in; it tells the user the size, asks whether to narrow a large scope, and reads area by area (§6.6, `docs/features/facts.md`). |
 | 0.41    | 2026-11-19 | The skill looks at its drawing before it reports, through a still PNG of each theme that `build --preview` renders inside archgram with resvg, and critiques what a reader sees; it still starts no browser. The PNG comes from the SVG, not from a rasterizer of archgram's own (§5, §6.5, §6.6, `docs/features/reader-check.md`). |
 | 0.42    | 2026-11-20 | Planned: every drawing titled; `build` counts crossings, lines through a frame, lines against the direction and side-by-side arrivals; the previews in `.archgram/preview/`, out of git; every Simple Icons logo, each with its licence, the owner's decision; the skill held by a script to the approved facts, the user's request before its limits, one idea and one phase a drawing, a report of about fifteen lines, no README assumed (§5, §6.3, §6.5, §6.6, §7, §8, `docs/features/approved-drawing.md`, #176). |
+| 0.43    | 2026-11-21 | The notation follows C4: a card is its name and its kind, never its note; a name with a logo says what the part does, and `check` warns of one that repeats the logo; an external system is a grey card edged solid, a dash marks only a boundary; the legend names each kind drawn and the boundary (§7). |

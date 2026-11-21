@@ -720,6 +720,7 @@ fn a_hundred_nodes_lay_out_within_the_budget() {
 #[test]
 fn the_legend_lists_what_the_diagram_uses() {
     use archgram_core::layout::legend::Swatch;
+    use archgram_core::spec::Kind;
     let spec = |legend: &str, nodes: &str| {
         parse_spec(&format!(
             r#"{{ "archgram": 1, "title": "t", "description": "d", {legend} "nodes": [{nodes}] }}"#
@@ -728,18 +729,55 @@ fn the_legend_lists_what_the_diagram_uses() {
     };
     let two = r#"{ "id": "a", "kind": "browser", "label": "A" }, { "id": "b", "kind": "service", "label": "B", "variant": "multi" }"#;
     let s = spec("", two);
-    let p = place(&s, &card_sizes(&s)).unwrap();
-    let kinds: Vec<Swatch> = p.legend.iter().map(|e| e.swatch).collect();
-    // Only the variants: colour tells no category apart.
-    assert_eq!(kinds, [Swatch::Multi]);
-    // Asked away, or with no variant to tell apart, there is none.
+    let swatches = |s: &archgram_core::Spec| -> Vec<Swatch> {
+        place(s, &card_sizes(s))
+            .unwrap()
+            .legend
+            .iter()
+            .map(|e| e.swatch)
+            .collect()
+    };
+    // Each kind drawn, in the order first used, then what a card's look
+    // means (C4: the legend explains shapes, borders and line styles).
+    assert_eq!(
+        swatches(&s),
+        [
+            Swatch::Kind(Kind::Browser),
+            Swatch::Kind(Kind::Service),
+            Swatch::Multi
+        ]
+    );
+    // Asked away, there is none.
     let s = spec(r#""legend": false,"#, two);
     assert!(place(&s, &card_sizes(&s)).unwrap().legend.is_empty());
+    // With no variant, the kinds alone; a frame adds the boundary, a
+    // dashed edge the path taken only sometimes.
     let s = spec(
         "",
         r#"{ "id": "a", "kind": "service", "label": "A" }, { "id": "b", "kind": "database", "label": "B" }"#,
     );
-    assert!(place(&s, &card_sizes(&s)).unwrap().legend.is_empty());
+    assert_eq!(
+        swatches(&s),
+        [Swatch::Kind(Kind::Service), Swatch::Kind(Kind::Database)]
+    );
+    let s = parse_spec(
+        r#"{ "archgram": 1, "title": "t", "description": "d",
+            "nodes": [{ "id": "a", "kind": "service", "label": "A", "frame": "f" },
+                      { "id": "b", "kind": "database", "label": "B", "variant": "external" }],
+            "frames": [{ "id": "f", "label": "F" }],
+            "edges": [{ "from": "a", "to": "b", "style": "dashed" }] }"#,
+    )
+    .unwrap();
+    assert_eq!(
+        swatches(&s),
+        [
+            Swatch::Kind(Kind::Service),
+            Swatch::Kind(Kind::Database),
+            Swatch::External,
+            Swatch::Boundary,
+            Swatch::Sometimes
+        ]
+    );
 }
 
 /// The credit sits under everything, against the right edge, inside the

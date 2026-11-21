@@ -28,6 +28,22 @@
   },
   "typography": {
     "$type": "typography",
+    "heading": {
+      "$value": {
+        "fontFamily": "{font.sans}",
+        "fontSize": {
+          "value": 18,
+          "unit": "px"
+        },
+        "fontWeight": 600,
+        "lineHeight": 1.2,
+        "letterSpacing": {
+          "value": 0,
+          "unit": "px"
+        }
+      },
+      "$description": "The drawing's visible title, above everything: the one style heavier than a node's name, so the eye reads it first."
+    },
     "title": {
       "$value": {
         "fontFamily": "{font.sans}",

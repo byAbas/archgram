@@ -206,7 +206,7 @@ pub enum LogoPlace {
     #[default]
     Corner,
     Chip,
-    /// Leading the note line, before the note or the technology's name.
+    /// Leading the card's second line, before its kind.
     Inline,
     /// In the badge, in place of the kind's icon.
     Icon,
@@ -304,11 +304,16 @@ pub struct Node {
 #[serde(rename_all = "kebab-case")]
 pub enum Kind {
     Service,
+    /// Authentication and authorisation: a guard, an auth service, an
+    /// identity provider.
+    Auth,
     Database,
     Queue,
     Cache,
     Storage,
     Users,
+    /// A large language model: one that writes text.
+    Llm,
     Model,
     VectorStore,
     Tool,
@@ -332,17 +337,44 @@ pub enum Category {
 }
 
 impl Kind {
+    /// The kind's name in the legend, beside its icon.
+    #[must_use]
+    pub fn legend_name(self) -> &'static str {
+        match self {
+            Kind::Service => "Service",
+            Kind::Auth => "Auth",
+            Kind::Database => "Database",
+            Kind::Queue => "Queue",
+            Kind::Cache => "Cache",
+            Kind::Storage => "Storage",
+            Kind::Users => "Users",
+            Kind::Llm => "LLM",
+            Kind::Model => "AI model",
+            Kind::VectorStore => "Vector store",
+            Kind::Tool => "Tool",
+            Kind::Agent => "Agent",
+            Kind::File => "File",
+            Kind::Script => "Script",
+            Kind::Generated => "Generated",
+            Kind::Check => "Validator",
+            Kind::Browser => "Browser",
+            Kind::Mobile => "Mobile app",
+            Kind::Desktop => "Desktop app",
+        }
+    }
+
     /// The kind's category (DESIGN.md, Components: Node card).
     #[must_use]
     pub fn category(self) -> Category {
         match self {
             Kind::Service
+            | Kind::Auth
             | Kind::Database
             | Kind::Queue
             | Kind::Cache
             | Kind::Storage
             | Kind::Users => Category::Core,
-            Kind::Model | Kind::VectorStore | Kind::Tool | Kind::Agent => Category::Ai,
+            Kind::Llm | Kind::Model | Kind::VectorStore | Kind::Tool | Kind::Agent => Category::Ai,
             Kind::File | Kind::Script | Kind::Generated | Kind::Check => Category::Build,
             Kind::Browser | Kind::Mobile | Kind::Desktop => Category::Client,
         }

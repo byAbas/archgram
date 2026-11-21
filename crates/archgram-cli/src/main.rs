@@ -340,6 +340,14 @@ fn located(errors: Vec<SpecError>, positions: Option<&Positions>) -> Vec<SpecErr
 /// looked up from the spec's folder, only under the project's folder
 /// (`files::project`, `files::Lookup`). A file is read only to look for a
 /// source's words, and nothing of it is printed or kept.
+/// Warns of each card whose name only repeats its logo's; the drawing is
+/// still made and `check` still passes.
+fn warn_names_repeating_logos(path: &str, diagram: &Diagram, positions: Option<&Positions>) {
+    for e in located(diagram.names_repeating_logos(&Icons::load()), positions) {
+        eprintln!("archgram: warning: {path}:{}", printable(&e.to_string()));
+    }
+}
+
 fn missing_sources(path: &str, diagram: &Diagram, positions: Option<&Positions>) -> Vec<SpecError> {
     let owned = diagram.owned();
     if archgram_core::sources::count_owned(&owned) == 0 {
@@ -388,6 +396,7 @@ fn check(path: &str) -> ExitCode {
     if !missing.is_empty() {
         return report(path, &missing);
     }
+    warn_names_repeating_logos(path, &diagram, positions.as_ref());
     let sources = match archgram_core::sources::count_owned(&diagram.owned()) {
         0 => String::new(),
         1 => ", 1 source found".into(),
@@ -437,6 +446,7 @@ fn build(
             for e in missing_sources(path, &diagram, positions.as_ref()) {
                 eprintln!("archgram: warning: {path}:{}", printable(&e.to_string()));
             }
+            warn_names_repeating_logos(path, &diagram, positions.as_ref());
             match diagram {
                 Diagram::Architecture(spec) => spec,
                 Diagram::Sequence(seq) => {

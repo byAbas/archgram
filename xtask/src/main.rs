@@ -48,6 +48,7 @@ fn fonts() -> ExitCode {
     for name in [
         "Geist-Regular",
         "Geist-Medium",
+        "Geist-SemiBold",
         "GeistMono-Regular",
         "GeistMono-Medium",
     ] {

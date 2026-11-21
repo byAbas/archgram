@@ -8,4 +8,5 @@
 - **Questions:** what does it read and write? In which stage is each
   decision made? What is generated and must not be edited?
 - **Draw:** `direction: right`, one node per stage; subcommands that run
-  the same stages are one entry node, their names in its note.
+  the same stages are one entry node, named for what they share, their
+  names in its `note` for the facts script and listed in the report.

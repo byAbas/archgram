@@ -64,7 +64,8 @@ the first file you opened:
 - a hook that imports `gates.mjs` and calls its `run()` is drawn going to
   `gates.mjs`, even when a `run-gates.mjs` sits beside it;
 - a thin adapter (it only translates input and output) and the core it
-  calls are two nodes, and the adapter's note says it only translates;
+  calls are two nodes, and the adapter's name says it only translates
+  (`HTTP adapter`);
 - where the docs and the code name a part differently, use the code's
   name and say so in the report.
 
@@ -78,10 +79,12 @@ them, and the spec keeps them wherever its format has a place for them
 likely it seems.
 
 Every edge in one diagram means one kind of thing. When most edges move
-data (reads and writes), one part starting another is a note or a flow's
-order, not an edge beside them; when most start other parts, a store they
-share is a note. "Configures", "contains" and "documents" are not edges:
-show them with a frame or a note.
+data (reads and writes), one part starting another is a flow's order or
+a line in the report, not an edge beside them; when most start other
+parts, a store they share is said in the report. "Configures", "contains"
+and "documents" are not edges: show them with a frame, or say them in the
+report. A node's `note` is never drawn, so nothing the reader needs goes
+there.
 
 ## What is easy to miss
 

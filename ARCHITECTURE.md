@@ -126,8 +126,8 @@ is the first half of determinism.
 
 Labels are measured with the advance widths of Geist, read with
 `skrifa`, and a sequence's words between its heads with Geist Mono's. The
-static Regular and Medium TTF files of each ship inside the binary under
-their OFL licence, so measurements do not depend on the fonts installed
+static Regular and Medium TTF files of each, and Geist's Semi Bold for
+the heading, ship inside the binary under their OFL licence, so measurements do not depend on the fonts installed
 on a machine. A type style names its face (`font.sans` or `font.mono`),
 and every measure, subset and baseline reads that face. A box's size comes from its kind's template (icon
 area, padding) and its measured label. A node with several instances
@@ -140,7 +140,7 @@ card, and the stack reaches past it into the gap (to the right when the
 flow runs right, up when it runs down).
 
 One list of text runs, each with its face, its family and weight (node
-titles and notes, edge labels; a sequence's labels, numbers, guards and
+names and kinds, edge labels; a sequence's labels, numbers, guards and
 phases' names in the mono face), feeds both the embedded fonts' subsets
 and the warning for characters they lack, so neither can miss a text the
 other covers.
@@ -338,8 +338,8 @@ carries it. A technology logo is its Simple Icons path scaled from the
 24 by 24 grid into one of four places: the card's corner, the start of
 its second line, a round chip on the badge, or the badge in place of the
 icon. A card whose logo goes in the corner keeps its width of room beside
-the title; an inline logo widens the second line, which without a note
-shows the technology's name from the logo set. The set also carries each
+the title; an inline logo widens the second line, the kind's. A node's
+note is never drawn. The set also carries each
 brand's colour, which a class per technology gives its logos in each
 theme; which colour a logo takes is in DESIGN.md (Components: Technology
 logo). `tech` is checked against the logos given, with

@@ -52,11 +52,13 @@ fn kinds_belong_to_their_categories() {
 fn every_kind() -> Vec<Kind> {
     let all = [
         Kind::Service,
+        Kind::Auth,
         Kind::Database,
         Kind::Queue,
         Kind::Cache,
         Kind::Storage,
         Kind::Users,
+        Kind::Llm,
         Kind::Model,
         Kind::VectorStore,
         Kind::Tool,
@@ -72,11 +74,13 @@ fn every_kind() -> Vec<Kind> {
     for kind in all {
         match kind {
             Kind::Service
+            | Kind::Auth
             | Kind::Database
             | Kind::Queue
             | Kind::Cache
             | Kind::Storage
             | Kind::Users
+            | Kind::Llm
             | Kind::Model
             | Kind::VectorStore
             | Kind::Tool

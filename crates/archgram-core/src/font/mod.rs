@@ -17,6 +17,8 @@ use crate::tokens::TextStyle;
 pub static REGULAR: &[u8] = include_bytes!("../../fonts/Geist-Regular.ttf");
 /// Geist Medium, weight 500.
 pub static MEDIUM: &[u8] = include_bytes!("../../fonts/Geist-Medium.ttf");
+/// Geist Semi Bold, weight 600: the drawing's heading.
+pub static SEMIBOLD: &[u8] = include_bytes!("../../fonts/Geist-SemiBold.ttf");
 /// Geist Mono Regular, weight 400.
 pub static MONO_REGULAR: &[u8] = include_bytes!("../../fonts/GeistMono-Regular.ttf");
 /// Geist Mono Medium, weight 500.
@@ -52,15 +54,16 @@ pub fn family_name(family: Family) -> &'static str {
     }
 }
 
-/// The file for a family and a CSS weight: Medium from 500 up, Regular
-/// below.
+/// The file for a family and a CSS weight: Geist Semi Bold from 600 up,
+/// Medium from 500, Regular below; Geist Mono has Medium from 500 up.
 #[must_use]
 pub fn face(family: Family, weight: u16) -> &'static [u8] {
-    match (family, weight >= 500) {
-        (Family::Sans, true) => MEDIUM,
-        (Family::Sans, false) => REGULAR,
-        (Family::Mono, true) => MONO_MEDIUM,
-        (Family::Mono, false) => MONO_REGULAR,
+    match family {
+        Family::Sans if weight >= 600 => SEMIBOLD,
+        Family::Sans if weight >= 500 => MEDIUM,
+        Family::Sans => REGULAR,
+        Family::Mono if weight >= 500 => MONO_MEDIUM,
+        Family::Mono => MONO_REGULAR,
     }
 }
 
@@ -128,7 +131,7 @@ mod tests {
 
     #[test]
     fn every_face_parses_and_maps_latin_text() {
-        for bytes in [REGULAR, MEDIUM, MONO_REGULAR, MONO_MEDIUM] {
+        for bytes in [REGULAR, MEDIUM, SEMIBOLD, MONO_REGULAR, MONO_MEDIUM] {
             let font = font_ref(bytes);
             for c in "Postgres API, queue: 3 replicas".chars() {
                 assert!(font.charmap().map(c).is_some(), "{c:?}");

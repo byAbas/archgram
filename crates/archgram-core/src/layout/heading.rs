@@ -1,12 +1,12 @@
 //! The heading (DESIGN.md, Components: Heading): the drawing's visible
-//! title, "<Kind> diagram of <title>", in a node's title type, and the
-//! spec's subtitle under it in a node's subtitle type, above everything,
-//! `spacing.legend` over the diagram as the legend is under it.
+//! title, "<Kind> diagram of <title>", in `typography.heading`, and the
+//! spec's subtitle under it in a node's kind's type, above everything,
+//! `spacing.section` over the diagram as the legend is under it.
 
 use crate::font::text_width;
 use crate::geometry::Rect;
 use crate::spec::DiagramKind;
-use crate::tokens::{SPACING_LABEL_GAP, SPACING_LEGEND, TYPOGRAPHY_SUBTITLE, TYPOGRAPHY_TITLE};
+use crate::tokens::{SPACING_LABEL_GAP, SPACING_SECTION, TYPOGRAPHY_HEADING, TYPOGRAPHY_SUBTITLE};
 
 /// The heading's texts and their boxes, from its own top left.
 #[derive(Debug, Clone, PartialEq)]
@@ -15,7 +15,7 @@ pub struct Heading {
     pub title_box: Rect,
     pub subtitle: Option<(String, Rect)>,
     /// How far everything else is moved down to make room for it: the
-    /// texts and `spacing.legend` under them, in whole pixels so a line
+    /// texts and `spacing.section` under them, in whole pixels so a line
     /// keeps covering whole pixels.
     pub depth: f64,
     /// Its width, the wider of its lines, in whole pixels, so a drawing
@@ -40,8 +40,8 @@ pub fn place(
     let title_box = Rect {
         x: 0.0,
         y: 0.0,
-        w: text_width(&title, &TYPOGRAPHY_TITLE),
-        h: line(&TYPOGRAPHY_TITLE),
+        w: text_width(&title, &TYPOGRAPHY_HEADING),
+        h: line(&TYPOGRAPHY_HEADING),
     };
     let subtitle = subtitle.map(|s| {
         let s = s.trim().to_owned();
@@ -61,7 +61,7 @@ pub fn place(
         title,
         title_box,
         subtitle,
-        depth: (last.bottom() + SPACING_LEGEND).ceil(),
+        depth: (last.bottom() + SPACING_SECTION).ceil(),
         width: width.ceil(),
     })
 }
@@ -72,7 +72,7 @@ pub fn runs(heading: Option<&Heading>) -> Vec<(u16, String)> {
     let Some(h) = heading else {
         return Vec::new();
     };
-    let mut runs = vec![(TYPOGRAPHY_TITLE.weight, h.title.clone())];
+    let mut runs = vec![(TYPOGRAPHY_HEADING.weight, h.title.clone())];
     if let Some((s, _)) = &h.subtitle {
         runs.push((TYPOGRAPHY_SUBTITLE.weight, s.clone()));
     }

@@ -26,7 +26,7 @@ use crate::motion::Timeline;
 use crate::spec::{SignalStyle, Spec};
 use crate::tokens::{
     ARROWHEAD_LENGTH, ARROWHEAD_WIDTH, Colors, FONT_SANS, ROUNDED_CANVAS, SPACING_MARGIN,
-    STROKE_CONNECTOR, TYPOGRAPHY_SUBTITLE, TYPOGRAPHY_TITLE, theme,
+    STROKE_CONNECTOR, TYPOGRAPHY_HEADING, TYPOGRAPHY_SUBTITLE, theme,
 };
 use scene::{Anchor, GroupOf, Item, Scene, StyleLine};
 use svg::num;
@@ -222,7 +222,12 @@ fn under_heading(items: &mut Vec<Item>, from: usize, heading: Option<&Heading>) 
         anchor: Anchor::Start,
         text: words.to_owned(),
     };
-    items.push(text("title", h.title_box, &TYPOGRAPHY_TITLE, &h.title));
+    items.push(text(
+        "heading-title",
+        h.title_box,
+        &TYPOGRAPHY_HEADING,
+        &h.title,
+    ));
     if let Some((words, at)) = &h.subtitle {
         items.push(text("sub", *at, &TYPOGRAPHY_SUBTITLE, words));
     }

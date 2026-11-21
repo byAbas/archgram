@@ -1,18 +1,24 @@
 //! The legend (DESIGN.md, Components: Legend): its entries, from what the
-//! diagram uses, run left to right under the diagram, `spacing.legend`
+//! diagram uses, run left to right under the diagram, `spacing.section`
 //! below it, and wrap into rows no wider than the diagram.
 
 use crate::font::text_width;
 use crate::geometry::{Rect, Size};
-use crate::spec::{Spec, Still, Variant};
+use crate::spec::{Kind, Spec, Still, Variant};
 use crate::tokens::{
     LEGEND_SWATCH, LEGEND_SWATCH_GAP, SPACING_LEGEND, SPACING_LEGEND_ENTRY, SPACING_LEGEND_ROW,
-    TYPOGRAPHY_LEGEND,
+    SPACING_SECTION, TYPOGRAPHY_LEGEND,
 };
 
 /// What an entry's swatch shows.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Swatch {
+    /// A kind of node: its icon, as its card shows it.
+    Kind(Kind),
+    /// A boundary: a small dashed frame.
+    Boundary,
+    /// An edge taken only sometimes: a short dashed line.
+    Sometimes,
     /// Several instances: a small card with two copies behind it.
     Multi,
     /// A system we do not own: a small dashed card.
@@ -57,21 +63,41 @@ pub fn flow_texts(spec: &Spec) -> Vec<String> {
 }
 
 /// The entries a spec's legend has, in order; none when it draws no legend.
-/// Every icon is in the text colour, so colour tells no category apart and
-/// the icon's shape tells the kind: the legend lists only the variants the
-/// spec uses (DESIGN.md, Components: Legend).
+/// Every icon is in the text colour, so the icon's shape tells the kind:
+/// the legend names each kind the spec uses, then what a card's or a
+/// line's look means, as C4 asks of a legend (DESIGN.md, Components:
+/// Legend).
 #[must_use]
 pub fn entries(spec: &Spec) -> Vec<(Swatch, &'static str)> {
     let has = |v: Variant| spec.nodes.iter().any(|n| n.variant == v);
     if !spec.legend {
         return Vec::new();
     }
-    let mut out = Vec::new();
+    // Each kind the diagram uses, in the order the spec first uses it, so
+    // the reader learns every icon the drawing shows.
+    let mut out: Vec<(Swatch, &'static str)> = Vec::new();
+    for n in &spec.nodes {
+        if !out.iter().any(|(s, _)| *s == Swatch::Kind(n.kind)) {
+            out.push((Swatch::Kind(n.kind), n.kind.legend_name()));
+        }
+    }
     if has(Variant::Multi) {
         out.push((Swatch::Multi, "Several instances"));
     }
     if has(Variant::External) {
         out.push((Swatch::External, "External"));
+    }
+    // Every other look the drawing uses, as C4 asks a key to explain
+    // border styles and line types (c4model.com/diagrams/notation).
+    if !spec.frames.is_empty() {
+        out.push((Swatch::Boundary, "Boundary"));
+    }
+    if spec
+        .edges
+        .iter()
+        .any(|e| e.style == crate::spec::EdgeStyle::Dashed)
+    {
+        out.push((Swatch::Sometimes, "Taken only sometimes"));
     }
     out
 }
@@ -87,7 +113,17 @@ pub fn stack_step() -> f64 {
 /// copies' reach for several instances.
 fn swatch_size(s: Swatch) -> Size {
     match s {
-        Swatch::External | Swatch::Call | Swatch::Send | Swatch::Reply | Swatch::Refused => Size {
+        Swatch::Kind(_) => Size {
+            w: LEGEND_SWATCH * 4.0 / 3.0,
+            h: LEGEND_SWATCH * 4.0 / 3.0,
+        },
+        Swatch::External
+        | Swatch::Boundary
+        | Swatch::Sometimes
+        | Swatch::Call
+        | Swatch::Send
+        | Swatch::Reply
+        | Swatch::Refused => Size {
             w: 1.5 * LEGEND_SWATCH,
             h: LEGEND_SWATCH,
         },
@@ -155,7 +191,7 @@ pub fn place(spec: &Spec, size: Size) -> (Vec<Entry>, Vec<FlowLine>, Size) {
         + if placed {
             SPACING_LEGEND_ROW
         } else {
-            SPACING_LEGEND
+            SPACING_SECTION
         };
     let mut lines = Vec::with_capacity(texts.len());
     for text in texts {
@@ -209,6 +245,9 @@ fn key_text(kind: Swatch) -> &'static str {
         Swatch::Refused => "refused",
         Swatch::Multi => "Several instances",
         Swatch::External => "External",
+        Swatch::Kind(k) => k.legend_name(),
+        Swatch::Boundary => "Boundary",
+        Swatch::Sometimes => "Taken only sometimes",
     }
 }
 
@@ -229,13 +268,20 @@ fn place_entries(list: &[(Swatch, &'static str)], size: Size) -> (Vec<Entry>, Si
         .iter()
         .map(|&(s, _)| swatch_size(s).h)
         .fold(line, f64::max);
-    let (mut x, mut y) = (0.0, size.h + SPACING_LEGEND);
+    let (mut x, mut y) = (0.0, size.h + SPACING_SECTION);
     let mut out = Vec::with_capacity(list.len());
+    let mut previous: Option<Swatch> = None;
     for (&(swatch, text), &w) in list.iter().zip(&widths) {
-        if x > 0.0 && x + w > limit {
+        // The kinds' icons are one group; what a card's or a line's look
+        // means (external, several instances, a kind of message) starts a
+        // row of its own, so it never reads as one more kind.
+        let new_group = previous.is_some_and(|p| matches!(p, Swatch::Kind(_)))
+            && !matches!(swatch, Swatch::Kind(_));
+        if x > 0.0 && (x + w > limit || new_group) {
             x = 0.0;
             y += row_height + SPACING_LEGEND_ROW;
         }
+        previous = Some(swatch);
         let s = swatch_size(swatch);
         let middle = y + row_height / 2.0;
         let swatch_box = Rect {
