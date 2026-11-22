@@ -10,7 +10,7 @@ checksum = "320119579fcad9c21884f5c4861d16174d0e06250625266f50fe6898340abefa"
 
 [[package]]
 name = "archgram-cli"
-version = "0.12.0"
+version = "0.13.0"
 dependencies = [
  "archgram-core",
  "archgram-icons",
@@ -20,7 +20,7 @@ dependencies = [
 
 [[package]]
 name = "archgram-core"
-version = "0.12.0"
+version = "0.13.0"
 dependencies = [
  "serde",
  "serde_json",
@@ -29,14 +29,14 @@ dependencies = [
 
 [[package]]
 name = "archgram-icons"
-version = "0.12.0"
+version = "0.13.0"
 dependencies = [
  "archgram-core",
 ]
 
 [[package]]
 name = "archgram-yaml"
-version = "0.12.0"
+version = "0.13.0"
 dependencies = [
  "archgram-core",
  "saphyr-parser",
@@ -644,7 +644,7 @@ checksum = "ec7a2a501ed189703dba8b08142f057e887dfc4b2cc4db2d343ac6376ba3e0b9"
 
 [[package]]
 name = "xtask"
-version = "0.12.0"
+version = "0.13.0"
 dependencies = [
  "archgram-core",
  "serde_json",
