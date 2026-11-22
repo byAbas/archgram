@@ -222,7 +222,7 @@ message does.
 
 `look` picks one of two. Both draw the same spec into the same columns,
 rows, frames and order; only these differ. Samples of both, in both
-themes, are in [docs/samples/sequence/](../samples/sequence/).
+themes, are in [design-system/samples/sequence/](../../design-system/samples/sequence/).
 
 | | `cards`, the default | `avatars` |
 |---|---|---|
@@ -246,7 +246,7 @@ its symbols (diagram-kinds.md, Decided 5):
 
 The drawing stays readable the whole time: motion points at a message,
 it never hides one. Samples are in
-[docs/samples/sequence/](../samples/sequence/) (`motion`).
+[design-system/samples/sequence/](../../design-system/samples/sequence/) (`motion`).
 
 - One phase plays at a time. Its name darkens; the other phases' messages
   dim to 60% at most, never further, and the heads stay as they are.
@@ -370,7 +370,7 @@ it never hides one. Samples are in
    send's and a reply's open, a reply's line dashed. The shape, not a
    colour, says whether a message waits.
 
-9. Its bands and label pills replaced by 12. Two looks, chosen from samples ([docs/samples/sequence/](../samples/sequence/)):
+9. Its bands and label pills replaced by 12. Two looks, chosen from samples ([design-system/samples/sequence/](../../design-system/samples/sequence/)):
    `look: cards | avatars`, `cards` by default, its activation bars
    UML's (17.2.4.4). The field is `look`, not `style`, which an edge
    already uses for its line (docs/SPEC.md, Edges).
