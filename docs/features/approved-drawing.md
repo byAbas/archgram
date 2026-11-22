@@ -2,11 +2,13 @@
 
 | Field   | Value      |
 |---------|------------|
-| Version | 0.2        |
-| Date    | 2026-11-20 |
+| Version | 0.5        |
+| Date    | 2026-11-22 |
 | Status  | Draft      |
-| Release | Planned    |
+| Release | 0.12.0     |
 | Issue   | [#176](https://github.com/byAbas/archgram/issues/176) |
+
+> **Partly superseded (PRD 0.45).** Its engine parts stand: the title, `build`'s layout counts, the previews and the logos. Its skill parts, the facts document and holding a drawing to it, are replaced by docs/PRD.md §6.6.
 
 What this feature does and why. `docs/PRD.md` (§6.3, §6.5, §6.6, §7)
 points here; the title and the subtitle go into `docs/SPEC.md`, how they
@@ -77,7 +79,7 @@ architecture of this project", the user approving the facts as asked:
 | User | What they get |
 |---|---|
 | The reader of the diagram | A titled drawing of one idea, its lines followed without guessing |
-| The user of the skill | What they approved is what is drawn, or the skill stops and asks; a report they read in a minute |
+| The user of a skill | What the facts hold is what is drawn, with no stop on the way; a report they read in a minute |
 | Anyone drawing a well-known technology | Its logo |
 
 ## Requirements
@@ -120,20 +122,11 @@ architecture of this project", the user approving the facts as asked:
   limits below apply; where a limit conflicts with what was asked, the
   skill draws what was asked and reports the limit's numbers with one
   line on the cleaner way.
-- **Held to approval, by a command.** On approval, the skill's
-  `archgram-facts`, a Node script in the `archgram` npm package beside
-  the launcher, not in the skill's folder, stamps each approved part of `docs/diagrams/facts.md`. Before each
-  build, it checks, and the skill stops and asks when one fails:
-  - the approved text is unchanged; a split adds a diagram of its own,
-    "split from" the approved one, naming the questions it answers;
-  - every approved part and relation is in at least one spec, and every
-    question in at least one diagram;
-  - every edge in a spec is a relation in the facts, its label the
-    approved label;
-  - every relation the facts list as not drawn is in the reader
-    contract's "left out on purpose", with its reason.
-  A new source for an approved relation needs no approval when `check`
-  finds it.
+- **Drawn from the facts.** The spec follows `docs/diagrams/facts.md`:
+  every edge a relation in it under the same words, every relation it
+  leaves out under Not drawn with its reason, and a split, which the user
+  asked for, a section of its own naming the questions it answers. No
+  script holds it there any more (Decided, 8).
 - **One idea per drawing.** The facts give each part a phase (run, build,
   setup), and one diagram draws one phase; another phase is offered as a
   diagram of its own. A reader contract asks at most three questions,
@@ -150,7 +143,7 @@ architecture of this project", the user approving the facts as asked:
   archgram.
 - **A short report**, about 15 lines: each drawing's path and what it
   shows; how exact it is (`check`'s count, the facts' path, whether they
-  were approved); at most three things changed after looking; at most
+  were checked with the user, when they asked); at most three things changed after looking; at most
   three not shown; at most one question. No list of parts or lines.
 - **Fewer failed checks.** The spec's rules for the skill say: quote
   every `note` and `label` inside `{ }`; an `order` hint orders the nodes
@@ -196,8 +189,7 @@ architecture of this project", the user approving the facts as asked:
 - The microservices-demo spec rebuilt as one diagram reports at least one
   target reached side by side; "placing an order" reports 0 crossings, 0
   lines through a frame, 0 lines against the direction, 0 side by side.
-- On the three projects, with the prompt above: nothing approved changes
-  without the skill stopping; every relation the code backs and the
+- On the three projects, with the prompt above: every relation the code backs and the
   drawing leaves out has its reason; each report is under 20 lines;
   `check` fails at most once per run.
 - Every golden shows its title, and every example builds.
@@ -209,15 +201,23 @@ architecture of this project", the user approving the facts as asked:
    limits, only where the request says nothing.
 2. **The title is composed** by the engine, shown by default; the
    subtitle only where two diagrams would share a title.
-3. **A split is the skill's,** without asking again, held by the script.
+3. **A split is the user's** (PRD 0.45, replacing a split the skill made
+   on its own): over a limit, the skill shows less; it splits only when
+   asked, held by the script.
 4. **Previews outside git's view,** in `.archgram/preview/`.
 5. **Every logo,** whatever its licence: the owner's decision, with the
    risks of the copyleft and non-commercial licences shown.
-6. **The heading has no symbol,** and takes a node's name's type, so the
-   names keep the one weight step (DESIGN.md, Typography).
+6. **The heading has no symbol.** Its type is `typography.heading`, the
+   one style heavier and larger than a node's name (DESIGN.md,
+   Typography; replacing a heading in the name's type).
 7. **Side by side is any parallel arrival,** no run required: measured on
    the single microservices-demo diagram, a run of 52 px or more counted
    nothing where the reader missed a line; any arrival counted it.
+
+8. **No facts script** (PRD 0.45, replacing `archgram-facts`): it was
+   made to keep a drawing to facts the user approved; with no approval,
+   it held the skill only to text the skill itself wrote, at the cost of
+   two commands a run.
 
 ## Open questions
 
@@ -229,3 +229,6 @@ None.
 |---------|------------|--------|
 | 0.1     | 2026-11-20 | First draft, from #176: a visible title; `build`'s layout report; previews in `.archgram/preview/`; every Simple Icons logo; the skill held to the approved facts by a script, one idea and one phase per drawing, a short report, the place shown taken from the user. |
 | 0.2     | 2026-11-20 | The facts script ships in the `archgram` npm package as `archgram-facts`, with `archgram-size`, since Anthropic's directory refuses scripts in a plugin from an organization that is not Verified. |
+| 0.3     | 2026-11-22 | Released in 0.12.0. The facts are stamped without the user, and the skill fixes what the script finds rather than stopping; a split is the user's; the heading takes its own heavier type (PRD 0.45; Decided, 3, 6). |
+| 0.4     | 2026-11-22 | `archgram-facts` removed: the spec is drawn from the facts document, and nothing stamps it (PRD 0.45; Decided, 8). |
+| 0.5     | 2026-11-22 | Its skill parts superseded: no facts document, the spec drawn from what the skill read, its sources the record (PRD 0.45). The engine's parts (title, layout counts, previews, logos) stand. |

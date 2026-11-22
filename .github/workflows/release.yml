@@ -175,11 +175,13 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: Archive the skill
+      - name: Archive the skills
         run: |
           version="${GITHUB_REF_NAME#v}"
           mkdir dist
-          tar -czf "dist/archgram-skill-${version}.tar.gz" -C skills archgram
+          # The skills' folders at the archive's top, so it unpacks into
+          # any agent's skills folder as one folder per skill.
+          tar -czf "dist/archgram-skill-${version}.tar.gz" -C skills/archgram/skills draw-architecture-diagram draw-sequence-diagram
           (cd dist && sha256sum -- *.tar.gz > SHA256SUMS)
           ls -l dist
       - uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2

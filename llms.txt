@@ -17,6 +17,6 @@
 
 ## Optional
 
-- [The archgram skill](https://github.com/byAbas/archgram/tree/main/skills/archgram): the agent skill that draws a project's architecture from its code
+- [The archgram skills](https://github.com/byAbas/archgram/tree/main/skills/archgram): the agent skills that draw a project's architecture, or the sequence of one request, from its code
 - [Changelog](https://github.com/byAbas/archgram/blob/main/CHANGELOG.md)
 - [npm package](https://www.npmjs.com/package/archgram)

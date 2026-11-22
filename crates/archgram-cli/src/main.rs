@@ -31,6 +31,11 @@ Usage:
                                Print the spec format this archgram reads (docs/SPEC.md): all
                                of it, its short part, one section, such as theme-file, or the
                                kinds of diagram it draws, each with its section
+  archgram guide [--section <name>]
+                               Print the rules the draw-<kind>-diagram skills share
+                               (docs/GUIDE.md): all of them, or one section, such as facts
+  archgram logos <name>...    Print the logo each technology's name stands for, as `tech`
+                               takes it: a product's, a package's or an image's name
   archgram theme check <archgram.theme.json>
                                Read a project's design tokens as the theme and show each role's colour
   archgram --version           Print the version
@@ -64,6 +69,10 @@ there (docs/SPEC.md, Sources).";
 /// draws it (docs/PRD.md, 6.5).
 const SPEC: &str = include_str!("../../../docs/SPEC.md");
 
+/// The rules the skills share, carried in the binary so a skill reads the
+/// rules of the very archgram it runs (docs/PRD.md, 6.6).
+const GUIDE: &str = include_str!("../../../docs/GUIDE.md");
+
 fn main() -> ExitCode {
     // A panic is archgram's bug, never the spec's: say so, and where to
     // report it, instead of a bare Rust panic.
@@ -79,9 +88,10 @@ fn main() -> ExitCode {
     match args.as_slice() {
         // Help asked after a command, anywhere among its arguments, is still
         // help: never a spec named `--help`.
-        ["build" | "check" | "spec" | "theme", rest @ ..]
-            if rest.iter().any(|a| matches!(*a, "--help" | "-h")) =>
-        {
+        [
+            "build" | "check" | "guide" | "logos" | "spec" | "theme",
+            rest @ ..,
+        ] if rest.iter().any(|a| matches!(*a, "--help" | "-h")) => {
             println!("{USAGE}");
             ExitCode::SUCCESS
         }
@@ -90,10 +100,16 @@ fn main() -> ExitCode {
             print!("{SPEC}");
             ExitCode::SUCCESS
         }
-        ["spec", "--brief"] => print_section("in-brief"),
-        ["spec", "--section", name] => print_section(name),
+        ["spec", "--brief"] => print_section(("spec", SPEC), "in-brief"),
+        ["spec", "--section", name] => print_section(("spec", SPEC), name),
+        ["guide"] => {
+            print!("{GUIDE}");
+            ExitCode::SUCCESS
+        }
+        ["guide", "--section", name] => print_section(("guide", GUIDE), name),
         ["spec", "--kinds"] => print_kinds(),
         ["theme", "check", path] => theme_check(path),
+        ["logos", names @ ..] if !names.is_empty() => print_logos(names),
         ["build", path, rest @ ..] => match build_options(rest) {
             Ok(b) => build(path, b),
             Err(message) => usage_error(&message),
@@ -110,18 +126,19 @@ fn main() -> ExitCode {
     }
 }
 
-/// One section of the spec format, from its `## ` heading to the next:
-/// the same document, printed in part (docs/PRD.md 6.5). `name` is the
-/// heading or its short form, `theme-file` for `Theme file`.
-fn print_section(name: &str) -> ExitCode {
-    let sections = spec_sections();
+/// One section of a document the binary carries, the spec format or the
+/// skills' guide, from its `## ` heading to the next: the same document,
+/// printed in part (docs/PRD.md 6.5). `name` is the heading or its short
+/// form, `theme-file` for `Theme file`.
+fn print_section((what, doc): (&str, &'static str), name: &str) -> ExitCode {
+    let sections = sections_of(doc);
     match sections.iter().find(|(id, _)| *id == section_id(name)) {
         Some((_, text)) => {
             print!("{text}");
             ExitCode::SUCCESS
         }
         None => usage_error(&format!(
-            "the spec has no section \"{}\"; its sections are: {}",
+            "the {what} has no section \"{}\"; its sections are: {}",
             printable(name),
             sections
                 .iter()
@@ -134,7 +151,7 @@ fn print_section(name: &str) -> ExitCode {
 
 /// The kinds of diagram this archgram draws, one a line: the value a
 /// spec's `diagram` takes, the section of the format that describes it, and
-/// the question it answers (docs/features/facts.md, The engine). The first
+/// the question it answers (docs/features/diagram-kinds.md). The first
 /// two are columns, so a reader or an agent takes them by position.
 fn print_kinds() -> ExitCode {
     let kinds = DiagramKind::ALL;
@@ -152,14 +169,14 @@ fn print_kinds() -> ExitCode {
 }
 
 /// The spec format's sections, each with its short name and its text.
-fn spec_sections() -> Vec<(String, &'static str)> {
-    let starts: Vec<usize> = SPEC.match_indices("\n## ").map(|(i, _)| i + 1).collect();
+fn sections_of(doc: &'static str) -> Vec<(String, &'static str)> {
+    let starts: Vec<usize> = doc.match_indices("\n## ").map(|(i, _)| i + 1).collect();
     starts
         .iter()
         .enumerate()
         .map(|(n, &start)| {
-            let end = starts.get(n + 1).copied().unwrap_or(SPEC.len());
-            let text = &SPEC[start..end];
+            let end = starts.get(n + 1).copied().unwrap_or(doc.len());
+            let text = &doc[start..end];
             let heading = text
                 .lines()
                 .next()
@@ -178,6 +195,29 @@ fn section_id(name: &str) -> String {
         .filter(|w| !w.is_empty())
         .collect::<Vec<_>>()
         .join("-")
+}
+
+/// For each name, the logo it stands for in the set this archgram carries,
+/// one line each: `<name>: <slug> (<title>)`, the candidates when it stands
+/// for several, or that it has none (docs/PRD.md 6.5).
+fn print_logos(names: &[&str]) -> ExitCode {
+    use archgram_core::logos::{Found, find};
+    let icons = Icons::load();
+    for name in names {
+        let line = match find(name, &icons) {
+            Found::Logo(slug, title) => format!("{slug} ({title})"),
+            Found::Candidates(list) => format!(
+                "no one logo; one of {}",
+                list.iter()
+                    .map(|(s, t)| format!("{s} ({t})"))
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            ),
+            Found::None => "no logo".into(),
+        };
+        println!("{}: {line}", printable(name));
+    }
+    ExitCode::SUCCESS
 }
 
 fn usage_error(message: &str) -> ExitCode {

@@ -54,9 +54,9 @@ if [ "${1:-}" = __one ]; then
   else
     cache="$EVAL_OUT/npm-cache"
   fi
-  # With --archgram, the skill's `npx … archgram@X.Y.Z` runs that build:
-  # npx takes a package of the version it asks for from the project's own
-  # node_modules before the registry. Kept out of the copy's git.
+  # With --archgram, the skills' `npx … archgram@X.Y.Z` runs that build:
+  # npx takes a package of the version it asks for from the project's own node_modules before the
+  # registry. Kept out of the copy's git.
   if [ -n "${EVAL_ARCHGRAM:-}" ] && [ -z "$absent" ]; then
     pkg="$dir/outputs/node_modules/archgram"
     mkdir -p "$pkg/bin" "$dir/outputs/node_modules/.bin"
@@ -87,8 +87,6 @@ if [ "${1:-}" = __one ]; then
     --allowedTools Read Write Edit Glob Grep Skill \
     "Bash(npx --yes --loglevel=error archgram@$EVAL_VERSION *)" \
     "Bash(npx --no --offline --loglevel=error archgram@$EVAL_VERSION *)" \
-    "Bash(npx --yes --loglevel=error --package archgram@$EVAL_VERSION *)" \
-    "Bash(npx --no --offline --loglevel=error --package archgram@$EVAL_VERSION *)" \
     "Bash(ls *)" "Bash(cat *)" "Bash(head *)" "Bash(grep *)" "Bash(find *)" \
     "Bash(wc *)" "Bash(git ls-files*)" "Bash(git status*)" "Bash(git diff*)" \
     "Bash(node --version)"
@@ -217,7 +215,7 @@ command -v claude >/dev/null || die "claude is not on the PATH"
 command -v node >/dev/null || die "node is not on the PATH"
 [ -n "$cases" ] || cases=$(node -e 'console.log(require(process.argv[1]).evals.map((e) => e.id).join(" "))' "$here/evals.json")
 
-version=$(grep -o 'archgram@[0-9][0-9.]*[0-9]' "$root/skills/archgram/SKILL.md" | head -1 | cut -d@ -f2)
+version=$(cat "$root"/skills/archgram/skills/*/SKILL.md | grep -o 'archgram@[0-9][0-9.]*[0-9]' | head -1 | cut -d@ -f2)
 plan=$(for id in $cases; do for c in $configs; do
   k=1; while [ "$k" -le "$repeat" ]; do echo "$id $c $k"; k=$((k + 1)); done
 done; done)

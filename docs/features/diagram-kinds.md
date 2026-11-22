@@ -2,8 +2,8 @@
 
 | Field   | Value      |
 |---------|------------|
-| Version | 0.4        |
-| Date    | 2026-10-11 |
+| Version | 0.5        |
+| Date    | 2026-11-22 |
 | Status  | Draft      |
 | Release | Planned, sequence first |
 | Issue   | [#126](https://github.com/byAbas/archgram/issues/126) |
@@ -247,9 +247,11 @@ Validation (rules the books are said to give, to be confirmed): a flow
 starts or ends at a process; no flow joins two stores, or two external
 entities, directly.
 
-## Choosing the kind (the skill)
+## Choosing the kind
 
-The skill chooses the kind from the question the reader asks:
+Each kind has a skill of its own, and the user calls the one they want,
+as the README's example prompt for each shows; no skill guesses the kind
+(PRD §6.6). Each kind answers one question:
 
 | The reader asks | Kind |
 |---|---|
@@ -259,18 +261,20 @@ The skill chooses the kind from the question the reader asks:
 | What steps does the work take, and who does each? | Workflow |
 | Where does the data go, and where is it kept? | Dataflow |
 
-When a request fits a kind archgram does not draw yet, the skill says so
-rather than drawing it as another kind: drawn as architecture, the OAuth
-request above lost its order without a word.
+A skill asked for another kind says which skill draws it, or that
+archgram does not draw it yet, rather than drawing it as its own kind:
+drawn as architecture, the OAuth request above lost its order without a
+word.
 
 ## Limits
 
 - A subset of each standard: a reader who needs history states, message
   flows between pools or levelled data flow diagrams needs a modelling
   tool.
-- A sequence diagram grows down with its messages; past about 30 messages
-  (to be measured) it is split, as an architecture diagram is past about
-  10 nodes and 12 edges.
+- A sequence diagram grows down with its messages; past about 15
+  messages (to be measured, sequence.md) it shows less, as an
+  architecture diagram does past about 10 nodes and 12 edges, and is
+  split only when the user asks (PRD §6.6).
 - The standards decide meaning; how each symbol is drawn is DESIGN.md's,
   so a diagram looks like archgram's, not like a UML tool's.
 
@@ -342,3 +346,4 @@ request above lost its order without a word.
 | 0.2     | 2026-10-09 | Sequence has its own document, [sequence.md](sequence.md). |
 | 0.3     | 2026-10-09 | Sequence takes activation bars, in one of its two looks, and may draw its participants as avatars ([sequence.md](sequence.md), Decided 1 and 9). |
 | 0.4     | 2026-10-11 | A sequence's messages take a colour by their kind, repeating their shape ([sequence.md](sequence.md), Decided 14). |
+| 0.5     | 2026-11-22 | Each kind has a skill of its own, which the user calls; no skill chooses the kind from the question (PRD 0.45). |

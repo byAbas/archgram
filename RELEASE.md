@@ -106,7 +106,7 @@ version goes in by a pull request and the tag follows the merge.
 8. Run the skill once, as a user would, before the directory has it.
    From the repository's root, copy the eval project
    `evals/archgram/files/notes` to a folder outside the repository, make
-   it a git repository of its own, and install the skill from the
+   it a git repository of its own, and install the skills from the
    release's archive into it, for Claude Code:
 
    ```sh
@@ -115,12 +115,12 @@ version goes in by a pull request and the tag follows the merge.
    mkdir -p .claude/skills && curl -sL https://github.com/byAbas/archgram/releases/download/vX.Y.Z/archgram-skill-X.Y.Z.tar.gz | tar -xz -C .claude/skills
    ```
 
-   The released skill must be the only archgram that Claude Code loads
+   The released skills must be the only archgram that Claude Code loads
    there. A personal skill of the same name runs instead of the
    project's
    ([skills](https://code.claude.com/docs/en/skills#resolve-skills-that-share-a-name)),
-   such as the one `npx skills add -g` links into
-   `~/.claude/skills/archgram`; the plugin from the directory,
+   such as one `npx skills add -g` links into `~/.claude/skills/`; the
+   plugin from the directory,
    `archgram@synced`, loads beside it; and the plugin installed from the
    repository's marketplace, `archgram@archgram`, loads in place of the
    project's copy
@@ -128,17 +128,14 @@ version goes in by a pull request and the tag follows the merge.
    Look for each:
 
    ```sh
-   ls -d ~/.claude/skills/archgram ~/.agents/skills/archgram 2>/dev/null
+   ls -d ~/.claude/skills/draw-*-diagram ~/.agents/skills/draw-*-diagram ~/.claude/skills/archgram 2>/dev/null
    claude plugin list | grep -i archgram
    ```
 
-   The list always shows the released copy itself, as
-   `archgram@skills-dir` at `./.claude/skills/archgram`: the skill's
-   folder carries a plugin manifest, so Claude Code loads it as a plugin
-   from the skills folder
-   ([plugin origins](https://code.claude.com/docs/en/plugins/loading)).
-   Any other archgram line, or any path the `ls` prints, is another copy.
-   Remove a personal copy (`npx skills remove --global archgram -y`) or
+   The released skills are project skills, `.claude/skills/draw-*-diagram`,
+   and no plugin. Any archgram line in the list, or any path the `ls`
+   prints, is another copy. Remove a personal copy (`npx skills remove
+   --global draw-architecture-diagram draw-sequence-diagram -y`) or
    move it out of the skills folder until the run is done, and turn each
    plugin off for the run with `claude plugin disable archgram@synced` or
    `claude plugin disable archgram@archgram`, on again after with

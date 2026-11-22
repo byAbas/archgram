@@ -2,8 +2,8 @@
 
 | Field   | Value      |
 |---------|------------|
-| Version | 0.1        |
-| Date    | 2026-10-08 |
+| Version | 0.2        |
+| Date    | 2026-11-22 |
 | Status  | Draft      |
 | Release | 0.9        |
 | Issue   | [#114](https://github.com/byAbas/archgram/issues/114) |
@@ -92,7 +92,8 @@ diagram is shown belongs to the spec, and the shape it gets there stays.
 
 - A spec with no `shownWidth` draws the same bytes as before.
 - On the reference site, with `shownWidth: 674`, every drawing is at
-  most 996 px wide, or `build` warns and the skill splits it.
+  most 996 px wide, or `build` warns and the skill shows less, splitting
+  it only when the user asks (PRD §6.6).
 - In the skill's evaluation, an update to an existing diagram never
   changes its `direction` unless the case asks for it
   (`updates-an-existing-diagram`, `repairs-what-lost-its-code`), and a
@@ -104,3 +105,4 @@ diagram is shown belongs to the spec, and the shape it gets there stays.
 | Version | Date       | Change |
 |---------|------------|--------|
 | 0.1     | 2026-10-08 | First draft, from #114: `shownWidth`, a README by default; the rule as the README's ratio, 1,300 to 880; `build` warns and still draws; the skill writes the direction it chose into the spec; no layout per screen. |
+| 0.2     | 2026-11-22 | Over the width, the skill shows less, and splits only when the user asks (PRD 0.45). |

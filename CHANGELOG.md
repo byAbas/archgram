@@ -8,8 +8,20 @@ follow [Semantic Versioning](https://semver.org/).
 
 ### Added
 
-- Two kinds of node: `auth`, what lets a request in or keeps it out at
-  run time (a guard, a session check, an identity provider), with a
+- `archgram logos <name>...` prints the logo each technology's name
+  stands for, its slug as a node's `tech` takes it, from a product's,
+  a package's or an image's name (`sentry-sdk` gives `sentry`): the
+  candidates when it stands for several, or that it has none. A skill
+  asks it once for every technology the project names, so every box
+  built on one has its logo.
+- `archgram guide` prints the rules the drawing skills share,
+  docs/GUIDE.md, all of them or one section with `--section`: what is
+  never read, checking and drawing, the critique,
+  the report and colours. A skill reads the rules of the very archgram it
+  runs, as it reads the spec format from `archgram spec`.
+
+- Two kinds of node: `auth`, a service that lets a request in or keeps
+  it out at run time (an auth service, an identity provider), with a
   shield; and `llm`, a model that writes text, with a chat bubble and a
   spark. `model` stays for any other model, such as one that embeds.
 - `archgram check` and `build` warn of a card whose name only repeats
@@ -24,6 +36,30 @@ follow [Semantic Versioning](https://semver.org/).
   shapes, borders and line styles.
 
 ### Changed
+
+- One skill for each kind of diagram, in the same `archgram` plugin:
+  `draw-architecture-diagram` and `draw-sequence-diagram`, called in
+  Claude Code as `/archgram:draw-architecture-diagram`. The README shows
+  the prompt for each; no skill guesses another kind from the question.
+  Each `SKILL.md` stays under 500 lines, and a test holds it there.
+- One prompt draws one diagram: a skill no longer stops for you to
+  approve its facts, to narrow a large project, or to delete its own
+  files. It asks only before it downloads archgram. Where the code and a
+  document disagree, it draws the code and says so in its report. Ask it
+  to show you what it found first, and it will.
+- An architecture diagram is drawn at the C4 container level: each app,
+  service, job, database, queue and outside system one node, the routes
+  and files inside them left to a component diagram you ask for.
+- An architecture diagram's lines carry one verb and one object, three
+  words at most, that read between the two parts as a sentence of what
+  the code does ("Web app stores accounts in App database"), not lists
+  of nouns, as C4 asks a label to be specific to the relationship's
+  intent.
+- Over a limit (about ten nodes, a readable width, `build`'s counts at
+  0), a skill shows less rather than splitting the drawing; it splits
+  only when you ask, and removes a drawing a split replaces.
+- When a project's own archgram is older than the skills' version, a
+  skill says so, with the command to upgrade, and draws nothing.
 
 - A card reads as C4 writes an element: its name, and its kind under it
   ("Payments", "Service"). A card named as its kind ("Browser") says it
@@ -40,21 +76,26 @@ follow [Semantic Versioning](https://semver.org/).
   and it, the diagram and the legend stand 40 px apart.
 - The `archgram` skill names a part with a logo for what it does, puts
   what a reader needs in a name, an edge's label or the report rather
-  than a note, and keeps a merged node's parts in its note for the facts
-  check.
-- The `archgram` skill's two scripts ship in the `archgram` npm package,
-  as `archgram-size` and `archgram-facts`, and the skill runs them
-  through npx at its own version, as it runs archgram. Its folder holds
-  only text and its icon, as Anthropic's directory asks of a plugin from
-  an organization it has not Verified, which refused 0.11.0 for
-  `scripts/size.mjs`; 0.12.0 carries the same scripts.
+  than a note.
+- The skills hold only text and their icon, and run no script of their
+  own, as Anthropic's directory asks of a plugin from an organization it
+  has not Verified, which refused 0.11.0 for `scripts/size.mjs`.
+
+### Removed
+
+- The facts document, `docs/diagrams/facts.md`, and the skills' scripts
+  `archgram-size` and `archgram-facts`. A skill reads only what the
+  diagram needs (the file list, each app's manifest, its run files and
+  entry points, and the line behind each line it draws), never the whole
+  codebase; the spec's sources are the record of what backs the drawing,
+  and `archgram check` holds them to the code.
 
 ### Fixed
 
-- The skill's sizing no longer stops with git's error "directory entry
-  not superset of prefix" when the project sits in a folder its
-  enclosing git repository ignores: it walks that folder as one with no
-  git, and says so.
+- The example in `archgram spec --brief` named a database "Postgres"
+  beside its PostgreSQL logo, the name `check` warns of; it is "Order
+  store" now, and a test holds the example to no warning.
+
 
 ## [0.12.0] - 2026-11-20
 

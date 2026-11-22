@@ -116,12 +116,6 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
       - run: node --test packages/archgram/lib/platform.test.js
-      # The skill's sizing script runs on the Node the skill asks for, 22 or
-      # later, so it is tested on the same versions as the launcher.
-      - run: node --test scripts/skill-size.test.mjs
-      # The skill's facts script, which holds each drawing to the approved
-      # facts (docs/features/approved-drawing.md), on the same versions.
-      - run: node --test scripts/skill-facts.test.mjs
       # npm shows the launcher's README, a copy of the repository's; the
       # release's `cargo xtask npm` refuses a copy that differs, so a pull
       # request does too, before a tag is pushed (RELEASE.md, step 1).
