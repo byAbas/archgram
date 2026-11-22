@@ -2,7 +2,7 @@
 
 Hand-made samples that chose how `archgram diff` marks what a change
 added, removed and changed
-([docs/features/diff.md](../../features/diff.md), Decided 2), kept so the
+([docs/features/diff.md](../../../docs/features/diff.md), Decided 2), kept so the
 other options can be compared later. They are not archgram's output:
 each is `linkshort-change.archgram.json`, the old spec and the new one
 written as one, drawn by archgram 0.10.1, with the marks and the legend

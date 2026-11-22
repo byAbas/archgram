@@ -1,7 +1,7 @@
 # Samples: a sequence diagram's two looks
 
 Hand-made samples that chose the two looks in
-[docs/features/sequence.md](../../features/sequence.md) (Looks), kept so
+[docs/features/sequence.md](../../../docs/features/sequence.md) (Looks), kept so
 they can be compared later. They are not archgram's output: they were
 drawn by hand, in archgram's colours, icons and logos, before the engine
 drew them.

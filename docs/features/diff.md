@@ -182,7 +182,7 @@ layout is computed and a change moves it (Evidence).
    side was not taken either: the two layouts differ too much to compare
    by eye (Evidence).
 2. **The marks are signs in colour**, the look `signs` of three samples
-   ([docs/samples/diff/](../samples/diff/README.md)). The same signs
+   ([design-system/samples/diff/](../../design-system/samples/diff/README.md)). The same signs
    with no colour (`mono`) kept the drawing monochrome, but the changes
    were harder to find at a glance. Words on the cards (`words`) need no
    legend there, but a word does not fit a short line, so the lines
@@ -249,5 +249,5 @@ layout is computed and a change moves it (Evidence).
 | Version | Date       | Change |
 |---------|------------|--------|
 | 0.1     | 2026-11-14 | First draft, from #47: `archgram diff` draws two architecture specs as one diagram, parts paired by id, each added, removed or changed part marked; one layout of both together, measured on 100 pairs; a still image, with the changes as text; the marks, the exit code and the Action left open. |
-| 0.2     | 2026-11-14 | The marks are decided, from three samples in `docs/samples/diff/`: a sign in a filled circle on a card's top edge and on a line, in green, red or amber, repeated by the card's border and the line; a removed card's title struck through. Open: the light theme's green, a trunk shared by an added and a removed line, the sign's size where the drawing is shown smaller, a frame's mark. The `archgram` skill uses `diff` on an update, and its report of what changed is the command's; where it writes the drawing and what it does with an older archgram are open. |
+| 0.2     | 2026-11-14 | The marks are decided, from three samples in `design-system/samples/diff/`: a sign in a filled circle on a card's top edge and on a line, in green, red or amber, repeated by the card's border and the line; a removed card's title struck through. Open: the light theme's green, a trunk shared by an added and a removed line, the sign's size where the drawing is shown smaller, a frame's mark. The `archgram` skill uses `diff` on an update, and its report of what changed is the command's; where it writes the drawing and what it does with an older archgram are open. |
 | 0.3     | 2026-11-14 | A difference exits 0: the command's exit codes are archgram's own, 1 for a problem in a spec and 2 for a file or a wrong use; a flag that makes a difference fail is not in this. When nothing differs the command says so and still writes the drawing, with no mark. |
