@@ -132,6 +132,21 @@ the question it answers.
 npx archgram spec --brief
 ```
 
+### `archgram logos <name>...`
+
+Prints the logo each technology's name stands for, as a node's `tech`
+takes it: a product's name, a package's or an image's. When a name
+stands for several logos it lists them; when for none, it says so.
+
+```sh
+npx archgram logos sentry-sdk Next.js postgres
+```
+
+### `archgram guide`
+
+Prints the rules the `draw-<kind>-diagram` skills share; `--section
+<name>` prints one section.
+
 ### `archgram theme check <archgram.theme.json>`
 
 Reads your design tokens as the theme and shows each colour role in light
@@ -147,12 +162,19 @@ Print the version, or every command and option.
 
 ## Draw with your coding agent
 
-The `archgram` skill lets a coding agent draw a project's architecture from
-its code, or the sequence of one request: it reads the code and the docs, writes the spec in
+Two skills let a coding agent draw from a project's code, one for each
+kind of diagram:
+
+| Skill | Ask | Draws |
+|---|---|---|
+| `draw-architecture-diagram` | `Draw the architecture of this project.` | What the system is made of and what calls what, at the C4 container level |
+| `draw-sequence-diagram` | `Draw the sequence of signing in.` | The order in which the parts handle one request, and what comes back |
+
+From one prompt, a skill reads the code, writes the spec in
 `docs/diagrams/`, checks and draws it with `npx archgram`, in archgram's
 colours or, when you ask, your project's own, and reports in a few lines
 what it drew and how exact it is, each part's file and each line's code
-kept in the facts document you approve. It asks before it downloads anything: it runs
+kept in the spec's sources. It asks only before it downloads anything: it runs
 the archgram your project lists, or the skill's version already on your
 machine, and otherwise asks whether to install that version into your
 project or to let npx download it once. It is
@@ -166,11 +188,11 @@ where each of your agents looks:
 npx skills add byabas/archgram
 ```
 
-It asks which agents to install it for; add `-g` to install it for every
-project rather than this one. Then ask your agent to draw the architecture,
-or, in Claude Code, type `/archgram`.
+It asks which agents to install them for; add `-g` to install them for
+every project rather than this one. Then ask your agent as the table
+shows, or, in Claude Code, type `/archgram:draw-architecture-diagram`.
 
-In Claude Code, it is also a plugin in
+In Claude Code, the two skills are also one plugin, `archgram`, in
 [Anthropic's directory](https://claude.ai/directory): find archgram there
 and add it to your claude.ai account. Claude Code loads it, as
 `archgram@synced`, the next time it starts signed in with that account
@@ -191,14 +213,14 @@ A marketplace of your own does not update by itself: run
 `claude plugin update archgram@archgram` for each release
 ([updates](https://code.claude.com/docs/en/plugins/install#keep-plugins-updated)).
 
-Or take it from the release, into your agent's skills folder
+Or take them from the release, into your agent's skills folder
 (`~/.agents/skills`, or `~/.claude/skills` for Claude Code):
 
 ```sh
 mkdir -p ~/.agents/skills && curl -sL https://github.com/byAbas/archgram/releases/download/v0.12.0/archgram-skill-0.12.0.tar.gz | tar -xz -C ~/.agents/skills
 ```
 
-The skill's archive carries a signed record of the build that made it:
+The skills' archive carries a signed record of the build that made it:
 `gh attestation verify archgram-skill-X.Y.Z.tar.gz -R byAbas/archgram`.
 0.5.0 and earlier were built before the account was renamed, and their
 records carry its earlier name.
@@ -258,7 +280,7 @@ step, Structurizr is the better tool.
 
 ### Can a coding agent draw my architecture from the code?
 
-Yes, with the `archgram` skill (above): it reads the code, draws a part
+Yes, with the `draw-architecture-diagram` skill (above): it reads the code, draws a part
 only where a file backs it and an edge only where a line of code makes it,
 and lists both.
 

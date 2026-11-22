@@ -1,16 +1,21 @@
 # archgram
 
-A skill, and a Claude Code plugin of that one skill in
-[Anthropic's directory](https://claude.ai/directory), that draws a
-project's software architecture as an animated SVG for its README and
-docs, or a sequence diagram of the order in which its parts call each
-other for one request. The agent reads the code and the documentation, writes a spec to
+Two skills, and a Claude Code plugin of them in
+[Anthropic's directory](https://claude.ai/directory), each drawing one
+kind of diagram as an animated SVG for a project's README and docs:
+
+| Skill | Ask | Draws |
+|---|---|---|
+| `/archgram:draw-architecture-diagram` | `Draw the architecture of this project.` | What the system is made of and what calls what |
+| `/archgram:draw-sequence-diagram` | `Draw the sequence of signing in.` | The order in which the parts handle one request |
+
+From one prompt, the agent reads the code and the documentation, writes a spec to
 `docs/diagrams/<name>.archgram.yaml`, and archgram lays it out and draws
 `docs/diagrams/<name>.svg` beside it, in light and dark, in archgram's
 colours or, when asked, the project's own. Its report is short, about
 fifteen lines: what it drew, how exact it is, what it changed after
-looking, what it left out, and one question when it has one; each part's
-file and each line's code are in the facts document.
+looking and what it left out; each part's file and each line's code are
+in the spec's sources.
 
 ## Install
 
@@ -29,45 +34,33 @@ For other agents, and every other way, see
 
 - It runs archgram through npx: the project's own archgram when its
   `package.json` lists one, and otherwise `archgram@0.12.0`, the version
-  released with this skill, when the machine already has it. It looks
+  released with these skills, when the machine already has it. It looks
   for it with no network and installs nothing while it looks. When the
-  project's own is older than `archgram@0.12.0`, the report says so,
-  with the command to upgrade it; it upgrades only when you ask.
-- It downloads nothing you have not agreed to. When it finds no
-  archgram, it stops and asks, naming the npm package `archgram@0.12.0`
+  project's own is older than `archgram@0.12.0`, it says so, with the
+  command to upgrade it, and draws nothing; it upgrades only when you
+  ask.
+- It downloads nothing you have not agreed to, the one thing it asks
+  about. When it finds no archgram, it stops and asks, naming the npm package `archgram@0.12.0`
   and the native archgram program for your system, a few megabytes, from
   the npm registry. You choose to install it into the project, pinned by
   its lockfile, or to let npx download it once, and it does neither
   until you answer.
-- Before it reads the code, it runs its sizing command, `archgram-size`,
-  which the archgram npm package carries beside archgram, from the
-  project's root: it lists what git tracks (`git ls-files`,
-  `git check-attr`), counts the lines of what it would read, and prints
-  the size, the areas and what it leaves out. It reads only under the
-  project's folder, follows no symbolic link, prints no file's contents,
-  makes no network request, and never opens a file that commonly holds
-  secrets (`.env`, `*.pem`, `.npmrc` and the like): it leaves it out by
-  its name.
-- It reads the project's code and documentation, and its styling files
-  when asked for its colours.
+- It reads only what the diagram needs, never the whole codebase: the
+  file list (`git ls-files`, names only), each app's manifest, its run
+  files and entry points, and the line behind each line it draws; its
+  styling files only when asked for its colours. It never opens a file
+  that commonly holds secrets (`.env`, `*.pem`, `.npmrc` and the like).
 - From archgram 0.7, a spec may name the file behind each part and a few
   words of the line behind each edge, and `check` and `build` look for
   them, to say which of that code is gone. archgram reads those files
   only under the project's folder, never `.git` nor a file that commonly
   holds secrets, and keeps only whether each holds the words
   ([SECURITY.md, What archgram reads](https://github.com/byAbas/archgram/blob/main/SECURITY.md#what-archgram-reads)).
-- Before any spec, it writes what it found in `docs/diagrams/facts.md`:
-  the project's parts with their files, what it read and what it left
-  out, and each diagram's relations with the line of code behind each.
-  It stops and asks you to approve that document, unless you said to go
-  on without it, and writes the spec only from facts a line of code or
-  a configuration backs. Once you approve, its facts command,
-  `archgram-facts`, from the same package, stamps each section of the document with the hash of its text, and,
-  before each drawing, checks every spec against it: what you approved
-  is unchanged, every relation is drawn or left out with its reason,
-  every line is one you approved under its approved label. It reads only
-  `docs/diagrams/`, writes only those stamps, and uses no network. When
-  a check fails, it stops and asks you.
+- It writes the spec only from what a line of code or a configuration
+  backs. It does not stop for you to check what it found; ask it to show
+  you first, and it will.
+- The rules both skills share come from archgram itself, `archgram
+  guide`, so they are always those of the archgram that draws.
 - It writes the spec and the SVG under `docs/diagrams/`, and archgram
   writes the still previews it looks at under `.archgram/preview/`, a
   folder git leaves out. When the user
@@ -75,8 +68,8 @@ For other agents, and every other way, see
   at the project's root and, where the colours are not already design
   tokens, `docs/diagrams/theme/archgram.resolver.json`.
 - It opens the SVG once with the system's own viewer.
-- It pre-approves no command. Every command it runs, `spec`, `check`,
-  `build` and `theme check`, the project's own archgram included, asks
+- It pre-approves no command. Every command it runs, `guide`, `spec`,
+  `check`, `build` and `theme check`, the project's own archgram included, asks
   the user first, unless the user has already allowed it.
 - It sends nothing anywhere, and edits the README or commits only when
   asked.
@@ -106,7 +99,7 @@ says.
 
 ## Terms
 
-archgram, this skill included, is free and open source under the
+archgram, these skills included, is free and open source under the
 [MIT licence](https://github.com/byAbas/archgram/blob/main/LICENSE): you
 may use, copy, change and share it, and it comes as is, without warranty
 of any kind. There is no account and nothing to pay. Downloading archgram
@@ -115,6 +108,7 @@ from the npm registry comes under npm's
 
 ## More
 
-Instructions: [SKILL.md](SKILL.md). The command, its install and the spec:
+Instructions: [draw-architecture-diagram](skills/draw-architecture-diagram/SKILL.md),
+[draw-sequence-diagram](skills/draw-sequence-diagram/SKILL.md). The command, its install and the spec:
 [the archgram README](https://github.com/byAbas/archgram#readme) and
 [archgram.dev](https://www.archgram.dev).

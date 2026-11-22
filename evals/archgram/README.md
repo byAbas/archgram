@@ -1,6 +1,6 @@
-# Evaluations of the archgram skill
+# Evaluations of the archgram skills
 
-Fourteen cases for `skills/archgram`, in the format of Anthropic's
+Thirteen cases for the skills in `skills/archgram`, in the format of Anthropic's
 [skill-creator](https://github.com/anthropics/skills/tree/main/skills/skill-creator),
 the one the Agent Skills format's own guide to evaluating skills uses:
 `evals.json` holds each prompt, what a good run produces and the checks a
@@ -10,7 +10,7 @@ prompts run in.
 | Case | What it checks |
 |---|---|
 | `draws-a-project` | It draws a project from its code, every part backed by a file and every edge by a line, no wider than 1,300 px with the direction archgram chose written in the spec, in archgram's colours since none were asked for, without starting a browser |
-| `asks-when-unclear` | It asks when the README and the code disagree, rather than drawing what does not exist |
+| `draws-the-code-when-the-readme-disagrees` | Where the README and the code disagree, it draws the code without asking, and its report says where they disagree |
 | `updates-an-existing-diagram` | It changes an existing spec, keeping its direction, and says what changed |
 | `not-for-other-work` | It stays out of a request that is not a diagram, and the work asked for is done |
 | `draws-a-pipeline` | It recognises a data pipeline and follows one day's rows from their sources to the warehouse, with where bad rows go |
@@ -18,11 +18,10 @@ prompts run in.
 | `merges-parts-with-the-same-relations` | It merges parts no question tells apart and keeps a crowded system within about 10 nodes and 12 edges |
 | `repairs-what-lost-its-code` | It starts from what `archgram check` says has lost its code, removes only that, keeps every source the check found and the spec's direction |
 | `draws-in-the-project-colours` | Asked for the project's colours, it reads them from its CSS, writes them as tokens and a mapping that `archgram theme check` passes, and draws with them |
-| `draws-a-sequence` | Asked what happens, step by step, when someone signs in, it draws a sequence: the participants in the order the request reaches them, the messages in the order the code runs, each call sourced to its line, the password's branch an `alt` with a refused 401, a send that does not wait, and phases |
-| `says-a-kind-it-cannot-draw` | Asked for a state diagram, it says archgram does not draw one yet and offers what it can, rather than drawing the states as another kind |
+| `draws-a-sequence` | Asked for the sequence of signing in, it draws one: the participants in the order the request reaches them, the messages in the order the code runs, each call sourced to its line, the password's branch an `alt` with a refused 401, a send that does not wait, and phases |
 | `draws-from-a-document` | Named a document and no code, it draws the example the document describes, each part and edge sourced to the sentence that states it, in the document's own words, with nothing the text does not state |
 | `asks-before-downloading` | With no archgram in the project or on the machine, it looks for one without the network, then stops and asks before downloading anything, naming the package, its exact version, the native program and the npm registry, and offers to install it into the project or to let npx download it once |
-| `stops-for-the-facts` | It writes the facts in `docs/diagrams/facts.md`, each part with its file and each relation with its source and evidence level, says what it read and left out, and stops for the user's approval before any spec is written |
+| `shows-what-it-found-when-asked` | Asked to see what it found first, it shows the parts with their files and the relations with their lines, and stops before any spec is written |
 
 Every case that draws expects a source on each node a file backs and on
 each edge, so it needs an archgram that reads them (0.7 or later;
@@ -46,11 +45,9 @@ empty cache and no archgram at all.
 The skill looks at its drawing before it reports: it builds with
 `--preview` and critiques the still images, so a case that draws expects
 that, and still that no browser was started (docs/features/reader-check.md).
-It holds each drawing to the approved facts with `archgram-facts`,
-and reports in about fifteen lines, each part's file and each line's code
-kept in the facts document, so a case that draws expects both, and, where
-the prompt names no README, no README in the report
-(docs/features/approved-drawing.md).
+It reports in about ten lines, each part's file and each line's code kept
+in the spec's sources, so a case that draws expects both, and, where the
+prompt names no README, no README in the report.
 
 ## The reader test
 
@@ -64,10 +61,10 @@ words a right answer holds, and `reader.json` beside the run keeps the
 score, the answers and the words. The session may read that one image
 and nothing else, and stops at $0.30; a run that drew no preview scores 0.
 
-The skill also stops for the user to approve its facts document before it
-writes a spec (docs/PRD.md 6.6). A case that draws says in its prompt that
-the user does not need to check the facts first, as a user may, so the run
-goes on; `stops-for-the-facts` does not, and expects the stop.
+A skill goes from the prompt to the drawing without stopping
+(docs/PRD.md 6.6), so a case that draws expects no question;
+`shows-what-it-found-when-asked` asks to see what it found first, and expects the
+stop.
 
 ## Running them
 
@@ -81,9 +78,9 @@ sh evals/archgram/run.sh --out ~/archgram-evals/iteration-1 --dry-run
 sh evals/archgram/run.sh --out ~/archgram-evals/iteration-1 --repeat 3 --jobs 4 --yes
 ```
 
-- **With the skill:** the skill as it is in `skills/archgram`, copied
-  first, loads with `--plugin-dir`, as a plugin from Anthropic's
-  directory does. A project's `.claude/skills` plugin does not load in a
+- **With the skills:** the plugin as it is in `skills/archgram`, both
+  skills in it, copied first, loads with `--plugin-dir`, as a plugin
+  from Anthropic's directory does. A project's `.claude/skills` plugin does not load in a
   `-p` run
   ([what runs before you trust a folder](https://code.claude.com/docs/en/permissions)).
 - **Without it:** the same prompt and project, with no skill.
@@ -91,9 +88,8 @@ sh evals/archgram/run.sh --out ~/archgram-evals/iteration-1 --repeat 3 --jobs 4 
   (`--setting-sources project`), and every plugin the user has on is
   turned off for the runs, so neither side gets help the other does not.
 - **Unattended:** reading, writing in the copy, archgram at the skill's
-  version, looked for (`npx --no --offline`) or run, and the skill's
-  sizing and facts commands from that package (`archgram-size`,
-  `archgram-facts`) run without a prompt; anything else is denied
+  version, looked for (`npx --no --offline`) or run, run without a
+  prompt; anything else is denied
   (`--permission-prompts none`), which also takes away the tool that asks
   the user a question, so a question is asked in the run's reply. The
   system's viewer is denied too, so a case expects the skill to try to

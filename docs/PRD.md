@@ -2,8 +2,8 @@
 
 | Field   | Value      |
 |---------|------------|
-| Version | 0.44       |
-| Date    | 2026-11-21 |
+| Version | 0.45       |
+| Date    | 2026-11-22 |
 | Status  | Draft      |
 | Owner   | Abas Turabli |
 
@@ -117,21 +117,14 @@ same file every time.
 
 ## 5. Scope by version
 
+What each released version brought is in CHANGELOG.md; this table holds
+what is next.
+
 | Version | Delivers |
 |---|---|
-| 0.1 | JSON spec; every node kind in section 7 with its icon; horizontal and vertical cards; layered layout without frames; orthogonal edge routing; one static SVG with light and dark; the mono palette, with the token structure ready for more palettes; text measured with an embedded font; the `archgram build` command |
-| 0.2 | Frames, nested; single, multi-node and external variants; an automatic legend; the YAML module; technology logos from Simple Icons; separate light and dark SVG files |
-| 0.3 | Flows and their animation, timed automatically; importing a project's DTCG design tokens as a theme; the `archgram` command on npm for Node, a native binary per platform; open-source release under MIT |
-| 0.4 | An edge's label lights with its signal; an optional "by archgram" credit; a spec named `<name>.archgram.yaml` draws `<name>.svg`, into a folder created when missing; `archgram spec`, the format the command reads; the `archgram` skill for Claude Code, which draws a project's architecture from its code |
-| 0.5 | A flow may stop at a step, and the refusal goes back to where the flow began; a card's border is drawn from the arrow that reaches it, in a colour for passing and one for a refusal, in one of four styles; only a signal glows, faintly |
-| 0.6 | A step's number lights as its signal passes it; the skill works with any coding agent that reads the Agent Skills format |
-| 0.7 | A node or an edge names the code behind it, and archgram says when that code is gone ([docs/features/sources.md](features/sources.md)) |
-| 0.8 | archgram chooses the direction that fits a README, and `build` says the size it drew; `archgram spec` prints a short part of the format, or one section |
-| 0.9 | A spec says how wide it is shown; `build` and `direction: auto` measure against it; the skill keeps a drawing's direction once chosen ([docs/features/shown-width.md](features/shown-width.md)) |
-| Planned | Four more kinds of diagram, each from its standard, in this order: sequence, with the `diagram` field that names a spec's kind; dataflow; workflow; lifecycle ([docs/features/diagram-kinds.md](features/diagram-kinds.md)) |
+| 0.13 | The C4 notation (a card is its name and its kind; external systems grey and solid; a legend of the kinds drawn); one skill for each kind of diagram, drawing an architecture at the container level from one prompt (§6.6) |
+| Planned | Three more kinds of diagram, each from its standard: dataflow, workflow, lifecycle ([docs/features/diagram-kinds.md](features/diagram-kinds.md)) |
 | Planned | `archgram diff`: two architecture specs drawn as one diagram, with what the change added, removed and changed marked ([docs/features/diff.md](features/diff.md)) |
-| Planned | A still PNG preview of each theme (`build --preview`), rendered with resvg, and the skill looking at it before it reports; a reader test in its evaluations ([docs/features/reader-check.md](features/reader-check.md)) |
-| Planned | Every drawing titled; `build` counts what makes its lines hard to follow; the previews kept out of git; every Simple Icons logo; the skill held by a script to the facts the user approved, one idea a drawing, and a short report ([docs/features/approved-drawing.md](features/approved-drawing.md)) |
 | Later | The WASM package, for the browser |
 
 ## 6. Functional requirements
@@ -247,6 +240,13 @@ same file every time.
   each with the section that holds its format and the question it
   answers, so whoever writes a spec learns from the command which kinds
   it may name.
+- `archgram logos <name>...` prints the logo each technology's name
+  stands for, its slug as `tech` takes it, or the candidates when it
+  stands for several: whoever writes a spec takes each logo from the set
+  this archgram draws, rather than guessing a slug (§7).
+- `archgram guide` prints the rules the skills share (docs/GUIDE.md,
+  carried in the binary), all of them or one section with `--section`,
+  so a skill reads the rules of the very archgram it runs (§6.6).
 - `archgram build` says the size it drew and the direction, and counts
   what makes its lines hard to follow: lines that cross, lines through a
   frame they neither start nor end in, lines against the main direction,
@@ -264,188 +264,103 @@ same file every time.
   own, rendered inside archgram with resvg from the SVG it draws: for the skill
   to look at the drawing, and for a page that shows no SVG
   ([docs/features/reader-check.md](features/reader-check.md)).
-- A skill, `archgram`, in the repository's `skills/` folder, for any
-  coding agent that reads the open Agent Skills format (a folder with a
-  `SKILL.md`), Claude Code among them. It is installed with the `skills`
-  command (`npx skills add byabas/archgram`), which puts it in the folder
-  each agent reads, for a project or for every project; archgram carries no
-  installer of its own (§6.6). The same folder is also a Claude Code
-  plugin of that one skill, with a manifest, an icon and a README of its
-  own, listed in Anthropic's directory for Claude Code; the plugin is the
-  skill's folder alone, never the repository. The repository is also a
-  Claude Code marketplace of that one plugin
-  (`.claude-plugin/marketplace.json`), so Claude Code installs it in one
-  command where no claude.ai account brings it from the directory, such
-  as with an API key, Bedrock or Vertex, and `claude plugin update`
-  brings each release.
+- The skills (§6.6), in the repository's `skills/` folder, for any coding
+  agent that reads the open Agent Skills format, Claude Code among them,
+  installed with the `skills` command (`npx skills add byabas/archgram`);
+  archgram carries no installer of its own. The same skills are one
+  Claude Code plugin, `archgram`, listed in Anthropic's directory, and
+  the repository is a Claude Code marketplace of that plugin
+  (`.claude-plugin/marketplace.json`), so Claude Code installs it where
+  no claude.ai account brings it from the directory, and `claude plugin
+  update` brings each release.
 
-### 6.6 The `archgram` skill
-- It draws a project's architecture for its README and docs, from the
-  code and the documentation, so the agent writes the spec and archgram
-  does the drawing. It replaces the `drawing-architecture-diagrams`
-  skill.
-- The user asks for it in words, with instructions such as which flow or
-  which direction, or calls it by name where the agent offers that
-  (`/archgram` in Claude Code); the agent also chooses it when asked for an
-  architecture diagram. It never runs by itself.
-- It chooses the kind of diagram from the question the reader asks: what
-  it is made of (architecture), in what order the parts call each other
-  (sequence), what states a thing goes through (lifecycle), what steps the
-  work takes and who does each (workflow), where data goes (dataflow).
-  A request that fits a kind archgram does not draw yet is said to be
-  so, never drawn as another kind
-  ([docs/features/diagram-kinds.md](features/diagram-kinds.md)). The
-  kinds it may draw are those `archgram spec --kinds` lists and it has a
-  pack for: how to find that kind's facts and how they become its spec
-  ([docs/features/facts.md](features/facts.md)).
-- It is written to the Agent Skills format alone: its frontmatter keeps the
-  format's fields, and its steps name no one agent's tools, so every agent
-  that reads skills follows the same steps.
-- Drawing from code, a part is drawn only when a file in the project backs
-  it, and the skill notes that file; an edge only where a line of code
-  makes it, and the skill notes that line. The spec keeps both as each
-  node's and edge's source, so `archgram check` holds them to the code as
-  the skill draws and whenever it runs later
-  ([docs/features/sources.md](features/sources.md)). It finds the parts
-  by walking from the project's entry points, keeps one level of detail
-  per diagram, and names each part after the file that decides, found by
-  following the imports. Where the code and the documentation disagree,
-  or the architecture is unclear, it asks the user.
-- Before it reads the code, it measures what it would read with a
-  command of its own, `archgram-size`, run with Node: the files git
-  tracks, less what is never the project's own, in areas no larger than
-  one reader takes in, as small, medium or large. It reads no file
-  outside the project, follows no link and uses no network. It tells the
-  user the size and the areas, asks whether to narrow a large scope, and
-  reads area by area.
-- It writes what it found in one document, `docs/diagrams/facts.md`,
-  before any spec: the project's parts with their files, what it read
-  and what it left out (vendored, generated and ignored files), and for
-  each diagram its relations, each with its source and the evidence
-  behind it. It stops and asks the user to approve the document, unless
-  the request says to go on without; the spec is written from the
-  approved document, only its facts that a line of code or a
-  configuration backs ([docs/features/facts.md](features/facts.md)).
-- A command of the skill's, `archgram-facts`, holds every spec to the
-  approved facts before
-  each build: what was approved stays as it was, every approved part and
-  relation is drawn in some diagram, every line is an approved relation
-  under its approved label, and a relation the code backs but no diagram
-  draws is left out with its reason. When one fails, the skill stops and
-  asks. A split into more diagrams needs no new approval when the script
-  passes ([docs/features/approved-drawing.md](features/approved-drawing.md)).
-- It draws what a document describes when the user names the document:
-  a pattern on a docs page, a system in a design doc or an article.
-  Without a named document it draws from the code. From a document, a
-  part is drawn only where a sentence states it, and an edge only where a
-  sentence says one part calls, sends to or reads from another; each
-  takes a few words of that sentence, from one line, as its source, so
-  `archgram check` holds the drawing to the text as it does to code.
-  Labels use the document's own words. What the document does not state
-  is not drawn, and is reported as a gap; where the document and a
-  diagram already beside it disagree, the skill says so and asks which
-  is right ([docs/features/sources.md](features/sources.md)).
-- It writes `docs/diagrams/<name>.archgram.yaml`, creating the folder when
-  missing, and draws `<name>.svg` beside it with archgram, run through npx
-  from where it already is: the project's own archgram when its
-  `package.json` lists one, pinned by the project's lockfile, and
-  otherwise the version released with the skill, named exactly
-  (`archgram@X.Y.Z`), never the latest, when the machine already has it.
-  When the project's own is older than the skill's, the skill draws with
-  it all the same, and its report says so, with the project's command to
-  upgrade; it upgrades only when the user says so.
-- It downloads nothing the user has not agreed to. npx assumes yes when
-  no terminal is attached, so an agent's npx never asks; the skill asks
-  instead. Before its first command it looks for archgram without the
-  network and without installing anything; when it finds none, it stops
-  and says what it would download, the package, its version and the
-  native program for the system, and from where, the npm registry. It
-  offers the user to install that version into the project, pinned by
-  its lockfile, or to let npx download it once, and does neither until
-  the user answers. A version published to npm later runs only once a
-  reviewed skill names it: Anthropic's plugin directory refuses a
-  launcher that is not pinned to an exact version, and holds a pinned one
-  for a reviewer
-  ([pre-submission checklist](https://claude.com/docs/plugins/pre-submission-checklist)).
-  Each release sets that version in the skill, and a test holds the two
-  equal.
-- The spec is kept, so a later call changes it and draws again, and says
-  what changed, starting from what `archgram check` says has lost its
-  code. Once
-  `archgram diff` is there, what changed is what it prints for the spec
-  before and after the update
-  ([docs/features/diff.md](features/diff.md)).
-- It learns the spec format from that same command (`archgram spec`), so
-  the format it writes always matches the command that draws it; it keeps
-  no copy of the format that could fall behind, nor of how to fill it.
-  What a version adds, and how a writer fills it, is in that format, so a
-  new field needs no change to the skill, and a skill newer or older than
-  the archgram it runs never writes a field that archgram cannot read.
-  It starts from the short part of the format, and reads a section when
-  it needs one: the theme file when the user asks for colours,
-  a problem's section when `check` reports one.
-- It works on its own: everything it needs is in its folder or comes from
-  archgram, which the project already has or the user agrees to
-  download; its plugin manifest only lets Claude Code take the same
-  folder as a plugin. Its folder holds text and its icon alone: the
-  commands it runs, `archgram-size` and `archgram-facts`, are Node
-  scripts of its own that ship in the `archgram` npm package beside the
-  launcher, run through npx at the skill's version as archgram is, since
-  Anthropic's directory refuses scripts in a plugin from an organization
-  it has not Verified.
-  Its text changes only by review, like the code.
-- Its evaluations live beside it: that it is chosen when asked for an
-  architecture diagram and not otherwise, that it draws a project it is
-  given, in more than one style of architecture, in archgram's colours
-  unless asked for the project's, and that it asks when the architecture
-  is unclear. They run on
-  request, since each run is a paid model call.
-- It draws in archgram's own palette unless the user asks for other
-  colours, as a project's design system is used only when asked for
-  (§4). Asked for the project's colours, it finds them in this order:
-  the project's DTCG tokens, through a mapping file; else the colours its
-  code styles with (CSS custom properties, a Tailwind theme, Sass
-  variables, a theme object), which the skill reads and writes as DTCG
-  tokens and a mapping beside the spec; else colours the user gives in
-  the request; else it keeps archgram's palette and says so. A mapping
-  file already at the project's root was asked for before, and each
-  later drawing uses it. archgram's contrast check holds either way; a
-  colour that fails it is reported with the reason.
-- It recognises the style the system follows (layered, ports and
-  adapters, microservices, a pipeline, a plugin host and others) and
-  looks for that style's parts; a system that follows none is drawn from
-  the general rules alone.
-- The user's request decides what is drawn, how many diagrams, which
-  phase and which level; the limits below hold where it says nothing,
-  and where one conflicts with it, the skill draws what was asked and
-  reports the limit's numbers. A drawing holds what a reader takes in
-  within thirty seconds: one idea, one phase (what runs, or how it is
-  built), at most three questions, `build`'s counts at 0, about ten nodes
-  and twelve edges: parts with the same relations, which no question
-  tells apart, are one node naming them all; what is still over goes to
-  a second diagram, or is left out and said so.
-- A drawing keeps its text readable where it is shown: at most 1,300 px
-  wide in a README on GitHub, and `shownWidth × 1300 / 880` where the
-  user or the project says it is shown elsewhere, which the skill writes
-  as `shownWidth`. Where the user names no place, the skill uses the
-  default and says the place was not named; it never assumes a README.
-  The skill leaves the first drawing's direction to
-  archgram (`auto`) unless the user asks for one, reads the size from
-  `build`, then writes the direction archgram chose into the spec, so an
-  edit never turns the drawing on its side; it turns one only when the
-  user asks or the drawing no longer fits, and says so. A drawing that
-  fits neither way is split in two.
-- The skill looks at its drawing before it reports: it builds with
-  `--preview`, looks at the still image of each theme, and critiques what
-  a reader sees, each of the reader contract's questions answered from
-  the image alone, fixing the spec until the drawing passes. It never
-  starts a browser ([docs/features/reader-check.md](features/reader-check.md)).
-- When done, `archgram check` passes, the SVG is opened with the
-  system's own viewer (`open`, `xdg-open`, `start`), and the skill
-  reports in about fifteen lines: each drawing and what it shows, how
-  exact it is, what it changed after looking, what it left out, what
-  archgram could not draw, and at most one question. Each part's file
-  and each line's code stay in the facts document, not in the report.
+### 6.6 The skills
+- **One skill for each kind of diagram**, named `draw-<kind>-diagram`:
+  `draw-architecture-diagram` and `draw-sequence-diagram`, called in
+  Claude Code as `/archgram:draw-architecture-diagram`. Each is a folder
+  with its own `SKILL.md`, and the next kind a skill of its own. Each
+  holds only its kind's rules, so a new kind adds a skill and changes no
+  other. The rules every kind shares (what is never read, checking, the
+  critique, the report) are one document,
+  docs/GUIDE.md, carried in the binary and printed by `archgram guide`
+  (§6.5), as the format is by `archgram spec`: written once, kept in no
+  skill's folder, and always the rules of the archgram that draws.
+- **Small enough to read whole.** Each `SKILL.md` stays under 500 lines
+  and about 5,000 tokens, and points to its other files one level deep,
+  as the format recommends
+  ([best practices](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices));
+  a test holds the line count. A rule a command already enforces
+  (`check`, `build`) is not repeated in the text: the
+  skill runs the command and does what it says.
+- **One prompt, one diagram.** The user asks in words, as the README's
+  example prompt for each skill shows, or calls the skill by name; the
+  skill never guesses another kind from the question. It then draws
+  without stopping: no question about the scope, what it found or its own
+  files. It asks only before it downloads archgram (below), and stops
+  only when it cannot go on: npx or the project's dependencies missing,
+  or nothing in the project that the request names. A user who wants to
+  see what it found first says so in the request.
+- **Drawn from the code.** A part is drawn only when a file in the project
+  backs it, an edge only where a line of code makes it, and the spec
+  keeps both as sources, so `archgram check` holds the drawing to the
+  code now and later ([docs/features/sources.md](features/sources.md)).
+  Where the code and a document disagree, the code is drawn and the
+  difference is in the report. When the user names a document to draw
+  from, the document's sentences are the facts instead, in its own
+  words, and what it does not state is not drawn.
+- **An architecture diagram is drawn at the C4 container level:** each
+  app, service, job, database, queue and outside system one node, the
+  lines running from the caller to what it calls, in one direction
+  ([C4: container](https://c4model.com/diagrams/container)). The modules
+  inside one container (routes, files, functions) are a component
+  diagram, drawn only when the user asks for it. The system's style
+  (client and API, microservices, a pipeline) says what counts as a
+  container in it, never the level.
+- **It reads only what the diagram needs,** never the whole codebase, as
+  a coding agent understands an architecture: the file list, each app's
+  manifest, its run files and entry points, and the line behind each
+  line it draws. The spec's sources are the record of what backs the
+  drawing; no other document repeats them.
+- **A drawing a reader takes in at a glance:** about ten nodes and twelve
+  edges, `build`'s counts at 0, no wider than keeps its text readable
+  where it is shown (1,300 px in a README, `shownWidth × 1300 / 880`
+  elsewhere). Over a limit, it shows less: parts with the same relations
+  merged, what the reader does not need left out and said so. It splits
+  a drawing in two only when the user asks, and a drawing it replaces,
+  it removes. Where the request and a limit disagree, it draws what was
+  asked and reports the limit's numbers.
+- **It looks before it reports:** it builds with `--preview`, critiques
+  the still image of each theme as a reader sees it, and fixes the spec
+  until it passes; it never starts a browser
+  ([docs/features/reader-check.md](features/reader-check.md)). It then
+  opens the drawing with the system's viewer and reports in about
+  fifteen lines: each drawing, how exact it is, what it changed after
+  looking, what it left out, what archgram could not draw.
+- **It runs archgram from where it already is:** the project's own
+  when its `package.json` lists one, else the version released with the
+  skills, named exactly (`archgram@X.Y.Z`), when the machine has it.
+  When the project's own is older than the skills' version, the skill
+  says so, with the project's own command to upgrade, and draws nothing:
+  an older archgram has neither the guide nor the commands the skills
+  run.
+  When it finds none, it asks before downloading: what (the package, its
+  version, the native program) and from where (the npm registry),
+  offering to install it into the project or to let npx fetch it once.
+  npx assumes yes when no terminal is attached, so the skill asks
+  instead. Anthropic's directory requires the exact version
+  ([pre-submission checklist](https://claude.com/docs/plugins/pre-submission-checklist));
+  each release sets it, and a test holds the skills to it.
+- **It learns the spec format from archgram** (`archgram spec`), so what
+  it writes matches the command that draws it; it keeps no copy of the
+  format.
+- **Colours only when asked:** the project's DTCG tokens, else the colours
+  its code styles with, else colours the user gives, written as tokens
+  and a mapping beside the spec; archgram's contrast check holds.
+- **The skills are text and images alone,** with no script of their own,
+  as Anthropic's directory asks of a plugin from an organization it has
+  not Verified. The skills are written to the Agent Skills format alone and
+  name no one agent's tools. Their evaluations live beside them and run
+  on request, since each run is a paid model call.
 
 ## 7. Node vocabulary
 
@@ -484,6 +399,9 @@ docs/SPEC.md once built.
 - Every text pair passes WCAG 2.1 AA in both themes.
 - Layout and SVG for a 100-node spec take under 50 ms in the native CLI.
 - The core WASM module, when there is one, stays under 350 KB gzipped.
+- A skill's run asks the user nothing on its way to the drawing but
+  whether to download archgram, when none is there, and loads no more
+  than its own kind's rules and the shared ones.
 - With the skill, an agent passes at least 90 % of the evaluation's
   checks (`evals/archgram/evals.json`) and at least 75 % of each case's,
   and more of them than the same agent without it. The evaluation of §1
@@ -523,49 +441,4 @@ None.
 
 ## 11. Changelog
 
-| Version | Date       | Change |
-|---------|------------|--------|
-| 0.1     | 2026-09-27 | First draft: problem, users, principles, scope by version, node vocabulary, success criteria, non-goals. |
-| 0.2     | 2026-09-27 | The mono palette, colour only in icon lines; horizontal and vertical cards; logos in the corner or on a chip (§5, §6.3, §7). Palettes removed from the open questions. |
-| 0.3     | 2026-09-27 | The font is Geist, measured and embedded as a subset; removed from the open questions. |
-| 0.4     | 2026-09-27 | Logos: a pinned Simple Icons release, CC0 data only, drawn neutral, sources and guidelines recorded (§7); removed from the open questions. |
-| 0.5     | 2026-09-27 | Four places for a logo: corner, inline, chip, icon (§7); the brand's colour while a signal is at the card (§6.4). |
-| 0.6     | 2026-09-27 | Flows branch; seven signal styles, the line filling by default; a lit card takes its hue until its signals arrive; the still image lists or numbers the flows on request (§6.4). |
-| 0.7     | 2026-09-27 | A project's DTCG tokens as the theme, through a mapping file, held to the same contrast (§6.3). |
-| 0.8     | 2026-09-28 | The PNG module moves after 0.3 (§5, §6.5). |
-| 0.9     | 2026-09-28 | 0.3 ships the command on npm for Node, a native binary per platform; the WASM package, for the browser, moves after 0.3 (§5, §6.5, §8). |
-| 0.10    | 2026-09-29 | 0.4: an edge's label lit with its signal (§6.4), an optional credit (§6.3), `<name>.archgram.yaml` draws `<name>.svg` into a folder created when missing (§6.5), and the archgram plugin for Claude Code with its `archgram:draw` skill, replacing `drawing-architecture-diagrams` (§5, §6.5, §6.6). 0.3 was the open-source release (§5). The trademark check is done, removed from the open questions: no "archgram" mark in the USPTO or TMview searches of 2026-09-29, classes 9 and 42 (TMview's one hit, "searchgram", is a different word, registered in Korea for point, billing and big-data software). |
-| 0.11    | 2026-09-29 | A logo is always in its brand's colour, not only while its card is lit (§6.4, §7). |
-| 0.12    | 2026-09-29 | `archgram spec` prints the format the command reads (§5, §6.5); the skill learns the format from it, runs one version throughout, and carries its evaluations (§6.6). |
-| 0.13    | 2026-09-29 | The diagram is monochrome: icons, signals and lit cards in the text colour, colour for the logos alone; the legend lists the variants only (§6.3). |
-| 0.14    | 2026-09-29 | A skill, `archgram`, not a plugin: one folder in `skills/` the user copies into a skills directory; it runs `npx archgram`, the project's own or the latest, not a pinned version (§5, §6.5, §6.6). |
-| 0.15    | 2026-09-29 | 0.5: a flow stops at a refusing step and the refusal travels back to where the flow began; a lit card's border is drawn from its arrowhead in a passing or a refusal colour, in one of four styles (spark by default), with no fill and the icon and text unchanged; an arrowhead takes its signal's colour; only a signal glows, faintly, and more softly in dark, unless the spec turns it off; both colours hold 3:1 against the card (§5, §6.3, §6.4). The samples that chose this are in `docs/samples/stop/`. |
-| 0.16    | 2026-09-29 | The skill backs every edge with the line of code that makes it, walks from the entry points at one level of detail, names each part after the file that decides, draws no wider than 1,300 px, and never starts a browser (§6.6). |
-| 0.17    | 2026-09-29 | The skill recognises the system's style of architecture, merges parts with the same relations into one node, and keeps a drawing to about ten nodes and twelve edges; its evaluations cover a pipeline, ports and adapters, and a plugin host (§6.6). |
-| 0.18    | 2026-10-01 | The skill is for any coding agent that reads the Agent Skills format, not Claude Code alone: written to the format's fields, asked for in words, and installed with the `skills` command into each agent's folder; archgram needs no installer of its own (§6.5, §6.6). |
-| 0.19    | 2026-10-01 | A step's number sits above the signals and lights as a signal reaches it, traced in the passing colour from where the line enters; the still image keeps the plain number; a number keeps clear of a refusal's ✕ (§6.4). |
-| 0.20    | 2026-10-04 | Where the project has no archgram of its own, the skill runs the version released with it, named exactly, not the latest; each release sets it, and a test holds it to the release (§6.6). |
-| 0.21    | 2026-10-04 | The skill's folder is also a Claude Code plugin of that one skill, with a manifest, an icon and a README, so Anthropic's plugin directory can list it without the rest of the repository (§6.5, §6.6). |
-| 0.22    | 2026-10-04 | The agents' baseline as measured: 6.3 minutes per diagram drawn by hand, 9.3 with a skill that added previews and self-critique, with no measure of how the time split; §8's baseline names that skill (§1, §8). |
-| 0.23    | 2026-10-07 | Features with more than a few lines of requirements get their own document in `docs/features/`, which this one points to. The problem names a stale diagram nobody notices (§1). 0.6 is in the scope; 0.7 names the code behind each node and edge, checked by `check` and `build`, with its limit; the skill writes a source for each and starts an update from what the check names (§5, §6.1, §6.6, `docs/features/sources.md`). Each feature's own success criteria count here (§8). |
-| 0.24    | 2026-10-07 | The plugin is listed in Anthropic's directory, for Claude Code (§6.5). |
-| 0.25    | 2026-10-07 | Without a skill, an agent now answers with a Mermaid chart in seconds, tied to no code and checked by nothing; the skill's first evaluation measured both (§1). 0.8: `direction: auto` chooses left to right or top to bottom to fit 1,300 px, `build` says the size it drew, and `archgram spec --brief` and `--section` print part of the format (§5, §6.1, §6.2, §6.5, §6.6). The skill is measured by its evaluation's checks, at least 90 % in all and 75 % in each case, and by its time on two cases, not against the hand-drawing baseline (§8). |
-| 0.26    | 2026-10-07 | `direction: auto` keeps left to right while it fits 1,300 px, and otherwise the narrower direction, not top to bottom always: a 100-node tree measured 1,648 px left to right and 10,424 px top to bottom (§6.2). |
-| 0.27    | 2026-10-07 | The skill draws in archgram's own palette unless the user asks for other colours, as §4 says of a project's design system; asked, it finds the project's as before, and a mapping file already at the root keeps being used (§6.6). |
-| 0.28    | 2026-10-08 | The kinds' icons come from Hugeicons' free Stroke Rounded set (MIT), copied once, in place of archgram's own drawings (§6.3). |
-| 0.29    | 2026-10-08 | 0.9: a spec says how wide it is shown, a README by default; `build` and `direction: auto` keep the text readable there, and `build` warns but still draws; the skill writes the direction it chose into the spec, so an edit never turns a drawing; no layout per screen (§5, §6.1, §6.2, §6.5, §6.6, §8, §9, `docs/features/shown-width.md`, #114). |
-| 0.30    | 2026-10-08 | A diagram may be drawn from a document the user names rather than from code: the skill takes its facts from the text, in its own words, and each part and line takes the sentence that states it as its source, which `check` holds to the text as it does to code (§1, §2, §6.1, §6.6, §8, `docs/features/sources.md`, #122). |
-| 0.31    | 2026-10-09 | Four more kinds of diagram, each taking its meaning from its standard: sequence and lifecycle from UML 2.5.1, workflow from BPMN 2.0.2, dataflow from structured analysis; a spec names its kind with `diagram`, architecture when it does not; sequence first, then dataflow, workflow, lifecycle; sequence leaves the non-goals (§1, §4, §5, §6.1, §6.2, §6.4, §6.6, §7, §8, §9, `docs/features/diagram-kinds.md`, #126). |
-| 0.32    | 2026-10-11 | A sequence's messages take a colour by their kind, repeating their shape; a sequence is drawn as a blueprint (§6.3, `docs/features/sequence.md`). |
-| 0.33    | 2026-11-14 | Planned: `archgram diff` draws a change's before and after, two architecture specs, as one diagram, with what was added, removed and changed marked and listed as text; one layout of both together; the reviewer of a pull request is a user (§1, §2, §5, §6.5, §8, `docs/features/diff.md`, #47). |
-| 0.34    | 2026-11-14 | A diff's marks take a colour by what the change did, repeating their signs; on an update, the skill's report of what changed is `archgram diff`'s (§6.3, §6.6, `docs/features/diff.md`). |
-| 0.35    | 2026-11-19 | The repository is also a Claude Code marketplace of the skill's plugin, so Claude Code installs and updates it without a claude.ai account (§6.5). |
-| 0.36    | 2026-11-19 | `archgram spec --kinds` lists the kinds of diagram a version draws, each with its section of the format and the question it answers (§6.5, `docs/features/facts.md`). |
-| 0.37    | 2026-11-19 | The skill draws the kinds `archgram spec --kinds` lists and it has a pack for, each pack how to find that kind's facts and how they become its spec (§6.6, `docs/features/facts.md`). |
-| 0.38    | 2026-11-19 | The skill downloads nothing the user has not agreed to: it looks for archgram without the network first, and when it finds none, it asks, offering to install the skill's version into the project or to let npx download it once; an agent's npx never asks on its own. A project's own archgram older than the skill's is drawn with, and the report says so and how to upgrade (§6.6). |
-| 0.39    | 2026-11-19 | The skill writes the facts it found in `docs/diagrams/facts.md`, with what it read and left out and the evidence behind each fact, and stops for the user's approval before it writes a spec, unless the request says to go on (§6.6, `docs/features/facts.md`). |
-| 0.40    | 2026-11-19 | Before it reads the code, the skill measures what it would read with its own script, `scripts/size.mjs`: the files git tracks, less what is never the project's own, in areas one reader takes in; it tells the user the size, asks whether to narrow a large scope, and reads area by area (§6.6, `docs/features/facts.md`). |
-| 0.41    | 2026-11-19 | The skill looks at its drawing before it reports, through a still PNG of each theme that `build --preview` renders inside archgram with resvg, and critiques what a reader sees; it still starts no browser. The PNG comes from the SVG, not from a rasterizer of archgram's own (§5, §6.5, §6.6, `docs/features/reader-check.md`). |
-| 0.42    | 2026-11-20 | Planned: every drawing titled; `build` counts crossings, lines through a frame, lines against the direction and side-by-side arrivals; the previews in `.archgram/preview/`, out of git; every Simple Icons logo, each with its licence, the owner's decision; the skill held by a script to the approved facts, the user's request before its limits, one idea and one phase a drawing, a report of about fifteen lines, no README assumed (§5, §6.3, §6.5, §6.6, §7, §8, `docs/features/approved-drawing.md`, #176). |
-| 0.43    | 2026-11-21 | The notation follows C4: a card is its name and its kind, never its note; a name with a logo says what the part does, and `check` warns of one that repeats the logo; an external system is a grey card edged solid, a dash marks only a boundary; the legend names each kind drawn and the boundary (§7). |
-| 0.44    | 2026-11-21 | The skill's two scripts, `archgram-size` and `archgram-facts`, ship in the `archgram` npm package, not in the skill's folder, which holds text and its icon alone: Anthropic's directory refused 0.11.0 for `scripts/size.mjs`, accepting scripts only from Verified organizations (§6.6). |
+Each draft's changes are in [PRD-history.md](PRD-history.md).

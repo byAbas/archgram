@@ -858,6 +858,12 @@ fn spec_brief_example_is_a_valid_spec() {
     let run = archgram_in(&dir, &["check", "docs/diagrams/brief.archgram.yaml"]);
     assert!(run.status.success(), "{}", stderr(&run));
     assert!(stdout(&run).contains("valid ("), "{}", stdout(&run));
+    // The example every writer starts from teaches no name `check` warns of.
+    assert!(
+        !stderr(&run).contains("warning"),
+        "the brief's example draws a warning: {}",
+        stderr(&run)
+    );
 }
 
 /// `spec --section` takes a heading or its short form, and prints that
@@ -1213,4 +1219,65 @@ fn build_prints_the_layouts_counts() {
     ]);
     assert!(seq.status.success(), "{}", stderr(&seq));
     assert!(!stdout(&seq).contains("layout:"));
+}
+
+/// `archgram guide` prints the rules the skills share, docs/GUIDE.md, all of
+/// it or one section, as `spec` prints the format (docs/PRD.md 6.5); an
+/// unknown section is refused with the names there are.
+#[test]
+fn guide_prints_the_rules_the_skills_share() {
+    let full = stdout(&archgram(&["guide"]));
+    let doc =
+        std::fs::read_to_string(Path::new(env!("CARGO_MANIFEST_DIR")).join("../../docs/GUIDE.md"))
+            .unwrap();
+    assert_eq!(full, doc);
+    let draw = stdout(&archgram(&["guide", "--section", "check-and-draw"]));
+    assert!(draw.starts_with("## Check and draw\n"), "{draw}");
+    assert!(full.contains(&draw));
+    let wrong = archgram(&["guide", "--section", "no-such-section"]);
+    assert_eq!(wrong.status.code(), Some(2));
+    assert!(
+        stderr(&wrong).contains("the guide has no section"),
+        "{}",
+        stderr(&wrong)
+    );
+    assert!(
+        stderr(&wrong).contains("what-is-never-read"),
+        "{}",
+        stderr(&wrong)
+    );
+}
+
+/// The section the skills name for what is never read is in the guide.
+#[test]
+fn the_guide_holds_every_section_the_commands_name() {
+    let name = "What is never read";
+    let run = archgram(&["guide", "--section", name]);
+    assert!(run.status.success(), "{name}: {}", stderr(&run));
+}
+
+/// `archgram logos` gives each technology's name the slug `tech` takes,
+/// from the very set the drawing uses (docs/PRD.md 6.5).
+#[test]
+fn logos_names_the_slug_each_technology_takes() {
+    let run = archgram(&[
+        "logos",
+        "sentry-sdk",
+        "Next.js",
+        "Traefik",
+        "adminer",
+        "mailpit",
+    ]);
+    assert!(run.status.success(), "{}", stderr(&run));
+    let out = stdout(&run);
+    for line in [
+        "sentry-sdk: sentry (Sentry)",
+        "Next.js: nextdotjs (Next.js)",
+        "Traefik: no one logo; one of traefikmesh (Traefik Mesh), traefikproxy (Traefik Proxy)",
+        "adminer: adminer (Adminer)",
+    ] {
+        assert!(out.contains(line), "{line} not in:\n{out}");
+    }
+    assert!(out.contains("mailpit: "), "{out}");
+    assert_eq!(archgram(&["logos"]).status.code(), Some(2));
 }

@@ -27,7 +27,7 @@ nodes:
   - { id: api, kind: service, label: API, tech: express, frame: app, source: ../../src/api.ts }
   - { id: queue, kind: queue, label: orders, tech: redis, source: ../../src/queue.ts }
   - { id: worker, kind: service, label: Worker, frame: app, source: ../../src/worker.ts }
-  - { id: db, kind: database, label: Postgres, tech: postgresql, source: ../../src/db.ts }
+  - { id: db, kind: database, label: Order store, tech: postgresql, source: ../../src/db.ts }
   - { id: mail, kind: service, label: Resend, variant: external, source: ../../src/mail.ts }
 frames:
   - { id: app, label: Our services }
@@ -160,8 +160,8 @@ Kinds, by category:
 A card's second line, and the legend, name each kind in words: Service,
 Auth, Database, Queue, Cache, Storage, Users, LLM, AI model, Vector
 store, Tool, Agent, File, Script, Generated, Validator, Browser, Mobile
-app, Desktop app. `auth` is what lets a request in or keeps it out at run
-time: a guard, a session check, an identity provider. `llm` is a model
+app, Desktop app. `auth` is a service that lets a request in or keeps
+it out at run time: an auth service or an identity provider. `llm` is a model
 that writes text; `model` is any other, such as one that embeds. `check`
 is a check in the build or the tooling: a linter, a test, a gate.
 
@@ -510,7 +510,7 @@ file of at most 4 MiB; nothing of it is printed or kept. A spec without
 sources looks nothing up (SECURITY.md, What archgram reads).
 
 A writer that reads the code, a person or an agent such as the
-`archgram` skill, gives a source to every node a file backs (not to the
+`draw-<kind>-diagram` skills, gives a source to every node a file backs (not to the
 people or systems outside the code, such as a browser) and to every
 edge: the file behind a node (the files, for a node that stands for
 several parts), and for an edge the file with a few words copied exactly

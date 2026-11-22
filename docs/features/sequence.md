@@ -2,8 +2,8 @@
 
 | Field   | Value      |
 |---------|------------|
-| Version | 0.6        |
-| Date    | 2026-10-11 |
+| Version | 0.7        |
+| Date    | 2026-11-22 |
 | Status  | Draft      |
 | Release | Planned, the first of the new kinds |
 | Issue   | [#126](https://github.com/byAbas/archgram/issues/126) |
@@ -294,13 +294,16 @@ it never hides one. Samples are in
 
 ### The skill
 
-- It draws a sequence when the reader asks in what order the parts call
-  each other and what comes back (diagram-kinds.md, Choosing the kind).
+- It is the `draw-sequence-diagram` skill, which the user calls to see in
+  what order the parts call each other and what comes back
+  (diagram-kinds.md, Choosing the kind).
 - From code, it follows one entry point's calls in the order they run,
   each call's source the line that makes it; from a document, each
   message's source the sentence that states it.
-- Past about 15 messages, it splits the sequence, by phase or by
-  fragment. 15 is a starting value, to be measured (Success criteria).
+- Past about 15 messages, it shows less: the calls the reader does not
+  ask about left out, and said so; it splits the sequence, by phase or
+  by fragment, only when the user asks. 15 is a starting value, to be
+  measured (Success criteria).
 
 ## Limits
 
@@ -347,14 +350,15 @@ it never hides one. Samples are in
 3. The spec's shape above: `participants`, and `messages` in time's
    order, fragments as items holding operands; `reply: <sender>`;
    `when` for a guard; `refused: true`.
-4. The skill splits past about 15 messages, a starting value measured
-   once the engine draws.
+4. Past about 15 messages the skill shows less, and splits only when
+   the user asks (PRD 0.45, replacing a split of its own); 15 is a
+   starting value measured once the engine draws.
 5. Sources as in architecture: a participant's file, a call's line,
    optional on a reply and a guard; a document's sentence when drawn from
    one.
 6. A participant's head is drawn once, at the top of its lifeline, as
    UML draws it (17.3.4.1) and archify does; a sequence past about 15
-   messages is split, so it stays within a screen.
+   messages shows less, so it stays within a screen.
 7. No rule of its own for an `alt` whose operands all refuse, or whose
    guards none hold: its operands play in turn, each refusal travelling
    back before the next starts, and an `alt` without `else` plays every
@@ -418,3 +422,4 @@ None.
 | 0.4     | 2026-10-10 | In `cards`, a bar fills down as its call is answered. |
 | 0.5     | 2026-10-10 | Phases as dividers, drawn as bands; thin lifelines, labels as plain text, a call stronger than a reply; motion phase by phase, an `alt`'s ways as alternatives numbered `4a`, `4b`; the bars no longer fill, and a refusal no longer travels back. |
 | 0.6     | 2026-10-11 | A blueprint: a dot grid, thin lines, monospace labels with bracketed numbers, colour by the kind of message with a key, a patch under labels and phase names, a point travelling each message, and the refusing head marked only while its refusal plays. |
+| 0.7     | 2026-11-22 | It is a skill of its own, `draw-sequence-diagram`; past about 15 messages it shows less and splits only when asked (PRD 0.45; Decided, 4, 6). |

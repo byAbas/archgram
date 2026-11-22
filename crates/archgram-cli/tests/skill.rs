@@ -1,6 +1,8 @@
-//! The skill runs the archgram it was released with (docs/PRD.md 6.6):
+//! The skills run the archgram they were released with (docs/PRD.md 6.6):
 //! every `archgram@X.Y.Z` in `skills/archgram` names this version, and no
-//! command there runs archgram through npx without one.
+//! command there runs archgram through npx without one. One skill for each
+//! kind of diagram, `skills/archgram/skills/draw-<kind>-diagram/`, each
+//! small enough to read whole.
 
 use std::path::{Path, PathBuf};
 
@@ -8,6 +10,35 @@ use std::path::{Path, PathBuf};
 /// own warnings, such as those about a pnpm project's `.npmrc`, out of what
 /// the agent reads (#52).
 const NPX: &str = "npx --yes --loglevel=error archgram";
+
+/// Each skill's folder, `skills/archgram/skills/<name>/`.
+fn skills() -> Vec<PathBuf> {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../skills/archgram/skills");
+    let mut found: Vec<PathBuf> = std::fs::read_dir(&root)
+        .unwrap_or_else(|e| panic!("{}: {e}", root.display()))
+        .map(|e| e.unwrap().path())
+        .filter(|p| p.is_dir())
+        .collect();
+    found.sort();
+    assert!(!found.is_empty(), "{} holds no skill", root.display());
+    found
+}
+
+/// A skill's `SKILL.md` frontmatter, between its `---` lines.
+fn frontmatter(path: &Path) -> String {
+    let text = std::fs::read_to_string(path).unwrap_or_else(|e| panic!("{}: {e}", path.display()));
+    text.strip_prefix("---\n")
+        .and_then(|rest| rest.split_once("\n---\n"))
+        .map_or_else(
+            || {
+                panic!(
+                    "{} starts with no frontmatter between `---` lines",
+                    path.display()
+                )
+            },
+            |(frontmatter, _)| frontmatter.to_owned(),
+        )
+}
 
 fn markdown(dir: &Path, found: &mut Vec<PathBuf>) {
     for entry in std::fs::read_dir(dir).unwrap_or_else(|e| panic!("{}: {e}", dir.display())) {
@@ -56,7 +87,7 @@ fn the_skill_names_the_version_it_is_released_with() {
     assert!(pinned > 0, "no archgram@X.Y.Z in {}", skill.display());
 }
 
-/// The skill's folder is also a Claude Code plugin (docs/PRD.md 6.5), whose
+/// The skills' folder is also a Claude Code plugin (docs/PRD.md 6.5), whose
 /// manifest carries the release's version, so an update reaches its users.
 #[test]
 fn the_plugin_carries_the_version_it_is_released_with() {
@@ -142,19 +173,16 @@ fn the_plugin_keeps_only_its_manifest_in_the_manifest_folder() {
 /// pre-approved its own `archgram spec` commands. Every command asks the user.
 #[test]
 fn the_skill_preapproves_no_command() {
-    let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../skills/archgram/SKILL.md");
-    let text = std::fs::read_to_string(&path).unwrap();
-    let (frontmatter, _) = text
-        .strip_prefix("---\n")
-        .and_then(|rest| rest.split_once("\n---\n"))
-        .expect("SKILL.md starts with a frontmatter between `---` lines");
-    for (n, line) in frontmatter.lines().enumerate() {
-        assert!(
-            !line.starts_with("allowed-tools:") && !line.starts_with("allowedTools:"),
-            "{}:{} pre-approves commands; the directory refuses that",
-            path.display(),
-            n + 2
-        );
+    for skill in skills() {
+        let path = skill.join("SKILL.md");
+        for (n, line) in frontmatter(&path).lines().enumerate() {
+            assert!(
+                !line.starts_with("allowed-tools:") && !line.starts_with("allowedTools:"),
+                "{}:{} pre-approves commands; the directory refuses that",
+                path.display(),
+                n + 2
+            );
+        }
     }
 }
 
@@ -164,105 +192,117 @@ fn the_skill_preapproves_no_command() {
 /// directory could not, and held the version (`REACH_UNKNOWN`).
 #[test]
 fn the_skill_frontmatter_is_plain_yaml() {
-    let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../skills/archgram/SKILL.md");
-    let text = std::fs::read_to_string(&path).unwrap();
-    let frontmatter = text
-        .strip_prefix("---\n")
-        .and_then(|rest| rest.split_once("\n---\n"))
-        .map(|(frontmatter, _)| frontmatter)
-        .expect("SKILL.md starts with a frontmatter between `---` lines");
-    for (n, line) in frontmatter.lines().enumerate() {
-        let at = format!("{}:{}", path.display(), n + 2);
-        let (key, value) = line
-            .split_once(": ")
-            .unwrap_or_else(|| panic!("{at} is not `key: value`: {line}"));
-        assert!(
-            !value.starts_with(['"', '\'', '|', '>']),
-            "{at}: `{key}` is quoted or a block; keep it plain"
-        );
-        for breaks in [": ", " #"] {
+    for skill in skills() {
+        let path = skill.join("SKILL.md");
+        for (n, line) in frontmatter(&path).lines().enumerate() {
+            let at = format!("{}:{}", path.display(), n + 2);
+            let (key, value) = line
+                .split_once(": ")
+                .unwrap_or_else(|| panic!("{at} is not `key: value`: {line}"));
             assert!(
-                !value.contains(breaks),
-                "{at}: `{key}` holds `{breaks}`, which ends a plain YAML value"
+                !value.starts_with(['"', '\'', '|', '>']),
+                "{at}: `{key}` is quoted or a block; keep it plain"
             );
-        }
-    }
-}
-
-/// Every file the skill names by its path from the skill's root, as the
-/// Agent Skills format asks (`references/kinds/architecture/find.md`,
-/// `references/facts.md`), is there, so moving a file cannot leave the skill
-/// pointing at nothing. A
-/// path with a placeholder (`references/kinds/<kind>/find.md`) names no
-/// one file.
-#[test]
-fn every_file_the_skill_names_is_there() {
-    let skill = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../skills/archgram");
-    let mut files = Vec::new();
-    markdown(&skill, &mut files);
-    let mut named = 0;
-    for file in &files {
-        let text = std::fs::read_to_string(file).unwrap();
-        for (n, line) in text.lines().enumerate() {
-            let named_here = line
-                .match_indices("`references/")
-                .chain(line.match_indices("`scripts/"));
-            for (i, _) in named_here {
-                let path = line[i + 1..].split('`').next().unwrap_or_default();
-                let file_like = Path::new(path).extension().is_some();
-                if path.contains('<') || !file_like {
-                    continue;
-                }
+            for breaks in [": ", " #"] {
                 assert!(
-                    skill.join(path).is_file(),
-                    "{}:{} names {path}, which is not in the skill",
-                    file.display(),
-                    n + 1
+                    !value.contains(breaks),
+                    "{at}: `{key}` holds `{breaks}`, which ends a plain YAML value"
                 );
-                named += 1;
             }
         }
     }
-    assert!(named > 0, "the skill names no reference file");
 }
 
-/// Each kind's pack, `references/kinds/<kind>/`, is named after a kind
-/// archgram draws, the value a spec's `diagram` takes, and holds the two
-/// files the skill reads: `find.md` for the facts and `spec.md` for the
-/// spec (docs/features/facts.md, Kind packs).
+/// Every file a skill names in its own folder (`find.md`, `spec.md`) is
+/// there, so moving a file cannot leave a skill pointing at nothing; it
+/// names them one level deep, as the Agent Skills format recommends.
 #[test]
-fn every_kind_pack_is_a_kind_archgram_draws() {
-    let kinds =
-        Path::new(env!("CARGO_MANIFEST_DIR")).join("../../skills/archgram/references/kinds");
+fn every_file_a_skill_names_is_there() {
+    let mut named = 0;
+    for skill in skills() {
+        let mut files = Vec::new();
+        markdown(&skill, &mut files);
+        for file in &files {
+            let text = std::fs::read_to_string(file).unwrap();
+            for (n, line) in text.lines().enumerate() {
+                for part in line.split('`').skip(1).step_by(2) {
+                    let own = Path::new(part)
+                        .extension()
+                        .is_some_and(|ext| ext.eq_ignore_ascii_case("md"))
+                        && !part.contains(['/', '<', ' '])
+                        && part != "SKILL.md";
+                    if !own {
+                        continue;
+                    }
+                    assert!(
+                        skill.join(part).is_file(),
+                        "{}:{} names {part}, which is not in {}",
+                        file.display(),
+                        n + 1,
+                        skill.display()
+                    );
+                    named += 1;
+                }
+            }
+        }
+    }
+    assert!(named > 0, "no skill names a file of its own");
+}
+
+/// Each skill is named `draw-<kind>-diagram` after a kind archgram draws,
+/// the value a spec's `diagram` takes, its frontmatter's `name` its
+/// folder's, and holds `SKILL.md` and `find.md`, what its kind draws and
+/// how to read the project for it (docs/PRD.md 6.6).
+#[test]
+fn every_skill_is_a_kind_archgram_draws() {
     let drawn: Vec<&str> = archgram_core::spec::DiagramKind::ALL
         .iter()
         .map(|k| k.name())
         .collect();
-    let mut packs = 0;
-    for entry in std::fs::read_dir(&kinds).unwrap_or_else(|e| panic!("{}: {e}", kinds.display())) {
-        let path = entry.unwrap().path();
-        if !path.is_dir() {
-            continue;
-        }
-        let name = path.file_name().unwrap().to_string_lossy().into_owned();
+    for skill in skills() {
+        let name = skill.file_name().unwrap().to_string_lossy().into_owned();
+        let kind = name
+            .strip_prefix("draw-")
+            .and_then(|rest| rest.strip_suffix("-diagram"))
+            .unwrap_or_else(|| panic!("{} is not named draw-<kind>-diagram", skill.display()));
         assert!(
-            drawn.contains(&name.as_str()),
-            "{} is a pack for `{name}`, which archgram does not draw ({drawn:?})",
+            drawn.contains(&kind),
+            "{} draws `{kind}`, which archgram does not draw ({drawn:?})",
+            skill.display()
+        );
+        assert!(
+            frontmatter(&skill.join("SKILL.md")).contains(&format!("\nname: {name}\n"))
+                || frontmatter(&skill.join("SKILL.md")).starts_with(&format!("name: {name}\n")),
+            "{}/SKILL.md is not named {name}",
+            skill.display()
+        );
+        for file in ["SKILL.md", "find.md"] {
+            assert!(skill.join(file).is_file(), "{name} has no {file}");
+        }
+    }
+}
+
+/// Each `SKILL.md` stays small enough to read whole: under 500 lines and
+/// about 5,000 tokens, counted as 20,000 bytes, as the Agent Skills format
+/// recommends (docs/PRD.md 6.6).
+#[test]
+fn every_skill_is_small_enough_to_read_whole() {
+    for skill in skills() {
+        let path = skill.join("SKILL.md");
+        let text = std::fs::read_to_string(&path).unwrap();
+        let lines = text.lines().count();
+        assert!(
+            lines < 500,
+            "{} is {lines} lines; keep it under 500",
             path.display()
         );
-        for file in ["find.md", "spec.md"] {
-            assert!(path.join(file).is_file(), "the {name} pack has no {file}");
-        }
-        // Its layer of the facts document (references/facts.md, A
-        // diagram's layer), which its spec.md writes the spec from.
-        let find = std::fs::read_to_string(path.join("find.md")).unwrap();
         assert!(
-            find.contains("\n## In the facts document\n"),
-            "the {name} pack's find.md does not say what its layer of the facts document holds"
+            text.len() < 20_000,
+            "{} is {} bytes, more than about 5,000 tokens",
+            path.display(),
+            text.len()
         );
-        packs += 1;
     }
-    assert!(packs > 0, "{} holds no pack", kinds.display());
 }
 
 /// The skill downloads nothing the user has not agreed to (docs/PRD.md
@@ -272,27 +312,28 @@ fn every_kind_pack_is_a_kind_archgram_draws() {
 /// nothing, and says it asks the user when it finds none.
 #[test]
 fn the_skill_looks_for_archgram_before_it_downloads() {
-    let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../skills/archgram/SKILL.md");
-    let text = std::fs::read_to_string(&path).unwrap();
     let version = env!("CARGO_PKG_VERSION");
     let look = format!("npx --no --offline --loglevel=error archgram@{version} --version");
-    let looks = text
-        .find(&look)
-        .unwrap_or_else(|| panic!("{} never runs `{look}`", path.display()));
-    let downloads = text
-        .find("npx --yes")
-        .unwrap_or_else(|| panic!("{} runs no `npx --yes`", path.display()));
-    assert!(
-        looks < downloads,
-        "{} runs `npx --yes` before it looks for archgram with `{look}`",
-        path.display()
-    );
-    let asks = &text[looks..downloads];
-    assert!(
-        asks.contains("ask the user before anything is"),
-        "{}: between looking and the first download, the skill does not say it asks the user",
-        path.display()
-    );
+    for skill in skills() {
+        let path = skill.join("SKILL.md");
+        let text = std::fs::read_to_string(&path).unwrap();
+        let looks = text
+            .find(&look)
+            .unwrap_or_else(|| panic!("{} never runs `{look}`", path.display()));
+        let downloads = text
+            .find("npx --yes")
+            .unwrap_or_else(|| panic!("{} runs no `npx --yes`", path.display()));
+        assert!(
+            looks < downloads,
+            "{} runs `npx --yes` before it looks for archgram with `{look}`",
+            path.display()
+        );
+        assert!(
+            text[looks..downloads].contains("ask before downloading"),
+            "{}: between looking and the first download, the skill does not say it asks",
+            path.display()
+        );
+    }
 }
 
 /// The plugin's folder holds only what Anthropic's directory accepts from

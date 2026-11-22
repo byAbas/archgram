@@ -1,27 +1,23 @@
 # Writing a sequence spec
 
-`references/kinds/sequence/find.md` found the participants, each with its
-file, and the messages, in the order the code runs them, each with its
-line. This says how they become the spec; the fields are in
-`spec --section sequence` (SKILL.md, step 3).
 
 ## Contents
 
-- The facts in the format
+- From what was found
 - Phases
 - How much to draw
 - In the report
 - An example
 
-## The facts in the format
+## From what was found
 
-From the diagram's layer of the facts document (`references/facts.md`):
+From what `find.md` found:
 its Participants, its Messages in the order the code runs, its Branches
 as fragments, and phases for its steps. A sequence has no `direction` and no
 `flows`: it is drawn top to bottom, numbers its messages and moves on its
 own, one phase at a time, so leave `still` out too. Inside `{ }`, quote
 every `label` and `note` (`label: "find user, then check"`): there a comma
-ends a value, and the words after it read as a field.
+ends a value. A participant's `note` is never drawn.
 
 ## Phases
 
@@ -36,16 +32,14 @@ from what the reader asks, not from the code's functions.
 ## How much to draw
 
 About 15 messages is as much as a reader follows on one screen. Past
-that, split the conversation in two, at a phase, and draw each as its own
-diagram; or leave out calls the contract's questions do not need (a
-helper inside one part, a log line). Say what you split or left out in
-the report.
+that, leave out the calls the contract's questions do not need (a helper
+inside one part, a log line), and say so in the report. Split the
+conversation at a phase only when the user asks.
 
 ## In the report
 
-Under "Not shown" (SKILL.md, step 7): what was split or left out past
-about 15 messages. Each participant's file and each message's line stay
-in the facts document.
+Under "Not shown": what was left out past about 15 messages. Each
+participant's file and each message's line stay in the spec's sources.
 
 ## An example
 
@@ -61,7 +55,7 @@ description: >-
 participants:
   - { id: browser, kind: browser, label: Browser }
   - { id: api, kind: service, label: API, tech: express, source: ../../src/routes/login.ts }
-  - { id: auth, kind: service, label: Auth, variant: external }
+  - { id: auth, kind: auth, label: Session check, variant: external }
   - { id: db, kind: database, label: Users, tech: postgresql, source: ../../src/db.ts }
 messages:
   - phase: Sign in

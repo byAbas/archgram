@@ -13,9 +13,8 @@ Switch on the git hooks once in each clone, `git config core.hooksPath
 .githooks`: before each commit and push they check the branch's name
 (`scripts/check-change`). A Claude Code session switches them on itself,
 and refuses a command that would skip them (`.claude/settings.json`).
-Node is needed only for the tests of the npm launcher and of the skill's
-commands in the npm package (`packages/archgram/skill/size.mjs` and
-`facts.mjs`). Work on the version in
+Node is needed only for the tests of the npm launcher. Work on the
+version in
 `.nvmrc`. The launcher itself supports the versions `engines` allows in
 `packages/archgram/package.json`, and CI tests it on several of them
 (`.github/workflows/ci.yml`).
@@ -44,8 +43,6 @@ cargo fmt --check
 cargo clippy --workspace --all-targets --locked -- -D warnings
 cargo test --workspace --locked
 node --test packages/archgram/lib/platform.test.js
-node --test scripts/skill-size.test.mjs
-node --test scripts/skill-facts.test.mjs
 cmp README.md packages/archgram/README.md
 sh scripts/check-change.test
 sh scripts/git-hooks.test
@@ -100,7 +97,9 @@ sh scripts/claude-hooks.test
   [SECURITY.md](SECURITY.md); how people treat each other here is
   [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md); what archgram commits to for
   accessibility is [ACCESSIBILITY.md](ACCESSIBILITY.md); what only a
-  coding agent must do is [AGENTS.md](AGENTS.md). Change the document that owns a fact, and only
+  coding agent must do is [AGENTS.md](AGENTS.md); the rules the
+  `draw-<kind>-diagram` skills share are [docs/GUIDE.md](docs/GUIDE.md),
+  and each kind's own its skill's folder. Change the document that owns a fact, and only
   that one; elsewhere, link to it. A change to what archgram does
   searches for the old wording and leaves none of it in a document, a
   comment or a test name, and its pull request says so.

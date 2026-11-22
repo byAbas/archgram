@@ -304,8 +304,8 @@ pub struct Node {
 #[serde(rename_all = "kebab-case")]
 pub enum Kind {
     Service,
-    /// Authentication and authorisation: a guard, an auth service, an
-    /// identity provider.
+    /// Authentication and authorisation, as a service of its own: an auth
+    /// service, an identity provider.
     Auth,
     Database,
     Queue,

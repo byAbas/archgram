@@ -557,18 +557,20 @@ spec generator are small helpers inside the workspace.
   provenance and needs no stored token, and it only stages: each package
   goes public when a maintainer approves it with two-factor
   authentication (RELEASE.md).
-- The GitHub release carries the agent skill (`skills/archgram`) as
-  an archive, with a signed build provenance attestation (`actions/attest`,
+- The GitHub release carries the agent skills (`skills/archgram/skills/`)
+  as an archive of their folders, with a signed build provenance attestation (`actions/attest`,
   SLSA Build Level 2) and a `SHA256SUMS`. The command itself ships only on
   npm. The workflow drafts the release and a maintainer publishes it;
   releases are immutable once published.
-- The skill is one folder, installed as docs/PRD.md (6.5) says. It runs
+- The skills, one for each kind of diagram, are folders under
+  `skills/archgram/skills/`, installed as docs/PRD.md (6.5) says. Each runs
   archgram through npx, the project's own or the version released with the
-  skill (docs/PRD.md 6.6), and reads the spec format from `archgram spec`,
-  the text of docs/SPEC.md carried in the binary, so it keeps no copy of
-  the format. Its `.claude-plugin/plugin.json`, icon and README make the
-  same folder a Claude Code plugin of one skill, so Anthropic's plugin
-  directory takes that folder and not the repository.
+  skills (docs/PRD.md 6.6), and reads the spec format from `archgram spec`
+  and the rules the skills share from `archgram guide`, the text of
+  docs/SPEC.md and docs/GUIDE.md carried in the binary, so no skill keeps
+  a copy of either. `skills/archgram/`'s `.claude-plugin/plugin.json`, icon
+  and README make it a Claude Code plugin of those skills, so Anthropic's
+  plugin directory takes that folder and not the repository.
   `.claude-plugin/marketplace.json` at the repository's root lists that
   folder, by its relative path, as the one plugin of the repository's own
   marketplace; Claude Code clones the repository to read it and copies
