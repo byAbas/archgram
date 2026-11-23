@@ -154,13 +154,21 @@ version goes in by a pull request and the tag follows the merge.
 9. Publish the plugin's new version in Anthropic's directory, once step 7
    shows the release whole and step 8 has run the skill: the skill names
    `archgram@X.Y.Z`, and a version published before npm has it stops for
-   everyone who installs it from there. Open archgram under **Submissions**
-   at [claude.ai/directory/manage](https://claude.ai/directory/manage),
-   select **Check for new commits**, and once the version of the merged
-   commit passes its checks, select **Publish**. Auto-publish is off for
-   this reason; leave it off. A version held for a reviewer goes live once
-   they clear it
-   ([Submit your plugin](https://claude.com/docs/plugins/submit#update-a-published-plugin)).
+   everyone who installs it from there. So the directory follows the
+   release's tag, never `main`: a commit merged to `main` does not reach
+   it by itself. Open archgram under **Submissions** at
+   [claude.ai/directory/manage](https://claude.ai/directory/manage), and
+   on its **Settings** tab set **Tracked branch or tag** to `vX.Y.Z` and
+   select **Save**; the directory scans that commit as a new version
+   ([Change the tracked branch or tag](https://claude.com/docs/plugins/submit#change-the-tracked-branch-or-tag)).
+   **Publish new versions automatically** is on, so a version that
+   passes its checks goes live by itself, unless a reviewer publishes
+   each version: then select **Publish**, and it goes live once they
+   clear it
+   ([Publish a passing version](https://claude.com/docs/plugins/submit#publish-a-passing-version)).
+   The tag cannot change while a version is with a reviewer, and
+   changing it cancels a publish request still waiting: when the
+   previous release is still with a reviewer, wait until it is cleared.
 
 ## When a release fails
 
