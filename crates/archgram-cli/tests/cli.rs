@@ -301,6 +301,119 @@ fn a_symlinked_folder_on_the_way_to_the_output_is_refused() {
     assert!(elsewhere.join("shop.svg").is_file());
 }
 
+/// A junction at `link` to the folder `target`: Windows's folder link,
+/// which any user can make, where a symbolic link needs a right that a
+/// runner may lack. `mklink` takes no `\\?\` path, which `scratch` gives.
+#[cfg(windows)]
+fn junction(link: &Path, target: &Path) {
+    let plain = |p: &Path| {
+        let p = p.to_string_lossy();
+        p.strip_prefix(r"\\?\").unwrap_or(&p).to_owned()
+    };
+    let made = Command::new("cmd")
+        .args(["/C", "mklink", "/J", &plain(link), &plain(target)])
+        .output()
+        .expect("cmd runs");
+    assert!(
+        made.status.success(),
+        "mklink /J: {}",
+        String::from_utf8_lossy(&made.stdout)
+    );
+}
+
+/// On Windows a junction is a symbolic link to archgram (Rust's
+/// `is_symlink` counts every name-surrogate reparse point): a folder on
+/// the way to the output that is one is refused, and nothing lands where
+/// it leads.
+#[cfg(windows)]
+#[test]
+fn a_junction_on_the_way_to_the_output_is_refused() {
+    let dir = scratch("output-junction");
+    let elsewhere = scratch("output-junction-elsewhere");
+    std::fs::create_dir_all(dir.join(".git")).unwrap();
+    std::fs::create_dir_all(dir.join("docs")).unwrap();
+    junction(&dir.join("docs").join("img"), &elsewhere);
+    std::fs::copy(example("linkshort.json"), dir.join("shop.json")).unwrap();
+    for out in [
+        &["-o", "docs/img/shop.svg"][..],
+        &["-o", "docs/img/new/shop.svg", "--split-themes"],
+        &["-o", "docs/img/shop.svg", "--preview"],
+    ] {
+        let run = archgram_in(&dir, &[&["build", "shop.json"][..], out].concat());
+        assert_eq!(run.status.code(), Some(2), "{out:?}: {}", stderr(&run));
+        assert!(
+            stderr(&run).contains("is a symbolic link"),
+            "{out:?}: {}",
+            stderr(&run)
+        );
+        let left: Vec<_> = std::fs::read_dir(&elsewhere).unwrap().collect();
+        assert!(
+            left.is_empty(),
+            "{out:?} wrote through the junction: {left:?}"
+        );
+    }
+}
+
+/// On Windows a theme's file is not read through a junction under the
+/// mapping file's folder, as it is not through a symbolic link.
+#[cfg(windows)]
+#[test]
+fn a_theme_is_not_read_through_a_junction() {
+    let dir = scratch("theme-junction");
+    own_theme(&dir, "");
+    junction(&dir.join("linked"), &dir.join("tokens"));
+    let theme = own_mapping(&dir, "linked/design.resolver.json", "");
+    let run = archgram(&["theme", "check", theme.to_str().unwrap()]);
+    assert_eq!(run.status.code(), Some(1), "{}", stderr(&run));
+    assert!(stderr(&run).contains("symbolic link"), "{}", stderr(&run));
+}
+
+/// On Windows a name that the system reads as a secret file's, though
+/// written otherwise, is refused: a trailing dot, the file's default data
+/// stream (`::$DATA`) and its short 8.3 name all open the file, and none
+/// is a name its folder lists.
+#[cfg(windows)]
+#[test]
+fn a_theme_file_windows_reads_by_another_name_is_refused() {
+    let dir = scratch("theme-windows-names");
+    own_theme(&dir, "");
+    let resolver = read(&dir.join("tokens/design.resolver.json"));
+    let secret = dir.join("tokens").join("my-private-server.key");
+    std::fs::write(&secret, &resolver).unwrap();
+    let mut names = vec![
+        "tokens/my-private-server.key.".to_owned(),
+        "tokens/my-private-server.key::$DATA".to_owned(),
+    ];
+    // The short name, when the volume makes them; Windows can turn them off.
+    let short = Command::new("powershell")
+        .args([
+            "-NoProfile",
+            "-Command",
+            &format!(
+                "(New-Object -ComObject Scripting.FileSystemObject).GetFile('{}').ShortName",
+                secret.to_string_lossy().trim_start_matches(r"\\?\")
+            ),
+        ])
+        .output()
+        .expect("powershell runs");
+    let short = String::from_utf8_lossy(&short.stdout).trim().to_owned();
+    if short.contains('~') {
+        names.push(format!("tokens/{short}"));
+    } else {
+        println!("this volume makes no short names; the 8.3 case is not run");
+    }
+    for name in names {
+        let theme = own_mapping(&dir, &name, "");
+        let run = archgram(&["theme", "check", theme.to_str().unwrap()]);
+        assert_eq!(run.status.code(), Some(1), "{name}: {}", stderr(&run));
+        let said = stderr(&run);
+        assert!(
+            said.contains("the file cannot be read") || said.contains("commonly holds secrets"),
+            "{name}: {said}"
+        );
+    }
+}
+
 /// A theme reads only the files under its mapping's folder: `..`, an
 /// absolute path and a symlink cannot lead it out.
 #[test]
