@@ -8,6 +8,34 @@ follow [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- A YAML spec's aliases were held to 10 000 values but not to their
+  size, so a few aliases of one long text could take far more memory
+  than the file. They may now add at most 4 MiB of text too
+  (docs/SPEC.md, Formats).
+- `build -o` followed a folder on the way to the drawing that is a
+  symbolic link, which a project can hold, so the drawing and its
+  previews could land outside the project. Such a folder is now refused,
+  as one on the way to a spec is (SECURITY.md).
+- A theme's files were held to the list of files that commonly hold
+  secrets by the name as written, which macOS and Windows may fold into
+  another one's; each part of a theme file's path must now be written as
+  its folder lists it, with the same capitals, as a source's already is
+  (docs/SPEC.md, Theme file).
+- A spec of any size was checked and laid out, and the time some checks
+  and the layout take grows faster than the spec does: a few hundred
+  edges could hold a build for minutes. A spec now has at most 200
+  nodes, 200 edges and 200 frames, frames 16 deep, ids and `tech` of 64
+  characters, and a sequence 50 participants and 1000 items, about ten
+  times the largest example; past one it is refused with that problem
+  alone (docs/SPEC.md, Validation). A hint names each node once, and a
+  reference longer than any id gets no suggestion.
+- A theme's resolver could list a set several times down a chain of
+  sets, each listing multiplying the sources merged, so a few kilobytes
+  held `theme check` for minutes. The resolution order now merges at
+  most 1000 sources (docs/SPEC.md, Theme file).
+- `build --preview` drew a drawing of any size, so very long labels
+  could make it take gigabytes; it now draws none of more than 32
+  million pixels (docs/features/reader-check.md).
 - `archgram --help` named `facts` as an example of a section of
   `archgram guide`, which the guide does not have; it names `colours`
   now, and a test holds each section the help names to one its command

@@ -20,7 +20,10 @@ mod validate;
 
 pub use error::{Location, SpecError};
 pub use spec::Spec;
-pub use validate::{FORMAT_VERSION, validate};
+pub use validate::{
+    FORMAT_VERSION, MAX_EDGES, MAX_FRAME_DEPTH, MAX_FRAMES, MAX_ID_LENGTH, MAX_ITEMS, MAX_NODES,
+    MAX_PARTICIPANTS, validate,
+};
 
 use serde::Deserialize;
 use spec::{DiagramKind, Direction};

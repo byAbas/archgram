@@ -19,7 +19,8 @@ use crate::spec::{
     default_palette, default_true,
 };
 use crate::validate::{
-    Common, is_valid_id, nearest, source_forms, tech_form, techs_carried, top_level, xml_problem,
+    Common, MAX_ITEMS, MAX_PARTICIPANTS, is_valid_id, nearest, source_forms, tech_form,
+    techs_carried, too_long, top_level, xml_problem,
 };
 
 /// A whole sequence diagram.
@@ -611,6 +612,9 @@ pub fn validate(seq: &Sequence) -> Vec<SpecError> {
         }),
         used: BTreeSet::new(),
     };
+    if !v.sizes() {
+        return v.errors;
+    }
     v.texts();
     let ids = v.participants();
     if seq.messages.is_empty() {
@@ -666,9 +670,60 @@ struct Validator<'a> {
     used: BTreeSet<&'a str>,
 }
 
+/// How many items `items` hold, those inside their fragments too.
+fn items_in(items: &[Item]) -> usize {
+    items
+        .iter()
+        .map(|item| {
+            let operands = item
+                .alt
+                .iter()
+                .flatten()
+                .chain(item.par.iter().flatten())
+                .chain(&item.opt)
+                .chain(&item.repeat);
+            1 + operands.map(|o| items_in(&o.messages)).sum::<usize>()
+        })
+        .sum()
+}
+
 impl<'a> Validator<'a> {
     fn error(&mut self, pointer: &str, message: String) {
         self.errors.push(SpecError::at(pointer, message));
+    }
+
+    /// Whether the sequence is within its sizes (docs/SPEC.md,
+    /// Validation). A problem here stops the checks after it, whose time
+    /// grows faster than the sequence does.
+    fn sizes(&mut self) -> bool {
+        let s = self.seq;
+        let before = self.errors.len();
+        let participants = s.participants.len();
+        if participants > MAX_PARTICIPANTS {
+            self.error(
+                "/participants",
+                format!("a sequence has at most {MAX_PARTICIPANTS} participants; this one has {participants}: split it into sequences a reader can follow"),
+            );
+        }
+        let items = items_in(&s.messages);
+        if items > MAX_ITEMS {
+            self.error(
+                "/messages",
+                format!("a sequence has at most {MAX_ITEMS} messages, replies, fragments and phases, those inside fragments too; this one has {items}: split it into sequences a reader can follow"),
+            );
+        }
+        if self.errors.len() > before {
+            return false;
+        }
+        for (i, p) in s.participants.iter().enumerate() {
+            if let Some(message) = too_long("an id", &p.id) {
+                self.error(&format!("/participants/{i}/id"), message);
+            }
+            if let Some(message) = p.tech.as_deref().and_then(|t| too_long("a `tech`", t)) {
+                self.error(&format!("/participants/{i}/tech"), message);
+            }
+        }
+        self.errors.len() == before
     }
 
     /// Every text the drawing carries holds only characters XML allows.

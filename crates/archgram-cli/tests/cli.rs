@@ -263,6 +263,44 @@ fn a_symlink_at_the_output_is_replaced_not_followed() {
     assert_eq!(left.len(), 2, "no temporary file left: {left:?}");
 }
 
+/// A folder on the way to the output that is a link, which a pull request
+/// can add, is refused, never followed: neither the drawing, a theme's
+/// drawing, nor a preview lands where it leads.
+#[cfg(unix)]
+#[test]
+fn a_symlinked_folder_on_the_way_to_the_output_is_refused() {
+    let dir = scratch("output-midlink");
+    let elsewhere = scratch("output-elsewhere");
+    std::fs::create_dir_all(dir.join(".git")).unwrap();
+    std::fs::create_dir_all(dir.join("docs")).unwrap();
+    std::os::unix::fs::symlink(&elsewhere, dir.join("docs/img")).unwrap();
+    std::fs::copy(example("linkshort.json"), dir.join("shop.json")).unwrap();
+    for out in [
+        &["-o", "docs/img/shop.svg"][..],
+        &["-o", "docs/img/new/shop.svg", "--split-themes"],
+        &["-o", "docs/img/shop.svg", "--preview"],
+    ] {
+        let run = archgram_in(&dir, &[&["build", "shop.json"][..], out].concat());
+        assert_eq!(run.status.code(), Some(2), "{out:?}: {}", stderr(&run));
+        assert!(
+            stderr(&run).contains("is a symbolic link"),
+            "{out:?}: {}",
+            stderr(&run)
+        );
+        let left: Vec<_> = std::fs::read_dir(&elsewhere).unwrap().collect();
+        assert!(left.is_empty(), "{out:?} wrote through the link: {left:?}");
+    }
+
+    // A folder outside the one archgram runs in is the caller's own
+    // choice, a link too (macOS's /tmp is one), and is written to.
+    let outside = scratch("output-outside");
+    std::os::unix::fs::symlink(&elsewhere, outside.join("img")).unwrap();
+    let out = outside.join("img/shop.svg");
+    let run = archgram_in(&dir, &["build", "shop.json", "-o", out.to_str().unwrap()]);
+    assert!(run.status.success(), "{}", stderr(&run));
+    assert!(elsewhere.join("shop.svg").is_file());
+}
+
 /// A theme reads only the files under its mapping's folder: `..`, an
 /// absolute path and a symlink cannot lead it out.
 #[test]
@@ -293,6 +331,39 @@ fn a_theme_reads_only_under_its_folder() {
             "{resolver}: {stderr}"
         );
     }
+}
+
+/// A theme's file is read only by the name it has on disk, so a name that
+/// a system folds into a secret file's (macOS folds `ſ` to `s` and the
+/// Kelvin sign to `k`) never reaches it past the list of such names.
+#[test]
+fn a_theme_reads_a_file_only_by_its_name_on_disk() {
+    let dir = scratch("theme-folded");
+    own_theme(&dir, "");
+    let resolver = read(&dir.join("tokens/design.resolver.json"));
+    std::fs::create_dir_all(dir.join("tokens/.aws")).unwrap();
+    std::fs::write(dir.join("tokens/.aws/design.resolver.json"), &resolver).unwrap();
+    std::fs::write(dir.join("tokens/server.key"), &resolver).unwrap();
+    for name in [
+        "tokens/.aw\u{17f}/design.resolver.json",
+        "tokens/server.\u{212a}ey",
+    ] {
+        let theme = own_mapping(&dir, name, "");
+        let run = archgram(&["theme", "check", theme.to_str().unwrap()]);
+        assert_eq!(run.status.code(), Some(1), "{name}: {}", stderr(&run));
+        assert!(
+            stderr(&run).contains("the file cannot be read"),
+            "{name}: {}",
+            stderr(&run)
+        );
+    }
+    let theme = own_mapping(&dir, "tokens/Design.resolver.json", "");
+    let run = archgram(&["theme", "check", theme.to_str().unwrap()]);
+    assert!(
+        stderr(&run).contains("`Design.resolver.json` is `design.resolver.json` on disk"),
+        "{}",
+        stderr(&run)
+    );
 }
 
 /// A spec named `<name>.archgram.yaml` (or `.yml`, `.json`) draws

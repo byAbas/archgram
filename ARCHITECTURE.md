@@ -110,10 +110,11 @@ a JSON pointer to its value's. So every rule lives once, in the core, and
 a YAML author still sees `line:column`. The tree is the crate's own, not
 saphyr's loader, because the loader keeps the last of two equal keys and
 expands aliases without limit; the YAML a spec may not use, these among
-it, is in docs/SPEC.md (Formats), and the crate's `MAX_DEPTH` and
-`MAX_EXPANDED` hold its limits. Plain scalars follow the core schema
-(null, booleans, integers, floats; the rest is text); a plain number
-where text belongs is reported with the advice to quote it.
+it, is in docs/SPEC.md (Formats), and the crate's `MAX_DEPTH`,
+`MAX_EXPANDED` and `MAX_EXPANDED_BYTES` hold its limits. Plain scalars
+follow the core schema (null, booleans, integers, floats; the rest is
+text); a plain number where text belongs is reported with the advice to
+quote it.
 
 ### Model
 

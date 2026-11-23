@@ -11,7 +11,8 @@
 //! Beyond the parser's own checks, a spec is refused when it holds more than
 //! one document, a key that is not plain text, a key twice in one mapping, a
 //! tag outside YAML's core schema, nesting deeper than [`MAX_DEPTH`], or
-//! aliases that expand past [`MAX_EXPANDED`] values (a "billion laughs").
+//! aliases that expand past [`MAX_EXPANDED`] values or
+//! [`MAX_EXPANDED_BYTES`] of text (a "billion laughs").
 //! Plain scalars follow YAML 1.2's core schema: `null`, booleans, integers
 //! and floats become JSON literals, everything else text.
 
@@ -27,6 +28,11 @@ pub const MAX_DEPTH: usize = 64;
 /// How many values aliases may add in all: a spec repeats little, so a
 /// budget far above any real one stops an alias bomb before it grows.
 pub const MAX_EXPANDED: usize = 10_000;
+
+/// How many bytes of text aliases may add in all, as much as the largest
+/// file archgram reads: few aliases of one long text stay under
+/// [`MAX_EXPANDED`] and would otherwise copy it into gigabytes.
+pub const MAX_EXPANDED_BYTES: usize = 4 << 20;
 
 /// A line and a column, both counted from 1.
 type At = (usize, usize);
@@ -215,6 +221,16 @@ impl Node {
             Value::Scalar { .. } => 0,
         }
     }
+
+    /// How many bytes of text it holds: its scalars, both as read and as
+    /// their JSON, and its keys.
+    fn bytes(&self) -> usize {
+        match &self.value {
+            Value::Map(entries) => entries.iter().map(|(k, _, n)| k.len() + n.bytes()).sum(),
+            Value::Seq(items) => items.iter().map(Node::bytes).sum(),
+            Value::Scalar { literal, text } => literal.len() + text.len(),
+        }
+    }
 }
 
 /// A mapping or sequence being read.
@@ -253,6 +269,7 @@ fn read_tree(yaml: &str) -> Result<Node, SpecError> {
     let mut root: Option<Node> = None;
     let mut documents = 0;
     let mut expanded = 0usize;
+    let mut expanded_bytes = 0usize;
     for event in Parser::new_from_str(yaml) {
         let (event, span) = event.map_err(|e| {
             let m = e.marker();
@@ -284,9 +301,10 @@ fn read_tree(yaml: &str) -> Result<Node, SpecError> {
                 Some(node)
             }
             Event::Alias(id) => {
+                // Charged before the copy is made, so a refused alias
+                // never takes the memory it asks for.
                 let node = anchors
                     .get(&id)
-                    .cloned()
                     .ok_or_else(|| problem(here, "an alias to an anchor not yet defined"))?;
                 expanded += node.count();
                 if expanded > MAX_EXPANDED {
@@ -295,7 +313,20 @@ fn read_tree(yaml: &str) -> Result<Node, SpecError> {
                         format!("aliases expand to more than {MAX_EXPANDED} values"),
                     ));
                 }
-                Some(Node { at: here, ..node })
+                expanded_bytes += node.bytes();
+                if expanded_bytes > MAX_EXPANDED_BYTES {
+                    return Err(problem(
+                        here,
+                        format!(
+                            "aliases expand to more than {} MiB of text",
+                            MAX_EXPANDED_BYTES >> 20
+                        ),
+                    ));
+                }
+                Some(Node {
+                    at: here,
+                    ..node.clone()
+                })
             }
             Event::MappingStart(anchor, tag) => {
                 opening(&stack, tag.as_deref(), here)?;

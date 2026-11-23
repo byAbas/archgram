@@ -47,10 +47,26 @@ same way:
   disk's root), judged by the path's text before the disk is looked at,
   so a spec cannot learn whether a file outside the project exists;
 - never `.git`, nor a file that commonly holds secrets rather than code
-  (docs/SPEC.md, Sources, lists them), as a source or a theme's file;
+  (docs/SPEC.md, Sources, lists them), as a source or a theme's file,
+  each named as its folder lists it, so a name that a system folds into
+  one of theirs (macOS opens `server.key` for a name written with the
+  Kelvin sign, U+212A, for its `k`) does not reach it;
 - each file once per run, keeping only whether it holds a source's
   words, and at most 1000 sources per spec, so a spec cannot make a run
   slow or large.
+
+What it reads is held to sizes too, so a spec cannot hold a run for
+long or make it take gigabytes: a YAML spec's aliases add at most
+10 000 values and 4 MiB of text (docs/SPEC.md, Formats), a theme's
+resolution order merges at most 1000 sources (docs/SPEC.md, Theme
+file), and a spec is refused past the sizes docs/SPEC.md (Validation)
+names, before the checks whose time grows faster than the spec does.
+
+archgram writes a drawing, at `-o` or beside its spec, as a new file
+renamed over the old one, so a symbolic link at its path is replaced,
+never followed; and it refuses a folder on the way that is a link under
+the folder archgram runs in, as it refuses one on the way to a spec, so
+a project cannot aim its drawing at another folder.
 
 `build --preview` reads nothing more. It renders, inside archgram, the
 SVG it has just drawn, with only archgram's embedded fonts, never the
@@ -58,7 +74,8 @@ system's; it fetches no image, file or data URL, starts no browser and
 uses no network, and writes the PNGs under `.archgram/preview/` at the
 project's top, refusing a symlink on the way as it refuses one at the
 drawing, and a `.gitignore` of `*` in `.archgram/` when it has none
-(docs/features/reader-check.md, docs/features/approved-drawing.md).
+(docs/features/reader-check.md, docs/features/approved-drawing.md). It
+draws no preview of more than 32 million pixels.
 
 When a file that is not a spec is read as one, a problem does not quote
 a text value from it; like a problem with any spec, it may still name a

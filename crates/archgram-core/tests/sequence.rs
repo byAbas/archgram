@@ -42,6 +42,35 @@ fn one(json: &str) -> String {
     said[0].clone()
 }
 
+/// A sequence past a size is refused at once, with only that problem;
+/// the items inside fragments count too.
+#[test]
+fn a_sequence_is_held_to_its_sizes() {
+    use archgram_core::{MAX_ITEMS, MAX_PARTICIPANTS};
+    let many = (0..=MAX_PARTICIPANTS)
+        .map(|i| format!(r#"{{ "id": "p{i}", "kind": "service", "label": "P" }}"#))
+        .collect::<Vec<_>>()
+        .join(", ");
+    let said = one(&sequence(&many, r#"{ "from": "p0", "to": "p1" }"#));
+    assert!(
+        said.starts_with(&format!(
+            "/participants: a sequence has at most {MAX_PARTICIPANTS}"
+        )),
+        "{said}"
+    );
+
+    let half =
+        vec![r#"{ "from": "browser", "to": "api", "async": true }"#; MAX_ITEMS / 2].join(", ");
+    let messages = format!(
+        r#"{half}, {{ "par": [{{ "messages": [{half}] }}, {{ "messages": [{{ "from": "api", "to": "db", "async": true }}] }}] }}"#
+    );
+    let said = one(&sequence(THREE, &messages));
+    assert!(
+        said.starts_with(&format!("/messages: a sequence has at most {MAX_ITEMS}")),
+        "{said}"
+    );
+}
+
 #[test]
 fn a_sequence_reads_as_one() {
     let Diagram::Sequence(seq) = parse(&sequence(THREE, SIGN_IN)).expect("sign in") else {

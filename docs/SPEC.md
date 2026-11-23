@@ -68,8 +68,8 @@ command line tells them apart by the file's extension (`.json`, `.yaml`,
 `.yml`). Unknown fields are errors, not ignored, so a misspelt field is
 caught instead of silently changing the diagram. In YAML, a key written
 twice, a second document, a tag outside YAML's core schema, nesting deeper
-than 64 levels and aliases that expand to more than 10 000 values are
-errors too, and a plain word that reads as a number or a boolean (`title: 2026`)
+than 64 levels and aliases that expand to more than 10 000 values or 4 MiB
+of text are errors too, and a plain word that reads as a number or a boolean (`title: 2026`)
 must be quoted to stay text.
 
 A spec named `<name>.archgram.yaml` (or `.archgram.yml`, `.archgram.json`) draws
@@ -542,8 +542,17 @@ its JSON pointer (or its line and column in YAML), when:
   flow's name)
   holds a character XML does not allow, such as a control character
   other than tab, line feed and carriage return: the SVG would not open;
+- a diagram has more than 200 nodes, 200 edges or 200 frames, frames nest
+  more than 16 deep, an id or a `tech` is longer than 64 characters, or
+  a sequence has more than 50 participants or more than 1000 items in its
+  `messages`, those inside fragments too: about ten times the largest in
+  `examples/`, so a check and a build stay within a few seconds. Such a
+  spec is refused with that problem alone;
 - an id is duplicated, or an edge, flow, frame or hint names an id that
   does not exist;
+- a hint names a node more than once, a `first` or `last` hint or a
+  group names more nodes than the diagram has, or a hint has more groups
+  than the diagram has nodes;
 - frames nest in a cycle, or a frame is empty;
 - the nodes of an `order` hint do not share a frame (a frame keeps its
   nodes together, so a hint cannot sort them among others);
@@ -632,10 +641,14 @@ on. Channels outside sRGB are clipped. A role's colour is opaque.
 An import is refused, with every problem listed and each located by file
 and JSON pointer, when the mapping or the resolver breaks its format; a
 role is not archgram's; an input names no modifier or no context; a
-modifier without a default gets no input; a file cannot be read, is a
-remote reference, or is outside the mapping file's folder (by its real
+modifier without a default gets no input; a file cannot be read, is not
+written with the capitals it has on disk, is a remote reference, or is
+outside the mapping file's folder (by its real
 path, so neither `..` nor a symlink leads out); a token does not exist (the nearest are suggested), is
-not a colour, or aliases in a loop; a group uses `$extends`; a colour
+not a colour, or aliases in a loop; a group uses `$extends`; the
+resolution order merges more than 1000 sources, counting those a set
+brings each time it is listed, so a set listed several times down a
+chain of sets cannot hold the import for hours; a colour
 cannot be read; or a pair of roles falls below the contrast DESIGN.md
 requires, in either theme.
 

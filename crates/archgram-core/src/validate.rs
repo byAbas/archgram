@@ -17,6 +17,28 @@ const SHOWN_WIDTH_MAX: f64 = 4000.0;
 /// The only version of the spec format.
 pub const FORMAT_VERSION: u32 = 1;
 
+// The sizes a spec may have (docs/SPEC.md, Validation). Each is about ten
+// times the largest in `examples/`, and keeps a build within a few
+// seconds (3 s for 21 nodes joined by 200 edges, the worst measured,
+// 2026-11-23, Apple silicon, release build): the layout's time grows
+// faster than the spec does, so a spec from someone else, such as a pull
+// request that CI checks, could otherwise hold a run for hours.
+
+/// The most nodes an architecture diagram has.
+pub const MAX_NODES: usize = 200;
+/// The most edges an architecture diagram has.
+pub const MAX_EDGES: usize = 200;
+/// The most frames an architecture diagram has.
+pub const MAX_FRAMES: usize = 200;
+/// How deep frames nest: a frame in a frame is two deep.
+pub const MAX_FRAME_DEPTH: usize = 16;
+/// The longest an id, or a `tech`, is, in characters.
+pub const MAX_ID_LENGTH: usize = 64;
+/// The most participants a sequence has.
+pub const MAX_PARTICIPANTS: usize = 50;
+/// The most items a sequence's `messages` hold, those inside fragments too.
+pub const MAX_ITEMS: usize = 1000;
+
 /// Checks everything the types cannot express. Returns every problem found.
 #[must_use]
 pub fn validate(spec: &Spec) -> Vec<SpecError> {
@@ -25,6 +47,9 @@ pub fn validate(spec: &Spec) -> Vec<SpecError> {
         errors: Vec::new(),
     };
     v.top_level();
+    if !v.sizes() {
+        return v.errors;
+    }
     v.texts();
     let ids = v.ids();
     v.nodes(&ids);
@@ -88,6 +113,133 @@ impl<'a> Validator<'a> {
         }
         if s.nodes.is_empty() {
             self.error("/nodes".into(), "a diagram needs at least one node".into());
+        }
+    }
+
+    /// Whether the spec is within its sizes. A problem here stops the
+    /// checks after it, whose time grows faster than the spec does: the
+    /// counts first, then each id's length, then what is cheap only once
+    /// both hold.
+    fn sizes(&mut self) -> bool {
+        let s = self.spec;
+        let before = self.errors.len();
+        for (pointer, count, max, what) in [
+            ("/nodes", s.nodes.len(), MAX_NODES, "nodes"),
+            ("/edges", s.edges.len(), MAX_EDGES, "edges"),
+            ("/frames", s.frames.len(), MAX_FRAMES, "frames"),
+        ] {
+            if count > max {
+                self.error(
+                    pointer.into(),
+                    format!("a diagram has at most {max} {what}; this one has {count}: split it into diagrams a reader can follow"),
+                );
+            }
+        }
+        if self.errors.len() > before {
+            return false;
+        }
+        let ids = s
+            .nodes
+            .iter()
+            .enumerate()
+            .map(|(i, n)| (format!("/nodes/{i}/id"), &n.id))
+            .chain(
+                s.frames
+                    .iter()
+                    .enumerate()
+                    .map(|(i, f)| (format!("/frames/{i}/id"), &f.id)),
+            );
+        for (pointer, id) in ids {
+            if let Some(message) = too_long("an id", id) {
+                self.error(pointer, message);
+            }
+        }
+        for (i, n) in s.nodes.iter().enumerate() {
+            if let Some(message) = n.tech.as_deref().and_then(|t| too_long("a `tech`", t)) {
+                self.error(format!("/nodes/{i}/tech"), message);
+            }
+        }
+        if self.errors.len() > before {
+            return false;
+        }
+        self.frame_depths();
+        self.hint_sizes();
+        self.errors.len() == before
+    }
+
+    /// Each frame no deeper than [`MAX_FRAME_DEPTH`]. A loop through
+    /// parents is left to [`Validator::frames`], which names it.
+    fn frame_depths(&mut self) {
+        let frames = &self.spec.frames;
+        let parent: BTreeMap<&str, &str> = frames
+            .iter()
+            .filter_map(|f| f.parent.as_deref().map(|p| (f.id.as_str(), p)))
+            .collect();
+        for (i, f) in frames.iter().enumerate() {
+            let mut at = f.id.as_str();
+            let mut depth = 1;
+            while let Some(&up) = parent.get(at) {
+                at = up;
+                depth += 1;
+                if depth > frames.len() {
+                    break;
+                }
+            }
+            if depth > MAX_FRAME_DEPTH && depth <= frames.len() {
+                self.error(
+                    format!("/frames/{i}/parent"),
+                    format!(
+                        "frame `{}` is {depth} deep; frames nest at most {MAX_FRAME_DEPTH} deep",
+                        f.id
+                    ),
+                );
+            }
+        }
+    }
+
+    /// Each hint no longer than the nodes it can name, and no more groups
+    /// of a hint than there are nodes.
+    fn hint_sizes(&mut self) {
+        let h = &self.spec.hints;
+        let nodes = self.spec.nodes.len();
+        let over = |len: usize| len > nodes;
+        let mut said = Vec::new();
+        for (field, list) in [("first", &h.first), ("last", &h.last)] {
+            if over(list.len()) {
+                said.push((
+                    format!("/hints/{field}"),
+                    format!(
+                        "the hint names {} nodes; the diagram has {nodes}",
+                        list.len()
+                    ),
+                ));
+            }
+        }
+        for (field, groups) in [("sameLayer", &h.same_layer), ("order", &h.order)] {
+            if over(groups.len()) {
+                said.push((
+                    format!("/hints/{field}"),
+                    format!(
+                        "the hint has {} groups; the diagram has {nodes} nodes",
+                        groups.len()
+                    ),
+                ));
+                continue;
+            }
+            for (j, group) in groups.iter().enumerate() {
+                if over(group.len()) {
+                    said.push((
+                        format!("/hints/{field}/{j}"),
+                        format!(
+                            "the group names {} nodes; the diagram has {nodes}",
+                            group.len()
+                        ),
+                    ));
+                }
+            }
+        }
+        for (pointer, message) in said {
+            self.error(pointer, message);
         }
     }
 
@@ -441,6 +593,7 @@ impl<'a> Validator<'a> {
                     self.error(format!("/hints/{field}/{j}"), message);
                 }
             }
+            self.once_each(list, &format!("/hints/{field}"));
         }
         for id in h.first.iter().filter(|id| h.last.contains(id)) {
             self.error(
@@ -461,6 +614,7 @@ impl<'a> Validator<'a> {
                         self.error(format!("/hints/{field}/{j}/{k}"), message);
                     }
                 }
+                self.once_each(group, &format!("/hints/{field}/{j}"));
             }
         }
         // An order hint sorts nodes side by side; frames keep their nodes
@@ -483,12 +637,30 @@ impl<'a> Validator<'a> {
         }
     }
 
+    /// Each id named once in a hint's list: a second time says nothing.
+    fn once_each(&mut self, list: &[String], pointer: &str) {
+        let mut seen = BTreeSet::new();
+        for (k, id) in list.iter().enumerate() {
+            if !seen.insert(id) {
+                self.error(
+                    format!("{pointer}/{k}"),
+                    format!("`{id}` is named more than once in this hint"),
+                );
+            }
+        }
+    }
+
     /// Checks that `id` names a thing of the wanted sort; the message when it does not.
     fn reference(ids: &BTreeMap<&str, Named>, id: &str, wanted: Named) -> Option<String> {
         let what = match wanted {
             Named::Node => "node",
             Named::Frame => "frame",
         };
+        if id.chars().count() > MAX_ID_LENGTH {
+            return Some(format!(
+                "no {what} has an id this long; an id is at most {MAX_ID_LENGTH} characters"
+            ));
+        }
         match ids.get(id) {
             Some(&named) if named == wanted => None,
             Some(_) => Some(format!(
@@ -725,22 +897,38 @@ pub(crate) fn nearest_few<'a>(
     candidates: impl Iterator<Item = &'a str>,
     count: usize,
 ) -> Vec<&'a str> {
-    let limit = (id.chars().count() / 3).max(1);
-    let mut close: Vec<(usize, &str)> = candidates
-        .map(|c| (edit_distance(id, c), c))
-        .filter(|(d, _)| *d <= limit)
-        .collect();
+    let mut close = close_to(id, candidates);
     close.sort_unstable();
     close.into_iter().take(count).map(|(_, c)| c).collect()
 }
 
 pub(crate) fn nearest<'a>(id: &str, candidates: impl Iterator<Item = &'a str>) -> Option<&'a str> {
-    let limit = (id.chars().count() / 3).max(1);
+    close_to(id, candidates).into_iter().min().map(|(_, c)| c)
+}
+
+/// The candidates within a third of `id`'s length of it, with their
+/// distance. Those whose lengths alone differ by more are left out before
+/// the distance is counted, which takes the product of the two lengths;
+/// an `id` longer than any id may be gets none.
+fn close_to<'a>(id: &str, candidates: impl Iterator<Item = &'a str>) -> Vec<(usize, &'a str)> {
+    let length = id.chars().count();
+    if length > MAX_ID_LENGTH {
+        return Vec::new();
+    }
+    let limit = (length / 3).max(1);
     candidates
+        .filter(|c| c.chars().count().abs_diff(length) <= limit)
         .map(|c| (edit_distance(id, c), c))
         .filter(|(d, _)| *d <= limit)
-        .min()
-        .map(|(_, c)| c)
+        .collect()
+}
+
+/// The problem with `what` (an id, a `tech`) longer than [`MAX_ID_LENGTH`],
+/// which is not printed back.
+pub(crate) fn too_long(what: &str, text: &str) -> Option<String> {
+    let length = text.chars().count();
+    (length > MAX_ID_LENGTH)
+        .then(|| format!("{what} is at most {MAX_ID_LENGTH} characters; this one has {length}"))
 }
 
 /// Levenshtein distance over characters.
