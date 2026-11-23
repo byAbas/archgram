@@ -22,7 +22,11 @@ light and dark mode and animates the path a request takes. The file drops
 into a GitHub README or any docs page, and the animation plays wherever an
 image shows.
 
-![A visitor's request goes to the API, which reads the URL cache in Redis, falls back to Postgres on a miss and adds the click to a Redis stream; a worker drains the stream into Postgres. The animation follows the visit.](https://raw.githubusercontent.com/byAbas/archgram/main/docs/images/linkshort.svg)
+![archgram's own architecture: a developer runs the archgram CLI, or asks a coding agent, which loads the diagram skills; the skills build the diagram with the CLI, and fetch archgram from the npm registry only when the project does not have it. The animation follows one prompt to a diagram.](https://raw.githubusercontent.com/byAbas/archgram/main/docs/diagrams/architecture.svg)
+
+archgram's own architecture, drawn by its skill from `Draw the architecture
+of this project.` and nothing more
+([the spec](https://github.com/byAbas/archgram/blob/main/docs/diagrams/architecture.archgram.yaml)).
 
 You describe the system: its nodes, what connects them and the paths a
 request takes. archgram lays it out, routes the lines around the boxes and
@@ -32,8 +36,6 @@ It also draws a sequence diagram: the order in which the parts call each
 other for one request, and what comes back, told in phases and played one
 phase at a time ([docs/SPEC.md,
 Sequence](https://github.com/byAbas/archgram/blob/main/docs/SPEC.md)).
-
-![Signing in: the browser posts the login to the API, which finds the user in Postgres; with the right password the API returns a session, and otherwise refuses with a 401.](https://raw.githubusercontent.com/byAbas/archgram/main/docs/images/sequence-sign-in.svg)
 
 ## Install
 
