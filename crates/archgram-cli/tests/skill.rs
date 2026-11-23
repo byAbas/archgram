@@ -136,8 +136,7 @@ fn the_marketplace_lists_the_skill_folder_as_its_one_plugin() {
 }
 
 /// `.claude-plugin/` holds the manifest and nothing else: Claude Code's
-/// plugin manifest reference puts every other file of a plugin at its root,
-/// so the icon the manifest names for the directory's listing is there too.
+/// plugin manifest reference puts every other file of a plugin at its root.
 /// Finder's `.DS_Store` is ignored by git, so it is never submitted.
 #[test]
 fn the_plugin_keeps_only_its_manifest_in_the_manifest_folder() {
@@ -153,18 +152,32 @@ fn the_plugin_keeps_only_its_manifest_in_the_manifest_folder() {
             folder.display()
         );
     }
+}
 
-    let manifest = std::fs::read_to_string(folder.join("plugin.json")).unwrap();
-    let icon = manifest
-        .lines()
-        .find_map(|line| line.trim().strip_prefix("\"icon\": \"./"))
-        .and_then(|rest| rest.split('"').next())
-        .expect("plugin.json names an icon as `./<path>`");
-    assert!(
-        plugin.join(icon).is_file(),
-        "plugin.json names the icon ./{icon}, which is not in {}",
-        plugin.display()
-    );
+/// The manifest names none of the fields only Anthropic's directory reads.
+/// The directory took the listing's icon and links when the submission was
+/// created, and newer versions do not update them; each field left in a
+/// version only raises a warning in its scan, as one Claude Code does not
+/// read.
+#[test]
+fn the_plugin_manifest_has_no_directory_listing_fields() {
+    let manifest = std::fs::read_to_string(
+        Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../skills/archgram/.claude-plugin/plugin.json"),
+    )
+    .unwrap();
+    for field in [
+        "icon",
+        "documentationUrl",
+        "supportUrl",
+        "privacyPolicyUrl",
+        "termsOfServiceUrl",
+    ] {
+        assert!(
+            !manifest.contains(&format!("\"{field}\"")),
+            "plugin.json names `{field}`, which only the directory's listing reads"
+        );
+    }
 }
 
 /// The skill pre-approves no command: its frontmatter has no `allowed-tools`.
@@ -336,12 +349,13 @@ fn the_skill_looks_for_archgram_before_it_downloads() {
     }
 }
 
-/// The plugin's folder holds only what Anthropic's directory accepts from
-/// an organization that is not Verified: Markdown, text, JSON, YAML and a
-/// PNG, JPEG, GIF, WebP or ICO image, none starting with `#!`. A script the
-/// skill runs ships in the npm package instead (`packages/archgram/skill/`).
+/// The plugin's folder holds only text: Markdown, text, JSON and YAML, none
+/// starting with `#!`. Anthropic's directory accepts no script from an
+/// organization that is not Verified, and notes each image a version
+/// carries as let through without being read; the listing's icon is the one
+/// uploaded in the developer portal, kept as `docs/images/plugin-icon.png`.
 #[test]
-fn the_plugin_holds_only_text_and_images() {
+fn the_plugin_holds_only_text() {
     // What git tracks, as the directory reads the commit, not the folder
     // (a `.DS_Store` beside it is no file of the plugin's).
     let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
@@ -364,10 +378,7 @@ fn the_plugin_holds_only_text_and_images() {
             .unwrap_or_default()
             .to_ascii_lowercase();
         assert!(
-            [
-                "md", "txt", "json", "yaml", "yml", "png", "jpg", "jpeg", "gif", "webp", "ico"
-            ]
-            .contains(&extension.as_str()),
+            ["md", "txt", "json", "yaml", "yml"].contains(&extension.as_str()),
             "{} is not a file the directory accepts in the plugin",
             file.display()
         );
