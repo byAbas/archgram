@@ -52,6 +52,12 @@ same way:
   words, and at most 1000 sources per spec, so a spec cannot make a run
   slow or large.
 
+archgram writes a drawing, at `-o` or beside its spec, as a new file
+renamed over the old one, so a symbolic link at its path is replaced,
+never followed; and it refuses a folder on the way that is a link under
+the folder archgram runs in, as it refuses one on the way to a spec, so
+a project cannot aim its drawing at another folder.
+
 `build --preview` reads nothing more. It renders, inside archgram, the
 SVG it has just drawn, with only archgram's embedded fonts, never the
 system's; it fetches no image, file or data URL, starts no browser and

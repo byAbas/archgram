@@ -631,6 +631,14 @@ fn preview_files(out: &Path) -> std::io::Result<[PathBuf; 2]> {
     let name = drawing
         .file_name()
         .ok_or_else(|| std::io::Error::other("the drawing has no file name"))?;
+    // Checked before the folder is resolved, which would follow a link and
+    // choose the project's top from where it leads.
+    if let Some(link) = link_under(&cwd, drawing.parent().unwrap_or(&cwd)) {
+        return Err(std::io::Error::other(format!(
+            "{} is a symbolic link, which archgram does not follow",
+            link.display()
+        )));
+    }
     let folder = std::fs::canonicalize(drawing.parent().unwrap_or(&cwd))?;
     let top = folder
         .ancestors()
@@ -670,19 +678,38 @@ fn preview_files(out: &Path) -> std::io::Result<[PathBuf; 2]> {
     Ok([file("light"), file("dark")])
 }
 
+/// The symbolic link on the way to the folder `folder`, when it is under
+/// `cwd`, where the project's files are and a link may have come with
+/// them. A folder outside it is the caller's own choice, such as macOS's
+/// `/tmp`, itself a link, and is not checked.
+fn link_under(cwd: &Path, folder: &Path) -> Option<PathBuf> {
+    files::link_to(cwd, folder).filter(|link| link.starts_with(cwd))
+}
+
 /// Writes each drawing to its file, its folder created when missing, and
-/// says what it wrote.
+/// says what it wrote. A folder on the way that is a symbolic link is
+/// refused ([`link_under`]), as one on the way to a spec is: it may have
+/// come with the project and lead out of it.
 fn write_drawings(drawings: Vec<(PathBuf, archgram_core::Drawing)>) -> ExitCode {
+    let cwd = std::env::current_dir().unwrap_or_default();
     for (file, drawing) in drawings {
         let svg = drawing.svg;
-        if let Some(folder) = file.parent().filter(|f| !f.as_os_str().is_empty())
-            && let Err(e) = std::fs::create_dir_all(folder)
-        {
-            eprintln!(
-                "archgram: cannot create the folder {}: {e}",
-                folder.display()
-            );
-            return ExitCode::from(2);
+        if let Some(folder) = file.parent().filter(|f| !f.as_os_str().is_empty()) {
+            if let Some(link) = link_under(&cwd, folder) {
+                eprintln!(
+                    "archgram: cannot write {}: {} is a symbolic link, which archgram does not follow; name the folder it leads to",
+                    file.display(),
+                    link.display()
+                );
+                return ExitCode::from(2);
+            }
+            if let Err(e) = std::fs::create_dir_all(folder) {
+                eprintln!(
+                    "archgram: cannot create the folder {}: {e}",
+                    folder.display()
+                );
+                return ExitCode::from(2);
+            }
         }
         if let Err(e) = write_replacing(&file, &svg) {
             eprintln!("archgram: cannot write {}: {e}", file.display());

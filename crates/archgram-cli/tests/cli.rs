@@ -263,6 +263,44 @@ fn a_symlink_at_the_output_is_replaced_not_followed() {
     assert_eq!(left.len(), 2, "no temporary file left: {left:?}");
 }
 
+/// A folder on the way to the output that is a link, which a pull request
+/// can add, is refused, never followed: neither the drawing, a theme's
+/// drawing, nor a preview lands where it leads.
+#[cfg(unix)]
+#[test]
+fn a_symlinked_folder_on_the_way_to_the_output_is_refused() {
+    let dir = scratch("output-midlink");
+    let elsewhere = scratch("output-elsewhere");
+    std::fs::create_dir_all(dir.join(".git")).unwrap();
+    std::fs::create_dir_all(dir.join("docs")).unwrap();
+    std::os::unix::fs::symlink(&elsewhere, dir.join("docs/img")).unwrap();
+    std::fs::copy(example("linkshort.json"), dir.join("shop.json")).unwrap();
+    for out in [
+        &["-o", "docs/img/shop.svg"][..],
+        &["-o", "docs/img/new/shop.svg", "--split-themes"],
+        &["-o", "docs/img/shop.svg", "--preview"],
+    ] {
+        let run = archgram_in(&dir, &[&["build", "shop.json"][..], out].concat());
+        assert_eq!(run.status.code(), Some(2), "{out:?}: {}", stderr(&run));
+        assert!(
+            stderr(&run).contains("is a symbolic link"),
+            "{out:?}: {}",
+            stderr(&run)
+        );
+        let left: Vec<_> = std::fs::read_dir(&elsewhere).unwrap().collect();
+        assert!(left.is_empty(), "{out:?} wrote through the link: {left:?}");
+    }
+
+    // A folder outside the one archgram runs in is the caller's own
+    // choice, a link too (macOS's /tmp is one), and is written to.
+    let outside = scratch("output-outside");
+    std::os::unix::fs::symlink(&elsewhere, outside.join("img")).unwrap();
+    let out = outside.join("img/shop.svg");
+    let run = archgram_in(&dir, &["build", "shop.json", "-o", out.to_str().unwrap()]);
+    assert!(run.status.success(), "{}", stderr(&run));
+    assert!(elsewhere.join("shop.svg").is_file());
+}
+
 /// A theme reads only the files under its mapping's folder: `..`, an
 /// absolute path and a symlink cannot lead it out.
 #[test]

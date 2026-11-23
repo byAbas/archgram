@@ -12,6 +12,10 @@ follow [Semantic Versioning](https://semver.org/).
   size, so a few aliases of one long text could take far more memory
   than the file. They may now add at most 4 MiB of text too
   (docs/SPEC.md, Formats).
+- `build -o` followed a folder on the way to the drawing that is a
+  symbolic link, which a project can hold, so the drawing and its
+  previews could land outside the project. Such a folder is now refused,
+  as one on the way to a spec is (SECURITY.md).
 - `archgram --help` named `facts` as an example of a section of
   `archgram guide`, which the guide does not have; it names `colours`
   now, and a test holds each section the help names to one its command
