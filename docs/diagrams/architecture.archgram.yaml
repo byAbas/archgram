@@ -1,0 +1,33 @@
+archgram: 1
+title: archgram
+description: >-
+  A developer draws a diagram with the archgram command, or asks a coding
+  agent, which follows archgram's skills: they run the same command
+  through npx, fetching it from the npm registry when the project does
+  not have it.
+direction: right
+nodes:
+  - { id: developer, kind: users, label: Developer }
+  - { id: agent, kind: agent, label: Coding agent, note: "Claude Code, Codex, Cursor and others" }
+  - id: skills
+    kind: tool
+    label: Diagram skills
+    note: "draw-architecture-diagram and draw-sequence-diagram, also the Claude Code plugin"
+    source: ../../skills/archgram/skills
+  - id: cli
+    kind: service
+    label: archgram CLI
+    tech: rust
+    note: "npm launcher and the native binary it starts; the core, icons and YAML crates are built in"
+    source: [../../packages/archgram/bin/archgram.js, ../../crates/archgram-cli/src/main.rs]
+  - { id: npm, kind: service, label: Package registry, tech: npm, variant: external }
+edges:
+  - { from: developer, to: agent, label: asks for diagram, source: "../../README.md#Draw the architecture of this project." }
+  - { from: developer, to: cli, label: runs build, source: "../../README.md#npx archgram build docs/diagrams/linkshort.archgram.yaml" }
+  - { from: agent, to: skills, label: loads skills, source: '../../.claude-plugin/marketplace.json#"source": "./skills/archgram"' }
+  - { from: skills, to: cli, label: builds diagram, source: "../../skills/archgram/skills/draw-architecture-diagram/SKILL.md#build docs/diagrams/architecture.archgram.yaml --preview" }
+  - { from: skills, to: npm, label: fetches archgram, style: dashed, source: "../../skills/archgram/skills/draw-architecture-diagram/SKILL.md#the npm registry" }
+flows:
+  - { name: a diagram from one prompt, steps: [developer, agent, skills, cli] }
+hints:
+  first: [developer]
