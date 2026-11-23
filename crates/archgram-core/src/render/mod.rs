@@ -25,7 +25,7 @@ use crate::layout::heading::Heading;
 use crate::motion::Timeline;
 use crate::spec::{SignalStyle, Spec};
 use crate::tokens::{
-    ARROWHEAD_LENGTH, ARROWHEAD_WIDTH, Colors, FONT_SANS, ROUNDED_CANVAS, SPACING_MARGIN,
+    ARROWHEAD_LENGTH, ARROWHEAD_WIDTH, Colors, FONT_SANS, ROUNDED_CANVAS, Role, SPACING_MARGIN,
     STROKE_CONNECTOR, TYPOGRAPHY_HEADING, TYPOGRAPHY_SUBTITLE, theme,
 };
 use scene::{Anchor, GroupOf, Item, Scene, StyleLine};
@@ -99,7 +99,7 @@ pub fn scene(
     let drawn = drawn_edges(placement);
     let lengths: Vec<f64> = drawn.iter().map(edge::Drawn::length).collect();
     let timeline = crate::motion::timeline(spec, &lengths);
-    let brands = brands(spec, logos);
+    let brands = brands(spec, logos, false);
     let style = style(spec, options, logos, (timeline.as_ref(), &brands));
     let mut items = vec![
         Item::Canvas {
@@ -369,7 +369,7 @@ fn cards(
     spec: &Spec,
     placement: &Placement,
     logos: &dyn crate::logos::Logos,
-    brands: &BTreeMap<String, Rgb>,
+    brands: &Brands,
 ) {
     for (node, r) in spec.nodes.iter().zip(&placement.nodes) {
         let at = Rect {
@@ -467,7 +467,7 @@ fn style(
     spec: &Spec,
     options: Options,
     logos: &dyn crate::logos::Logos,
-    (timeline, brands): (Option<&Timeline>, &BTreeMap<String, Rgb>),
+    (timeline, brands): (Option<&Timeline>, &Brands),
 ) -> Vec<StyleLine> {
     let mode = options.mode;
     let (light, dark) = colors(&spec.palette, options);
@@ -849,18 +849,37 @@ fn overlaps(a: Rect, b: Rect, margin: f64) -> bool {
         && b.y < a.bottom() + margin
 }
 
+/// A brand's colour, and every colour role its logos are drawn on in one
+/// drawing.
+struct BrandColour {
+    colour: Rgb,
+    grounds: BTreeSet<Role>,
+}
+
+/// The brand colours the logos show, by technology slug.
+type Brands = BTreeMap<String, BrandColour>;
+
 /// The brand colours the logos show: each technology's slug with its
-/// colour, for every card's technology whose logo set gives a colour.
-fn brands(spec: &Spec, logos: &dyn crate::logos::Logos) -> BTreeMap<String, Rgb> {
-    spec.nodes
-        .iter()
-        .filter_map(|n| n.tech.as_deref())
-        .filter(|slug| logos.path(slug).is_some())
-        .filter_map(|slug| {
-            let hex = logos.colour(slug)?;
-            Rgb::parse(hex).map(|rgb| (slug.to_owned(), rgb))
-        })
-        .collect()
+/// colour, for every card's technology whose logo set gives a colour, and
+/// what each of its logos is drawn on, on cards or on `avatars`.
+fn brands(spec: &Spec, logos: &dyn crate::logos::Logos, avatars: bool) -> Brands {
+    let mut out = Brands::new();
+    for node in &spec.nodes {
+        let Some(slug) = node.tech.as_deref().filter(|s| logos.path(s).is_some()) else {
+            continue;
+        };
+        let Some(colour) = logos.colour(slug).and_then(Rgb::parse) else {
+            continue;
+        };
+        out.entry(slug.to_owned())
+            .or_insert_with(|| BrandColour {
+                colour,
+                grounds: BTreeSet::new(),
+            })
+            .grounds
+            .insert(card::logo_ground(node, spec.logo, avatars));
+    }
+    out
 }
 
 /// The class that gives a technology's logo its brand's colour: the slug,
@@ -879,11 +898,16 @@ fn brand_class(slug: &str) -> String {
     format!("brand-{safe}")
 }
 
-/// The brand's colour on a card, or the text colour when the brand's would
-/// not show against the card: a line at least 3:1 (DESIGN.md, Colors).
-fn brand_fill(brand: Rgb, card: Rgb) -> String {
-    if crate::color::contrast(brand, card) >= 3.0 {
-        brand.to_string()
+/// The brand's colour in theme `c`, or the text colour when the brand's
+/// would not show against everything its logos are drawn on: a line at
+/// least 3:1 (DESIGN.md, Colors). One colour for every logo of the brand.
+fn brand_fill(brand: &BrandColour, c: &Colors) -> String {
+    let shows = brand
+        .grounds
+        .iter()
+        .all(|&ground| crate::color::contrast(brand.colour, c.get(ground)) >= 3.0);
+    if shows {
+        brand.colour.to_string()
     } else {
         "var(--text)".into()
     }
@@ -1085,21 +1109,17 @@ fn lit_text_rules(svg: &mut Sheet, (light, dark, mode): (&Colors, &Colors, Mode)
 }
 
 /// Each brand colour's rule, for the theme or themes the drawing carries.
-fn brand_rules(
-    svg: &mut Sheet,
-    brands: &BTreeMap<String, Rgb>,
-    (light, dark, mode): (&Colors, &Colors, Mode),
-) {
+fn brand_rules(svg: &mut Sheet, brands: &Brands, (light, dark, mode): (&Colors, &Colors, Mode)) {
     let fills = |c: &Colors| -> Vec<String> {
         brands
             .iter()
-            .map(|(slug, hex)| {
+            .map(|(slug, brand)| {
                 // As strong as a logo's own rule, `.logo-icon.core` in the
                 // badge too, and after it, so the brand's colour stands.
                 format!(
                     ".logo.{class}, .logo-icon.{class} {{ fill: {fill}; }}",
                     class = brand_class(slug),
-                    fill = brand_fill(*hex, c.card)
+                    fill = brand_fill(brand, c)
                 )
             })
             .collect()

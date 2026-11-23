@@ -517,8 +517,13 @@ In every place the logo is in its brand's own colour (the logo's `hex` in
 Simple Icons), whether or not a flow's signal lights its card, so a reader
 knows the technology at a glance; the kind's icon still says which kind of
 thing, except in the fourth place, where the logo says both. A brand
-colour below 3:1 against the card in a theme (a black logo on a dark card)
-shows as `color.text` in that theme instead, and a logo whose brand gives
+colour below 3:1 in a theme against anything one of its logos is drawn on
+(a black logo on a dark card) shows as `color.text` in that theme instead,
+on every card, so a technology keeps one colour in a drawing. A logo is
+drawn on the card's fill, which on an external card is `color.badge`; in
+the badge with the fourth place, which on an external card is
+`color.card`; in a chip, on `color.card`; and, under a sequence's avatar,
+on the canvas. A logo whose brand gives
 no colour is in `color.text-muted`, or, in place of the icon, in its
 category's hue, as the icon would be.
 

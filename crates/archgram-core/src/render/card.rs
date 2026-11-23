@@ -10,7 +10,7 @@ use crate::tokens::{
     AVATAR_LABEL_GAP, AVATAR_SIZE, CARD_HORIZONTAL_BADGE, CARD_HORIZONTAL_ICON, CARD_LOGO_CHIP,
     CARD_LOGO_CHIP_RING, CARD_LOGO_CORNER, CARD_LOGO_INLINE, CARD_LOGO_INLINE_GAP,
     CARD_MULTI_OFFSET, CARD_PADDING, CARD_VERTICAL_BADGE, CARD_VERTICAL_ICON, ROUNDED_BADGE,
-    ROUNDED_CARD, STROKE_ICON, TYPOGRAPHY_SUBTITLE, TYPOGRAPHY_TITLE,
+    ROUNDED_CARD, Role, STROKE_ICON, TYPOGRAPHY_SUBTITLE, TYPOGRAPHY_TITLE,
 };
 
 /// The CSS class that gives an icon its category's hue (DESIGN.md, Colors).
@@ -30,6 +30,27 @@ struct Lines<'a> {
     kind: Option<&'a str>,
     inline: Option<&'a str>,
     brand: Option<&'a Brand>,
+}
+
+/// The colour role `node`'s logo is drawn on, in the diagram's `place` for
+/// logos, on a card or, in a sequence's `avatars` look, an avatar: what its
+/// brand's colour must stand out against (DESIGN.md, Components: Technology
+/// logo). An external card is filled like a badge and its badge like a
+/// card; a chip is filled like a card; an avatar's second line is on the
+/// canvas.
+pub fn logo_ground(node: &Node, place: LogoPlace, avatar: bool) -> Role {
+    let external = node.variant == Variant::External;
+    let (on_badge, on_card) = if external {
+        (Role::Card, Role::Badge)
+    } else {
+        (Role::Badge, Role::Card)
+    };
+    match (place, avatar) {
+        (LogoPlace::Chip, _) | (LogoPlace::Corner, true) => Role::Card,
+        (LogoPlace::Inline, true) => Role::Canvas,
+        (LogoPlace::Icon, false) => on_badge,
+        (LogoPlace::Icon, true) | (LogoPlace::Corner | LogoPlace::Inline, false) => on_card,
+    }
 }
 
 /// The class that gives a card's logo its brand's colour, when the brand

@@ -242,6 +242,56 @@ fn logos_are_in_their_brands_colours() {
     );
 }
 
+/// A logo whose brand colour shows on a dark card (3.3:1) but not on the
+/// darker badge's fill (2.9:1).
+struct EdgeLogo;
+
+impl archgram_core::logos::Logos for EdgeLogo {
+    fn path(&self, slug: &str) -> Option<&str> {
+        (slug == "edge").then_some("M0 0h24v24H0z")
+    }
+    fn slugs(&self) -> Vec<&str> {
+        vec!["edge"]
+    }
+    fn colour(&self, slug: &str) -> Option<&str> {
+        (slug == "edge").then_some("3F63D2")
+    }
+}
+
+/// A brand colour is held to 3:1 against what its logo is drawn on: an
+/// external card is filled like a badge, and a logo in place of the icon
+/// sits in the badge, or, on an external card, on the badge's card fill
+/// (DESIGN.md, Components: Technology logo).
+#[test]
+fn a_logo_is_held_to_what_it_is_drawn_on() {
+    let dark = "@media (prefers-color-scheme: dark) { .logo.brand-edge, .logo-icon.brand-edge { fill: var(--text); } }";
+    let svg = |variant: &str, logo: &str| {
+        let spec = archgram_core::parse_spec(&format!(
+            r#"{{ "archgram": 1, "title": "t", "description": "d"{logo},
+            "nodes": [{{ "id": "a", "kind": "service", "label": "A", "tech": "edge"{variant} }}] }}"#
+        ))
+        .unwrap();
+        archgram_core::draw_with(&spec, Options::default(), &EdgeLogo)
+            .unwrap()
+            .svg
+    };
+    let external = r#", "variant": "external""#;
+    let icon = r#", "logo": "icon""#;
+    for (variant, logo, on_badge) in [
+        ("", "", false),
+        (external, "", true),
+        ("", icon, true),
+        (external, icon, false),
+    ] {
+        let svg = svg(variant, logo);
+        assert!(
+            svg.contains(".logo.brand-edge, .logo-icon.brand-edge { fill: #3f63d2; }"),
+            "{svg}"
+        );
+        assert_eq!(svg.contains(dark), on_badge, "{variant}{logo}: {svg}");
+    }
+}
+
 /// The credit is "by", the mark and "archgram" in the legend's type, and
 /// `credit: false` leaves out the credit and its rules.
 #[test]
