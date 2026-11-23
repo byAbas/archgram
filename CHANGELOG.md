@@ -49,7 +49,10 @@ follow [Semantic Versioning](https://semver.org/).
   to show you what it found first, and it will.
 - An architecture diagram is drawn at the C4 container level: each app,
   service, job, database, queue and outside system one node, the routes
-  and files inside them left to a component diagram you ask for.
+  and files inside them left to a component diagram you ask for. Parts
+  shipped and started together, such as a launcher and the program it
+  starts, are one node, and the files a program reads or writes on disk
+  are not nodes.
 - An architecture diagram's lines carry one verb and one object, three
   words at most, that read between the two parts as a sentence of what
   the code does ("Web app stores accounts in App database"), not lists
