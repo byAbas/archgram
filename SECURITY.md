@@ -57,9 +57,10 @@ same way:
 
 What it reads is held to sizes too, so a spec cannot hold a run for
 long or make it take gigabytes: a YAML spec's aliases add at most
-10 000 values and 4 MiB of text (docs/SPEC.md, Formats), and a spec is
-refused past the sizes docs/SPEC.md (Validation) names, before the
-checks whose time grows faster than the spec does.
+10 000 values and 4 MiB of text (docs/SPEC.md, Formats), a theme's
+resolution order merges at most 1000 sources (docs/SPEC.md, Theme
+file), and a spec is refused past the sizes docs/SPEC.md (Validation)
+names, before the checks whose time grows faster than the spec does.
 
 archgram writes a drawing, at `-o` or beside its spec, as a new file
 renamed over the old one, so a symbolic link at its path is replaced,

@@ -29,6 +29,10 @@ follow [Semantic Versioning](https://semver.org/).
   times the largest example; past one it is refused with that problem
   alone (docs/SPEC.md, Validation). A hint names each node once, and a
   reference longer than any id gets no suggestion.
+- A theme's resolver could list a set several times down a chain of
+  sets, each listing multiplying the sources merged, so a few kilobytes
+  held `theme check` for minutes. The resolution order now merges at
+  most 1000 sources (docs/SPEC.md, Theme file).
 - `build --preview` drew a drawing of any size, so very long labels
   could make it take gigabytes; it now draws none of more than 32
   million pixels (docs/features/reader-check.md).

@@ -268,6 +268,36 @@ fn loops_remote_files_and_extends_are_refused() {
     }
 }
 
+/// A set that lists another several times, down a chain of sets, brings
+/// that many times as many sources: a few lines would merge millions, so
+/// the merges are counted and stop at the budget.
+#[test]
+fn sets_that_repeat_a_set_stop_at_the_budget() {
+    use archgram_core::theme::MAX_MERGED;
+    let levels = 6;
+    assert!(4_usize.pow(levels - 1) > MAX_MERGED);
+    let sets = (0..levels)
+        .map(|i| {
+            let sources = if i + 1 < levels {
+                vec![format!(r##"{{ "$ref": "#/sets/b{}" }}"##, i + 1); 4].join(", ")
+            } else {
+                r##"{ "a": { "$type": "color", "$value": "#ffffff" } }"##.to_owned()
+            };
+            format!(r#""b{i}": {{ "sources": [{sources}] }}"#)
+        })
+        .collect::<Vec<_>>()
+        .join(", ");
+    let resolver = format!(
+        r##"{{ "version": "2025.10", "sets": {{ {sets} }}, "resolutionOrder": [{{ "$ref": "#/sets/b0" }}] }}"##
+    );
+    let mapping = r#"{ "version": 1, "resolver": "bomb.json", "roles": { "card": "a" }, "themes": { "light": {}, "dark": {} } }"#;
+    let e = errors(&[("archgram.theme.json", mapping), ("bomb.json", &resolver)]);
+    assert!(
+        e[0].contains(&format!("more than {MAX_MERGED} sources")),
+        "{e:?}"
+    );
+}
+
 #[test]
 fn paths_join_like_the_files_name_each_other() {
     assert_eq!(join("a/b/theme.json", "tokens/r.json"), "a/b/tokens/r.json");

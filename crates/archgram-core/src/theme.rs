@@ -34,6 +34,12 @@ pub const THEME_FORMAT: u32 = 1;
 /// How deep aliases may chain before archgram calls it a loop.
 const MAX_ALIASES: usize = 64;
 
+/// How many sources the resolution order may merge in all, those its sets
+/// bring through other sets too. A set listed several times, down a
+/// chain of sets, multiplies them: twelve lines of four would merge four
+/// million. archgram's own tokens merge five.
+pub const MAX_MERGED: usize = 1000;
+
 /// A problem with the mapping or the tokens it reads: in which file, where
 /// in it (a JSON pointer, or `/` for the whole file) and what.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -323,6 +329,7 @@ fn resolve_tree(
     r.check_inputs(order)?;
     let mut tree = Value::Object(serde_json::Map::new());
     let mut names = BTreeSet::new();
+    let mut merged = 0;
     for (i, entry) in order.iter().enumerate() {
         let (kind, body, pointer) = r.entry(i, entry, &mut names)?;
         let (sources, at) = r.sources(&kind, &body, &pointer)?;
@@ -334,6 +341,7 @@ fn resolve_tree(
             &doc,
             docs,
             &mut Vec::new(),
+            &mut merged,
         )?;
     }
     Ok(tree)
@@ -502,7 +510,9 @@ impl Resolving<'_> {
 }
 
 /// Merges each source into `tree` in turn: a file (with an optional pointer
-/// into it), another set, or tokens written inline.
+/// into it), another set, or tokens written inline. `merged` counts every
+/// source merged so far, against [`MAX_MERGED`].
+#[allow(clippy::too_many_arguments)]
 fn merge_sources(
     tree: &mut Value,
     sources: &Value,
@@ -511,6 +521,7 @@ fn merge_sources(
     doc: &Value,
     docs: &mut Documents,
     seen: &mut Vec<String>,
+    merged: &mut usize,
 ) -> Result<(), Vec<ImportError>> {
     let at = |p: &str, message: String| vec![error(resolver_path, p, message)];
     let list = sources
@@ -518,6 +529,15 @@ fn merge_sources(
         .ok_or_else(|| at(pointer, "sources are a list".into()))?;
     for (k, source) in list.iter().enumerate() {
         let here = format!("{pointer}/{k}");
+        *merged += 1;
+        if *merged > MAX_MERGED {
+            return Err(at(
+                &here,
+                format!(
+                    "the resolution order merges more than {MAX_MERGED} sources, counting those each set brings each time it is listed; list a set once"
+                ),
+            ));
+        }
         let Some(r) = source.get("$ref").and_then(Value::as_str) else {
             merge(tree, source);
             continue;
@@ -546,7 +566,16 @@ fn merge_sources(
                 .cloned()
                 .ok_or_else(|| at(&here, format!("`{r}` is not a set")))?;
             seen.push(r.to_owned());
-            merge_sources(tree, &inner, fragment, resolver_path, doc, docs, seen)?;
+            merge_sources(
+                tree,
+                &inner,
+                fragment,
+                resolver_path,
+                doc,
+                docs,
+                seen,
+                merged,
+            )?;
             seen.pop();
             continue;
         } else {

@@ -645,7 +645,10 @@ modifier without a default gets no input; a file cannot be read, is not
 written with the capitals it has on disk, is a remote reference, or is
 outside the mapping file's folder (by its real
 path, so neither `..` nor a symlink leads out); a token does not exist (the nearest are suggested), is
-not a colour, or aliases in a loop; a group uses `$extends`; a colour
+not a colour, or aliases in a loop; a group uses `$extends`; the
+resolution order merges more than 1000 sources, counting those a set
+brings each time it is listed, so a set listed several times down a
+chain of sets cannot hold the import for hours; a colour
 cannot be read; or a pair of roles falls below the contrast DESIGN.md
 requires, in either theme.
 

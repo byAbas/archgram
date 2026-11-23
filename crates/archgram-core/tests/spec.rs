@@ -327,6 +327,10 @@ fn the_spec_gives_the_sizes() {
         format!("nest more than {MAX_FRAME_DEPTH} deep"),
         format!("longer than {MAX_ID_LENGTH} characters"),
         format!("more than {MAX_PARTICIPANTS} participants or more than {MAX_ITEMS} items"),
+        format!(
+            "merges more than {} sources",
+            archgram_core::theme::MAX_MERGED
+        ),
     ] {
         assert!(doc.contains(&said), "docs/SPEC.md should say \"{said}\"");
     }
