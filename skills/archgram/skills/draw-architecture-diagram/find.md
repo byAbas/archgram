@@ -12,6 +12,10 @@
 The C4 container level (https://c4model.com/diagrams/container): the
 people and clients that start the system, the project's own apps and
 services, the stores they use, and the outside systems their code calls.
+A box is what is installed or deployed on its own: parts shipped and
+started together, such as a launcher and the program it starts, are one
+box. A store runs and holds data (a database, a cache, a queue, a
+bucket); the files a program reads or writes on disk are not boxes.
 A part goes in only when the project's own code addresses it: it is that
 code, or the code names it through a client, a library, a URL or a
 config key it reads. What no code addresses (what only routes traffic
