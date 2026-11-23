@@ -4,7 +4,7 @@
 use std::fmt::Write as _;
 
 use archgram_core::SpecError;
-use archgram_yaml::{MAX_DEPTH, MAX_EXPANDED, parse_spec};
+use archgram_yaml::{MAX_DEPTH, MAX_EXPANDED, MAX_EXPANDED_BYTES, parse_spec};
 
 fn root() -> String {
     format!("{}/../..", env!("CARGO_MANIFEST_DIR"))
@@ -121,6 +121,28 @@ fn an_alias_bomb_stops_early() {
 }
 
 #[test]
+fn aliases_to_long_text_stop_early() {
+    // Few aliases, each a copy of one long text: the values stay far under
+    // their budget, so the bytes they add must stop it.
+    let long = "x".repeat(64 * 1024);
+    let copies = MAX_EXPANDED_BYTES / long.len() + 1;
+    assert!(
+        copies < MAX_EXPANDED,
+        "the values' budget would stop it first"
+    );
+    let yaml = format!("a: &a {long}\nb: [{}]\n", vec!["*a"; copies].join(", "));
+    let e = errors(&yaml);
+    assert!(
+        e[0].message.contains(&format!(
+            "expand to more than {} MiB",
+            MAX_EXPANDED_BYTES >> 20
+        )),
+        "{}",
+        e[0].message
+    );
+}
+
+#[test]
 fn nesting_has_a_floor() {
     let yaml = format!("{}{}", "[".repeat(MAX_DEPTH + 1), "]".repeat(MAX_DEPTH + 1));
     let e = errors(&yaml);
@@ -153,6 +175,7 @@ fn the_spec_gives_the_crate_s_limits() {
     for limit in [
         format!("nesting deeper than {MAX_DEPTH} levels"),
         format!("expand to more than {} values", grouped(MAX_EXPANDED)),
+        format!("or {} MiB of text", MAX_EXPANDED_BYTES >> 20),
     ] {
         assert!(doc.contains(&limit), "docs/SPEC.md should say \"{limit}\"");
     }

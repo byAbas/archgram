@@ -68,8 +68,8 @@ command line tells them apart by the file's extension (`.json`, `.yaml`,
 `.yml`). Unknown fields are errors, not ignored, so a misspelt field is
 caught instead of silently changing the diagram. In YAML, a key written
 twice, a second document, a tag outside YAML's core schema, nesting deeper
-than 64 levels and aliases that expand to more than 10 000 values are
-errors too, and a plain word that reads as a number or a boolean (`title: 2026`)
+than 64 levels and aliases that expand to more than 10 000 values or 4 MiB
+of text are errors too, and a plain word that reads as a number or a boolean (`title: 2026`)
 must be quoted to stay text.
 
 A spec named `<name>.archgram.yaml` (or `.archgram.yml`, `.archgram.json`) draws

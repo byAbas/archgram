@@ -8,6 +8,10 @@ follow [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- A YAML spec's aliases were held to 10 000 values but not to their
+  size, so a few aliases of one long text could take far more memory
+  than the file. They may now add at most 4 MiB of text too
+  (docs/SPEC.md, Formats).
 - `archgram --help` named `facts` as an example of a section of
   `archgram guide`, which the guide does not have; it names `colours`
   now, and a test holds each section the help names to one its command
