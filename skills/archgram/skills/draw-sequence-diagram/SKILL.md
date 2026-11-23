@@ -21,29 +21,29 @@ it already is, once, before the first command. Read the project's root
 `package.json` first.
 
 - **The project's own.** When `package.json` lists archgram, run that
-  one: write each command with `archgram` for `archgram@0.12.0` and
-  `--no --offline` for `--yes`. When it is older than `0.12.0`, say so,
+  one: write each command with `archgram` for `archgram@0.13.0` and
+  `--no --offline` for `--yes`. When it is older than `0.13.0`, say so,
   with the project's own command to upgrade (`npm install --save-dev
-  archgram@0.12.0`), and stop. If npx says it is missing, ask the user
+  archgram@0.13.0`), and stop. If npx says it is missing, ask the user
   to install the project's dependencies, and stop.
 - **This version, already on the machine:**
 
   ```bash
-  npx --no --offline --loglevel=error archgram@0.12.0 --version
+  npx --no --offline --loglevel=error archgram@0.13.0 --version
   ```
 
-  It uses no network. When it prints `archgram 0.12.0`, run the commands
+  It uses no network. When it prints `archgram 0.13.0`, run the commands
   as written.
 - **Not there: ask before downloading.** Say what and from where: the npm
-  package `archgram@0.12.0` and its native program, a few megabytes, from
+  package `archgram@0.13.0` and its native program, a few megabytes, from
   the npm registry. Offer to install it into the project (`npm install
-  --save-dev archgram@0.12.0`) or to let npx fetch it once, and run
+  --save-dev archgram@0.13.0`) or to let npx fetch it once, and run
   neither until the user picks one.
 
 ## 1. Read the rules
 
 ```bash
-npx --yes --loglevel=error archgram@0.12.0 guide
+npx --yes --loglevel=error archgram@0.13.0 guide
 ```
 
 Then read `find.md` and `spec.md`.
@@ -57,14 +57,14 @@ never the whole codebase.
 ## 3. Write the spec, then check it
 
 ```bash
-npx --yes --loglevel=error archgram@0.12.0 spec --section sequence
+npx --yes --loglevel=error archgram@0.13.0 spec --section sequence
 ```
 
 Write `docs/diagrams/<scenario>.archgram.yaml` (`sign-in`), then check
 it until it passes:
 
 ```bash
-npx --yes --loglevel=error archgram@0.12.0 check docs/diagrams/<scenario>.archgram.yaml
+npx --yes --loglevel=error archgram@0.13.0 check docs/diagrams/<scenario>.archgram.yaml
 ```
 
 On an update, start from the spec there: `check` names what lost its
@@ -73,7 +73,7 @@ code; change only that and what the request asks.
 ## 4. Draw, look, open, report
 
 ```bash
-npx --yes --loglevel=error archgram@0.12.0 build docs/diagrams/<scenario>.archgram.yaml --preview
+npx --yes --loglevel=error archgram@0.13.0 build docs/diagrams/<scenario>.archgram.yaml --preview
 ```
 
 Hold it to the guide's limits, look at the previews, open the drawing
