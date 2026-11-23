@@ -1256,6 +1256,25 @@ fn the_guide_holds_every_section_the_commands_name() {
     assert!(run.status.success(), "{name}: {}", stderr(&run));
 }
 
+/// The section `--help` gives as each command's example is one that
+/// command prints.
+#[test]
+fn help_names_sections_that_exist() {
+    let help = stdout(&archgram(&["--help"]));
+    for (command, name) in [("spec", "theme-file"), ("guide", "colours")] {
+        assert!(
+            help.contains(&format!("such as {name}")),
+            "--help names {name}"
+        );
+        let run = archgram(&[command, "--section", name]);
+        assert!(
+            run.status.success(),
+            "{command} --section {name}: {}",
+            stderr(&run)
+        );
+    }
+}
+
 /// `archgram logos` gives each technology's name the slug `tech` takes,
 /// from the very set the drawing uses (docs/PRD.md 6.5).
 #[test]

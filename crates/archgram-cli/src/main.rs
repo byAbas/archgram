@@ -33,7 +33,7 @@ Usage:
                                kinds of diagram it draws, each with its section
   archgram guide [--section <name>]
                                Print the rules the draw-<kind>-diagram skills share
-                               (docs/GUIDE.md): all of them, or one section, such as facts
+                               (docs/GUIDE.md): all of them, or one section, such as colours
   archgram logos <name>...    Print the logo each technology's name stands for, as `tech`
                                takes it: a product's, a package's or an image's name
   archgram theme check <archgram.theme.json>
