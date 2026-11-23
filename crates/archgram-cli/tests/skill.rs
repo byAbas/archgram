@@ -135,11 +135,14 @@ fn the_marketplace_lists_the_skill_folder_as_its_one_plugin() {
     );
 }
 
-/// `.claude-plugin/` holds the manifest and nothing else: Claude Code's
-/// plugin manifest reference puts every other file of a plugin at its root.
+/// `.claude-plugin/` holds the manifest and the directory's icon, and
+/// nothing else: a plugin's components are at its root (Claude Code's plugin
+/// manifest reference). Anthropic's directory warns of a version with no
+/// icon, and looks for one at `.claude-plugin/icon.png` when the manifest
+/// has no `icon`: a square PNG, 512 to 2048 px on each side, under 2 MB.
 /// Finder's `.DS_Store` is ignored by git, so it is never submitted.
 #[test]
-fn the_plugin_keeps_only_its_manifest_in_the_manifest_folder() {
+fn the_manifest_folder_holds_the_manifest_and_the_icon() {
     let plugin = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../skills/archgram");
     let folder = plugin.join(".claude-plugin");
     for entry in std::fs::read_dir(&folder).unwrap_or_else(|e| panic!("{}: {e}", folder.display()))
@@ -147,11 +150,22 @@ fn the_plugin_keeps_only_its_manifest_in_the_manifest_folder() {
         let name = entry.unwrap().file_name();
         let name = name.to_string_lossy();
         assert!(
-            name == "plugin.json" || name == ".DS_Store",
+            name == "plugin.json" || name == "icon.png" || name == ".DS_Store",
             "{} holds {name}; keep it at the plugin's root",
             folder.display()
         );
     }
+
+    let icon = std::fs::read(folder.join("icon.png")).expect("the plugin has its icon");
+    assert!(icon.starts_with(b"\x89PNG\r\n\x1a\n"), "icon.png is a PNG");
+    let side = |at: usize| u32::from_be_bytes(icon[at..at + 4].try_into().unwrap());
+    let (width, height) = (side(16), side(20));
+    assert_eq!(width, height, "icon.png is square");
+    assert!(
+        (512..=2048).contains(&width),
+        "icon.png is {width} px on each side, not 512 to 2048"
+    );
+    assert!(icon.len() < 2 * 1024 * 1024, "icon.png is under 2 MB");
 }
 
 /// The manifest names none of the fields only Anthropic's directory reads.
@@ -349,13 +363,13 @@ fn the_skill_looks_for_archgram_before_it_downloads() {
     }
 }
 
-/// The plugin's folder holds only text: Markdown, text, JSON and YAML, none
-/// starting with `#!`. Anthropic's directory accepts no script from an
-/// organization that is not Verified, and notes each image a version
-/// carries as let through without being read; the listing's icon is the one
-/// uploaded in the developer portal, kept as `docs/images/plugin-icon.png`.
+/// The plugin's folder holds only text, and its icon: Markdown, text, JSON
+/// and YAML, none starting with `#!`. Anthropic's directory accepts no
+/// script from an organization that is not Verified, and notes each image a
+/// version carries as let through without being read, so the icon is the
+/// only one.
 #[test]
-fn the_plugin_holds_only_text() {
+fn the_plugin_holds_only_text_and_its_icon() {
     // What git tracks, as the directory reads the commit, not the folder
     // (a `.DS_Store` beside it is no file of the plugin's).
     let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
@@ -372,6 +386,9 @@ fn the_plugin_holds_only_text() {
         .collect();
     assert!(!files.is_empty(), "git lists the skill's files");
     for file in &files {
+        if file.ends_with(".claude-plugin/icon.png") {
+            continue;
+        }
         let extension = file
             .extension()
             .and_then(|e| e.to_str())
