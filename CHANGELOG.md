@@ -6,6 +6,13 @@ follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- `archgram --help` named `facts` as an example of a section of
+  `archgram guide`, which the guide does not have; it names `colours`
+  now, and a test holds each section the help names to one its command
+  prints.
+
 ## [0.13.0] - 2026-11-23
 
 ### Added
