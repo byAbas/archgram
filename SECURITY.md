@@ -47,7 +47,10 @@ same way:
   disk's root), judged by the path's text before the disk is looked at,
   so a spec cannot learn whether a file outside the project exists;
 - never `.git`, nor a file that commonly holds secrets rather than code
-  (docs/SPEC.md, Sources, lists them), as a source or a theme's file;
+  (docs/SPEC.md, Sources, lists them), as a source or a theme's file,
+  each named as its folder lists it, so a name that a system folds into
+  one of theirs (macOS opens `server.key` for a name written with the
+  Kelvin sign, U+212A, for its `k`) does not reach it;
 - each file once per run, keeping only whether it holds a source's
   words, and at most 1000 sources per spec, so a spec cannot make a run
   slow or large.

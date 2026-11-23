@@ -90,6 +90,42 @@ pub fn link_to(root: &Path, path: &Path) -> Option<PathBuf> {
     }
 }
 
+/// Whether each part of `below` is, under `root`, written as its folder
+/// lists it. A system that ignores capitals (macOS, Windows) opens a file
+/// by a name its letters fold into, `server.\u{212a}ey` for `server.key`;
+/// held to the names on disk, a name judged by its text is the name of
+/// the file that is opened. A part with no such entry reads as no file,
+/// so the answer is the same whether a folded one is there or not; one
+/// there with other capitals, as a source's is, is named.
+pub fn spelt_on_disk(root: &Path, below: &Path) -> Result<(), String> {
+    let mut here = root.to_path_buf();
+    for part in below.components() {
+        let name = part.as_os_str();
+        let names: Vec<OsString> = std::fs::read_dir(&here)
+            .map_err(|_| "the file cannot be read".to_owned())?
+            .flatten()
+            .map(|e| e.file_name())
+            .collect();
+        if !names.iter().any(|n| n == name) {
+            let wanted = name.to_string_lossy();
+            return Err(names
+                .iter()
+                .find(|n| n.to_string_lossy().eq_ignore_ascii_case(&wanted))
+                .map_or_else(
+                    || "the file cannot be read".to_owned(),
+                    |on_disk| {
+                        format!(
+                            "`{wanted}` is `{}` on disk; write it with the same capitals, so every system finds it alike",
+                            on_disk.to_string_lossy()
+                        )
+                    },
+                ));
+        }
+        here.push(part);
+    }
+    Ok(())
+}
+
 /// The project's folder, under which a spec's sources are looked up: the
 /// nearest folder above the spec's (`folder`) that holds `.git`, else the
 /// folder archgram runs in (`cwd`); never a disk's root, which would make

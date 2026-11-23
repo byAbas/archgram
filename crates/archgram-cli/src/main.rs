@@ -898,13 +898,26 @@ fn read_under(folder: &Path, written: &Path, name: &str) -> Result<String, Strin
     // file is there or not, the answer is the same. From an absolute base,
     // so a mapping in the current folder (written as "") is held too.
     let written = &std::env::current_dir().unwrap_or_default().join(written);
-    if !files::lexical(&written.join(name)).starts_with(files::lexical(written)) {
+    let base = files::lexical(written);
+    let Ok(below) = files::lexical(&written.join(name))
+        .strip_prefix(&base)
+        .map(Path::to_path_buf)
+    else {
         return Err(
             "the file is outside the mapping file's folder, and archgram reads only the files under it"
                 .into(),
         );
-    }
-    if let Some(why) = archgram_core::sources::private_part(name) {
+    };
+    // As written, and part by part as the system splits it, so a Windows
+    // `\` hides no name from the check.
+    let parts = below
+        .components()
+        .map(|c| c.as_os_str().to_string_lossy())
+        .collect::<Vec<_>>()
+        .join("/");
+    if let Some(why) = archgram_core::sources::private_part(name)
+        .or_else(|| archgram_core::sources::private_part(&parts))
+    {
         return Err(why);
     }
     if files::link_to(written, Path::new(name)).is_some() {
@@ -913,6 +926,9 @@ fn read_under(folder: &Path, written: &Path, name: &str) -> Result<String, Strin
                 .into(),
         );
     }
+    // The name judged above must be the one opened: a system that folds
+    // letters would open `server.key` for `server.\u{212a}ey`.
+    files::spelt_on_disk(&base, &below)?;
     let path = written.join(name);
     let path = path.as_path();
     let cannot = |_| "the file cannot be read".to_owned();

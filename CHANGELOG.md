@@ -16,6 +16,11 @@ follow [Semantic Versioning](https://semver.org/).
   symbolic link, which a project can hold, so the drawing and its
   previews could land outside the project. Such a folder is now refused,
   as one on the way to a spec is (SECURITY.md).
+- A theme's files were held to the list of files that commonly hold
+  secrets by the name as written, which macOS and Windows may fold into
+  another one's; each part of a theme file's path must now be written as
+  its folder lists it, with the same capitals, as a source's already is
+  (docs/SPEC.md, Theme file).
 - `archgram --help` named `facts` as an example of a section of
   `archgram guide`, which the guide does not have; it names `colours`
   now, and a test holds each section the help names to one its command

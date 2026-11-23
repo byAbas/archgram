@@ -333,6 +333,39 @@ fn a_theme_reads_only_under_its_folder() {
     }
 }
 
+/// A theme's file is read only by the name it has on disk, so a name that
+/// a system folds into a secret file's (macOS folds `ſ` to `s` and the
+/// Kelvin sign to `k`) never reaches it past the list of such names.
+#[test]
+fn a_theme_reads_a_file_only_by_its_name_on_disk() {
+    let dir = scratch("theme-folded");
+    own_theme(&dir, "");
+    let resolver = read(&dir.join("tokens/design.resolver.json"));
+    std::fs::create_dir_all(dir.join("tokens/.aws")).unwrap();
+    std::fs::write(dir.join("tokens/.aws/design.resolver.json"), &resolver).unwrap();
+    std::fs::write(dir.join("tokens/server.key"), &resolver).unwrap();
+    for name in [
+        "tokens/.aw\u{17f}/design.resolver.json",
+        "tokens/server.\u{212a}ey",
+    ] {
+        let theme = own_mapping(&dir, name, "");
+        let run = archgram(&["theme", "check", theme.to_str().unwrap()]);
+        assert_eq!(run.status.code(), Some(1), "{name}: {}", stderr(&run));
+        assert!(
+            stderr(&run).contains("the file cannot be read"),
+            "{name}: {}",
+            stderr(&run)
+        );
+    }
+    let theme = own_mapping(&dir, "tokens/Design.resolver.json", "");
+    let run = archgram(&["theme", "check", theme.to_str().unwrap()]);
+    assert!(
+        stderr(&run).contains("`Design.resolver.json` is `design.resolver.json` on disk"),
+        "{}",
+        stderr(&run)
+    );
+}
+
 /// A spec named `<name>.archgram.yaml` (or `.yml`, `.json`) draws
 /// `<name>.svg` beside it, and one theme per file as `<name>.light.svg`;
 /// any other spec draws its own name with `.svg` (docs/SPEC.md, Formats).

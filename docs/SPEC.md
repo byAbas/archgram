@@ -632,8 +632,9 @@ on. Channels outside sRGB are clipped. A role's colour is opaque.
 An import is refused, with every problem listed and each located by file
 and JSON pointer, when the mapping or the resolver breaks its format; a
 role is not archgram's; an input names no modifier or no context; a
-modifier without a default gets no input; a file cannot be read, is a
-remote reference, or is outside the mapping file's folder (by its real
+modifier without a default gets no input; a file cannot be read, is not
+written with the capitals it has on disk, is a remote reference, or is
+outside the mapping file's folder (by its real
 path, so neither `..` nor a symlink leads out); a token does not exist (the nearest are suggested), is
 not a colour, or aliases in a loop; a group uses `$extends`; a colour
 cannot be read; or a pair of roles falls below the contrast DESIGN.md
