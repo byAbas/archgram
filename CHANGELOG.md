@@ -6,6 +6,8 @@ follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.13.1] - 2026-11-23
+
 ### Fixed
 
 - A YAML spec's aliases were held to 10 000 values but not to their
@@ -653,7 +655,8 @@ same release.
   subset of Geist.
 - `archgram build` and `archgram check`.
 
-[Unreleased]: https://github.com/byAbas/archgram/compare/v0.13.0...HEAD
+[Unreleased]: https://github.com/byAbas/archgram/compare/v0.13.1...HEAD
+[0.13.1]: https://github.com/byAbas/archgram/compare/v0.13.0...v0.13.1
 [0.13.0]: https://github.com/byAbas/archgram/compare/v0.12.0...v0.13.0
 [0.12.0]: https://github.com/byAbas/archgram/compare/v0.11.0...v0.12.0
 [0.11.0]: https://github.com/byAbas/archgram/compare/v0.10.1...v0.11.0
