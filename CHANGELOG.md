@@ -12,6 +12,12 @@ follow [Semantic Versioning](https://semver.org/).
   `archgram guide`, which the guide does not have; it names `colours`
   now, and a test holds each section the help names to one its command
   prints.
+- A logo on an external card, or in the badge with `logo: icon`, kept its
+  brand's colour when that colour stood out against a card's fill but not
+  against the badge's fill it was drawn on: below 3:1, as with Chainlink's
+  blue on a dark external card (2.6:1). A brand colour is now held to
+  3:1 against everything its logos are drawn on, and shows as the text
+  colour otherwise, the same on every card.
 
 ## [0.13.0] - 2026-11-23
 

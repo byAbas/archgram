@@ -7,10 +7,8 @@
 //! at a time, a point travelling each message, the drawing readable
 //! throughout (DESIGN.md, Layout: Motion). Under reduced motion it is still.
 
-use std::collections::BTreeMap;
 use std::fmt::Write as _;
 
-use crate::color::Rgb;
 use crate::font;
 use crate::geometry::{Point, Rect};
 use crate::layout::sequence::{Label, Layout, Message, Sort};
@@ -51,7 +49,7 @@ pub fn scene(
         x: p.x + EDGE_OFFSET,
         y: p.y + EDGE_OFFSET,
     };
-    let brands = super::brands(&layout.spec, logos);
+    let brands = super::brands(&layout.spec, logos, layout.look == Look::Avatars);
     let style = style(seq, layout, options, logos, &brands);
     // Every message's line as drawn, on the canvas, and the motion's timing.
     let drawn: Vec<edge::Drawn> = layout
@@ -784,7 +782,7 @@ fn style(
     layout: &Layout,
     options: Options,
     logos: &dyn crate::logos::Logos,
-    brands: &BTreeMap<String, Rgb>,
+    brands: &super::Brands,
 ) -> Vec<super::scene::StyleLine> {
     let (light, dark) = super::colors(&seq.palette, options);
     let refused = layout.messages.iter().any(|m| m.refused);
