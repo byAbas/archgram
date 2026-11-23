@@ -14,8 +14,14 @@ use std::sync::Arc;
 use resvg::tiny_skia::{Pixmap, Transform};
 use resvg::usvg::{self, ImageHrefResolver};
 
+/// The most pixels a preview draws: about 128 MB at four bytes each. A
+/// drawing of the most nodes a spec may have, in a row, is about 12.5
+/// million (47,196 × 264 px); one larger is too large to read, and only
+/// its labels' length, which nothing else bounds, could make it so.
+const MAX_PIXELS: u64 = 32_000_000;
+
 /// The PNG of `svg`, an SVG archgram drew in one theme (`--theme light` or
-/// `dark`), at its own size.
+/// `dark`), at its own size, when it is no larger than [`MAX_PIXELS`].
 pub fn png(svg: &str) -> Result<Vec<u8>, String> {
     let svg = with_fonts_named(&with_values(svg)?);
 
@@ -49,6 +55,12 @@ pub fn png(svg: &str) -> Result<Vec<u8>, String> {
         tree.size().width().ceil() as u32,
         tree.size().height().ceil() as u32,
     );
+    if u64::from(width) * u64::from(height) > MAX_PIXELS {
+        return Err(format!(
+            "the drawing is {width}×{height} px, more than the {} million pixels a preview draws; shorten its labels, or split it into diagrams a reader can follow",
+            MAX_PIXELS / 1_000_000
+        ));
+    }
     let mut pixmap = Pixmap::new(width, height)
         .ok_or_else(|| format!("cannot make a {width}×{height} image"))?;
     resvg::render(&tree, Transform::default(), &mut pixmap.as_mut());
@@ -149,6 +161,19 @@ mod tests {
         let svg = "<style>:root { --card: #fff; } .c { fill: var(--missing); }</style>";
         assert!(with_values(svg).unwrap_err().contains("--missing"));
         assert!(with_values("<svg/>").is_err(), "no :root rule");
+    }
+
+    #[test]
+    fn a_drawing_past_the_pixels_a_preview_draws_is_refused() {
+        let side = 6000;
+        assert!(side * side > MAX_PIXELS);
+        let svg = format!(
+            r#"<svg xmlns="http://www.w3.org/2000/svg" width="{side}" height="{side}"><style>:root {{ --card: #fff; }}</style></svg>"#
+        );
+        let Err(e) = png(&svg) else {
+            panic!("the preview was drawn");
+        };
+        assert!(e.contains("million pixels"), "{e}");
     }
 
     #[test]

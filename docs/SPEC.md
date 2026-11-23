@@ -542,8 +542,17 @@ its JSON pointer (or its line and column in YAML), when:
   flow's name)
   holds a character XML does not allow, such as a control character
   other than tab, line feed and carriage return: the SVG would not open;
+- a diagram has more than 200 nodes, 200 edges or 200 frames, frames nest
+  more than 16 deep, an id or a `tech` is longer than 64 characters, or
+  a sequence has more than 50 participants or more than 1000 items in its
+  `messages`, those inside fragments too: about ten times the largest in
+  `examples/`, so a check and a build stay within a few seconds. Such a
+  spec is refused with that problem alone;
 - an id is duplicated, or an edge, flow, frame or hint names an id that
   does not exist;
+- a hint names a node more than once, a `first` or `last` hint or a
+  group names more nodes than the diagram has, or a hint has more groups
+  than the diagram has nodes;
 - frames nest in a cycle, or a frame is empty;
 - the nodes of an `order` hint do not share a frame (a frame keeps its
   nodes together, so a hint cannot sort them among others);

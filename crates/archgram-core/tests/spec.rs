@@ -311,6 +311,139 @@ fn a_reference_to_a_missing_id_suggests_a_near_one() {
     );
 }
 
+/// docs/SPEC.md (Validation) names the sizes this crate holds a spec to,
+/// as numbers.
+#[test]
+fn the_spec_gives_the_sizes() {
+    use archgram_core::{
+        MAX_EDGES, MAX_FRAME_DEPTH, MAX_FRAMES, MAX_ID_LENGTH, MAX_ITEMS, MAX_NODES,
+        MAX_PARTICIPANTS,
+    };
+    let path = format!("{}/../../docs/SPEC.md", env!("CARGO_MANIFEST_DIR"));
+    let doc = std::fs::read_to_string(&path).unwrap();
+    let doc = doc.split_whitespace().collect::<Vec<_>>().join(" ");
+    for said in [
+        format!("more than {MAX_NODES} nodes, {MAX_EDGES} edges or {MAX_FRAMES} frames"),
+        format!("nest more than {MAX_FRAME_DEPTH} deep"),
+        format!("longer than {MAX_ID_LENGTH} characters"),
+        format!("more than {MAX_PARTICIPANTS} participants or more than {MAX_ITEMS} items"),
+    ] {
+        assert!(doc.contains(&said), "docs/SPEC.md should say \"{said}\"");
+    }
+}
+
+/// `n` services, `s0` to `s{n-1}`, as JSON nodes.
+fn services(n: usize) -> String {
+    (0..n)
+        .map(|i| format!(r#"{{ "id": "s{i}", "kind": "service", "label": "S{i}" }}"#))
+        .collect::<Vec<_>>()
+        .join(", ")
+}
+
+/// A spec past a size is refused at once, with only that problem: the
+/// rules after it would take time that grows faster than the spec does.
+#[test]
+fn a_spec_is_held_to_its_sizes() {
+    use archgram_core::{MAX_EDGES, MAX_FRAMES, MAX_ID_LENGTH, MAX_NODES};
+    let e = errors(&spec_with(&services(MAX_NODES + 1), ""));
+    assert_eq!(pointers(&e), ["/nodes"]);
+    assert!(
+        e[0].message.contains(&format!("at most {MAX_NODES} nodes")),
+        "{}",
+        e[0].message
+    );
+
+    let edges = (1..=MAX_EDGES)
+        .map(|i| format!(r#"{{ "from": "s0", "to": "s{}" }}"#, i % 9 + 1))
+        .collect::<Vec<_>>()
+        .join(", ");
+    let e = errors(&spec_with(
+        &services(10),
+        &format!(r#", "edges": [{edges}, {{ "from": "s1", "to": "s2" }}]"#),
+    ));
+    assert_eq!(pointers(&e), ["/edges"]);
+    assert!(
+        e[0].message.contains(&format!("at most {MAX_EDGES} edges")),
+        "{}",
+        e[0].message
+    );
+
+    let frames = (0..=MAX_FRAMES)
+        .map(|i| format!(r#"{{ "id": "f{i}", "label": "F" }}"#))
+        .collect::<Vec<_>>()
+        .join(", ");
+    let e = errors(&spec_with(
+        &services(1),
+        &format!(r#", "frames": [{frames}]"#),
+    ));
+    assert_eq!(pointers(&e), ["/frames"]);
+
+    let long = "a".repeat(MAX_ID_LENGTH + 1);
+    let node =
+        format!(r#"{{ "id": "{long}", "kind": "service", "label": "A", "tech": "{long}" }}"#);
+    let e = errors(&spec_with(&node, ""));
+    assert_eq!(pointers(&e), ["/nodes/0/id", "/nodes/0/tech"]);
+    assert!(!e[0].message.contains(&long), "the id is not printed back");
+}
+
+#[test]
+fn frames_nest_only_so_deep() {
+    use archgram_core::MAX_FRAME_DEPTH;
+    let frames = (0..=MAX_FRAME_DEPTH)
+        .map(|i| match i {
+            0 => r#"{ "id": "f0", "label": "F" }"#.to_owned(),
+            _ => format!(
+                r#"{{ "id": "f{i}", "label": "F", "parent": "f{}" }}"#,
+                i - 1
+            ),
+        })
+        .collect::<Vec<_>>()
+        .join(", ");
+    let node = format!(
+        r#"{{ "id": "a", "kind": "service", "label": "A", "frame": "f{MAX_FRAME_DEPTH}" }}"#
+    );
+    let e = errors(&spec_with(&node, &format!(r#", "frames": [{frames}]"#)));
+    assert_eq!(pointers(&e), [format!("/frames/{MAX_FRAME_DEPTH}/parent")]);
+    assert!(
+        e[0].message
+            .contains(&format!("at most {MAX_FRAME_DEPTH} deep")),
+        "{}",
+        e[0].message
+    );
+}
+
+/// A hint names each node once, and a hint list is no longer than the
+/// nodes it can name.
+#[test]
+fn a_hint_names_each_node_once() {
+    let hints = r#", "hints": { "first": ["s0", "s0"], "sameLayer": [["s1", "s2", "s1"]] }"#;
+    let e = errors(&spec_with(&services(3), hints));
+    assert_eq!(pointers(&e), ["/hints/first/1", "/hints/sameLayer/0/2"]);
+    assert!(e[0].message.contains("more than once"), "{}", e[0].message);
+
+    let groups = [r#"["s0", "s1"]"#; 4].join(", ");
+    let e = errors(&spec_with(
+        &services(3),
+        &format!(r#", "hints": {{ "order": [{groups}] }}"#),
+    ));
+    assert_eq!(pointers(&e), ["/hints/order"]);
+}
+
+/// A reference longer than any id can be names none: it is neither
+/// compared with each id for a suggestion, which takes time that grows
+/// with its length times theirs, nor printed back.
+#[test]
+fn a_reference_longer_than_an_id_names_none() {
+    let long = format!("s{}", "1".repeat(archgram_core::MAX_ID_LENGTH));
+    let e = errors(&spec_with(
+        &services(3),
+        &format!(r#", "edges": [{{ "from": "s0", "to": "{long}" }}]"#),
+    ));
+    assert_eq!(pointers(&e), ["/edges/0/to"]);
+    assert!(!e[0].message.contains(&long), "{}", e[0].message);
+    assert!(!e[0].message.contains("did you mean"), "{}", e[0].message);
+}
+
 #[test]
 fn frames_cannot_nest_in_a_cycle_or_stand_empty() {
     let nodes = r#"{ "id": "api", "kind": "service", "label": "API", "frame": "a" }"#;

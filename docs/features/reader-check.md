@@ -115,6 +115,10 @@ critique of what a reader sees was answered from the spec.
   in it.
 - Its pixels are resvg's, not a browser's: the layout is the drawing's
   own, the antialiasing and text a little different.
+- A drawing of more than 32 million pixels gets none: the build stops
+  with an error rather than take gigabytes. A drawing of the most nodes
+  a spec may have, in a row, is about 12.5 million; only very long labels
+  make one larger, and it is too large to read.
 - A reader test checks only the questions a case asks, and scores an
   answer by its words, not its sense.
 - The skill sees the previews only where its agent reads images.
@@ -172,3 +176,4 @@ critique of what a reader sees was answered from the spec.
 |---------|------------|--------|
 | 0.1     | 2026-11-19 | First draft, from #173: `build --preview` writes a still PNG of each theme, rendered with resvg after the custom properties and the font's family are resolved; the skill's step 6 looks at it and critiques what a reader sees; the evaluations expect it, and a reader test answers each case's questions from the image alone. |
 | 0.2     | 2026-11-20 | The previews go under `.archgram/preview/` at the project's top, out of git, not beside the drawing, and the report says nothing of them; that answers whether the skill should leave them out of git (#176). |
+| 0.3     | 2026-11-23 | A drawing of more than 32 million pixels gets no preview, so a spec cannot make a build take gigabytes (Limits). |

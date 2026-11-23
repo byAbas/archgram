@@ -21,6 +21,17 @@ follow [Semantic Versioning](https://semver.org/).
   another one's; each part of a theme file's path must now be written as
   its folder lists it, with the same capitals, as a source's already is
   (docs/SPEC.md, Theme file).
+- A spec of any size was checked and laid out, and the time some checks
+  and the layout take grows faster than the spec does: a few hundred
+  edges could hold a build for minutes. A spec now has at most 200
+  nodes, 200 edges and 200 frames, frames 16 deep, ids and `tech` of 64
+  characters, and a sequence 50 participants and 1000 items, about ten
+  times the largest example; past one it is refused with that problem
+  alone (docs/SPEC.md, Validation). A hint names each node once, and a
+  reference longer than any id gets no suggestion.
+- `build --preview` drew a drawing of any size, so very long labels
+  could make it take gigabytes; it now draws none of more than 32
+  million pixels (docs/features/reader-check.md).
 - `archgram --help` named `facts` as an example of a section of
   `archgram guide`, which the guide does not have; it names `colours`
   now, and a test holds each section the help names to one its command

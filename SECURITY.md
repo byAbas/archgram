@@ -55,6 +55,12 @@ same way:
   words, and at most 1000 sources per spec, so a spec cannot make a run
   slow or large.
 
+What it reads is held to sizes too, so a spec cannot hold a run for
+long or make it take gigabytes: a YAML spec's aliases add at most
+10 000 values and 4 MiB of text (docs/SPEC.md, Formats), and a spec is
+refused past the sizes docs/SPEC.md (Validation) names, before the
+checks whose time grows faster than the spec does.
+
 archgram writes a drawing, at `-o` or beside its spec, as a new file
 renamed over the old one, so a symbolic link at its path is replaced,
 never followed; and it refuses a folder on the way that is a link under
@@ -67,7 +73,8 @@ system's; it fetches no image, file or data URL, starts no browser and
 uses no network, and writes the PNGs under `.archgram/preview/` at the
 project's top, refusing a symlink on the way as it refuses one at the
 drawing, and a `.gitignore` of `*` in `.archgram/` when it has none
-(docs/features/reader-check.md, docs/features/approved-drawing.md).
+(docs/features/reader-check.md, docs/features/approved-drawing.md). It
+draws no preview of more than 32 million pixels.
 
 When a file that is not a spec is read as one, a problem does not quote
 a text value from it; like a problem with any spec, it may still name a
